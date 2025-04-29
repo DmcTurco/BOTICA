@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fondo circular con gradiente -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#B71C1C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F44336;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Resplandor para el efecto de brillo -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Círculo exterior - con borde brillante -->
+  <circle cx="256" cy="256" r="240" fill="none" stroke="url(#grad)" stroke-width="8" filter="url(#glow)" />
+  
+  <!-- Círculo principal -->
+  <circle cx="256" cy="256" r="220" fill="rgba(0,0,0,0.85)" stroke="url(#grad)" stroke-width="6" />
+  
+  <!-- Triángulo de reproducción -->
+  <polygon points="200,160 360,256 200,352" fill="url(#grad)" filter="url(#glow)" />
+  
+  <!-- Ondas de sonido (izquierda) -->
+  <path d="M150,206 Q130,256 150,306" fill="none" stroke="url(#grad)" stroke-width="8" stroke-linecap="round" opacity="0.7" />
+  <path d="M120,186 Q90,256 120,326" fill="none" stroke="url(#grad)" stroke-width="8" stroke-linecap="round" opacity="0.5" />
+  
+  <!-- Ondas de sonido (derecha) -->
+  <path d="M380,206 Q400,256 380,306" fill="none" stroke="url(#grad)" stroke-width="8" stroke-linecap="round" opacity="0.7" />
+  <path d="M410,186 Q440,256 410,326" fill="none" stroke="url(#grad)" stroke-width="8" stroke-linecap="round" opacity="0.5" />
+</svg>

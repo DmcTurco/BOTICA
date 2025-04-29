@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cuerpo de la cámara -->
+  <rect x="30" y="60" width="140" height="80" rx="10" ry="10" fill="#333333" stroke="#000000" stroke-width="2"/>
+
+  <!-- Lente de la cámara -->
+  <circle cx="100" cy="100" r="30" fill="#111111" stroke="#000000" stroke-width="2"/>
+  <circle cx="100" cy="100" r="25" fill="#222222" stroke="#000000" stroke-width="1"/>
+  <circle cx="100" cy="100" r="20" fill="#333333" stroke="#000000" stroke-width="1"/>
+  <circle cx="100" cy="100" r="10" fill="#444444"/>
+
+  <!-- Reflejo en la lente -->
+  <circle cx="90" cy="90" r="4" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="95" cy="95" r="2" fill="#FFFFFF" opacity="0.5"/>
+
+  <!-- Flash -->
+  <rect x="45" y="70" width="15" height="15" rx="2" ry="2" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+
+  <!-- Botón de grabación -->
+  <circle cx="170" cy="80" r="8" fill="#FF0000" stroke="#AA0000" stroke-width="1"/>
+  <circle cx="170" cy="80" r="5" fill="#FF3333"/>
+
+  <!-- Micrófono de la cámara -->
+  <rect x="155" y="100" width="15" height="8" rx="4" ry="4" fill="#555555" stroke="#000000" stroke-width="1"/>
+
+  <!-- Parte superior de la cámara -->
+  <rect x="50" y="50" width="100" height="10" rx="5" ry="5" fill="#444444" stroke="#000000" stroke-width="1"/>
+
+  <!-- Correa para la cámara -->
+  <path d="M180,85 Q190,90 190,100 Q190,110 180,115" fill="none" stroke="#888888" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Indicador de grabación -->
+  <circle cx="40" cy="75" r="4" fill="#FF0000">
+    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
+  </circle>
+
+  <!-- Texto "REC" -->
+  <text x="50" y="77" font-family="Arial" font-size="8" font-weight="bold" fill="#FF0000">REC</text>
+</svg>

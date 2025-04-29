@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512" class="text-primary text-sm opacity-10">
+    <defs>
+        <linearGradient id="dashgradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#B71C1C;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#F44336;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+
+    <!-- Marco exterior del dashboard -->
+    <rect x="80" y="100" width="352" height="312" rx="15" ry="15" fill="currentColor" stroke="currentColor" stroke-width="8" />
+
+    <!-- Pantalla interior -->
+    <rect x="100" y="120" width="312" height="240" rx="5" ry="5" fill="rgba(0,0,0,0.7)" stroke="currentColor" stroke-width="4" />
+
+    <!-- Elementos del dashboard -->
+    <rect x="120" y="140" width="120" height="80" rx="5" ry="5" fill="currentColor" />
+    <rect x="120" y="240" width="120" height="100" rx="5" ry="5" fill="currentColor" />
+    <rect x="260" y="140" width="132" height="200" rx="5" ry="5" fill="currentColor" />
+
+    <!-- Botones de control -->
+    <circle cx="150" cy="385" r="10" fill="currentColor" />
+    <circle cx="190" cy="385" r="10" fill="currentColor" />
+    <circle cx="230" cy="385" r="10" fill="currentColor" />
+    <rect x="280" cy="375" width="80" height="20" rx="5" ry="5" fill="currentColor" />
+</svg>
