@@ -18,9 +18,11 @@ class AppServiceProvider extends ServiceProvider
         Request::macro('routeType', function () use ($requestUri) {
             if (preg_match("#^/" . MyApp::ADMINS_SUBDIR . "/#", $requestUri)) {
                 return MyApp::ADMINS_SUBDIR;
-            } else if(preg_match("#^/" . MyApp::COMPANY_SUBDIR . "/#", $requestUri)) {
+            } else if (preg_match("#^/" . MyApp::COMPANY_SUBDIR . "/#", $requestUri)) {
                 return MyApp::COMPANY_SUBDIR;
-            }else{
+            } else if (preg_match("#^/" . MyApp::COMPANY_SUBDIR . "/#", $requestUri)) {
+                return MyApp::EMPLOYEE_SUBDIR;
+            } else {
                 return null;
             }
         });

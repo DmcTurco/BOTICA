@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-@include('admin/inc/head')
+@include('company/inc/head')
 
 <body class="">
     <div class="container position-sticky z-index-sticky top-0">
@@ -110,26 +110,26 @@
 
     <style>
         :root {
-            --bs-primary: #3918cc;
+            --bs-primary: #2D8B61;
             --bs-primary-rgb: 45, 139, 97;
         }
         
         .btn-primary {
-            background-color: #3918cc;
-            border-color: #3918cc;
+            background-color: #2D8B61;
+            border-color: #2D8B61;
         }
         
         .btn-primary:hover {
-            background-color: #3918cc;
-            border-color: #3918cc;
+            background-color: #1A5D40;
+            border-color: #1A5D40;
         }
         
         .text-primary {
-            color: #3918cc !important;
+            color: #2D8B61 !important;
         }
         
         .bg-gradient-primary {
-            background-image: linear-gradient(195deg, #3918cc 0%, #1A5D40 100%);
+            background-image: linear-gradient(195deg, #2D8B61 0%, #1A5D40 100%);
         }
     </style>
 </body>
