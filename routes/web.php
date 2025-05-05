@@ -26,6 +26,7 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
     
     Route::get('/home', [Company\CompanyController::class, 'index'])->name('home');
     Route::resource('sales', Company\SalesController::class);
+    Route::resource('products', Company\ProductController::class);
 });
 
 Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employee.')->group(function () {
