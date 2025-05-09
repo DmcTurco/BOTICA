@@ -22,5 +22,6 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- CSS Files -->
     <link id="pagestyle" href="{{ asset('assets/css/argon-dashboard.css') }}" rel="stylesheet" />
+    {{-- <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script> --}}
     @yield('styles')
 </head>

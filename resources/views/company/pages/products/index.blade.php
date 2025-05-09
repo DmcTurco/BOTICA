@@ -17,7 +17,7 @@
                                     farmacia</p>
                             </div>
                             <div>
-                                <a class="btn btn-sm btn-white" data-bs-toggle="modal" data-bs-target="#productoModal"><i class="fas fa-plus me-2"></i> Nuevo Producto</a>
+                                <a href="{{ route('company.products.create') }}" class="btn btn-sm btn-white" ><i class="fas fa-plus me-2"></i> Nuevo Producto</a>
                                 {{-- <button type="button" class="btn btn-sm btn-white" data-toggle="modal"
                                     data-target="#productoModal">
                                     <i class="fas fa-plus me-2"></i> Nuevo Producto
@@ -47,12 +47,12 @@
                                             <div class="input-group input-group-static">
                                                 <select class="form-control" id="categoria" name="categoria">
                                                     <option value="">Todas las categorías</option>
-                                                    {{-- @foreach ($categorias as $categoria)
+                                                    @foreach ($categorias as $categoria)
                                                         <option value="{{ $categoria->id }}" 
                                                             {{ request('categoria') == $categoria->id ? 'selected' : '' }}>
-                                                            {{ $categoria->nombre }}
+                                                            {{ $categoria->name }}
                                                         </option>
-                                                    @endforeach --}}
+                                                    @endforeach
                                                 </select>
                                             </div>
                                         </div>
@@ -212,7 +212,5 @@
             </div>
         </div>
     </div>
-
-    @include('company.pages.products.form')
 
 @endsection
