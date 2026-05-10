@@ -15,13 +15,12 @@
         </main>
     </div>
 
-    @include('company/inc/foot')
-
     <script>
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('-translate-x-full');
         document.getElementById('sidebar-overlay').classList.toggle('hidden');
     }
     </script>
+    @include('company/inc/foot')
 </body>
 </html>

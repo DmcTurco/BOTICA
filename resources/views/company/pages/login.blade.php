@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>BOTICA — Iniciar Sesión</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css'])
     <style>
         @keyframes blobMorph {
             0%,100% { border-radius:60% 40% 30% 70% / 60% 30% 70% 40%; }
@@ -44,13 +44,11 @@
             animation: gradBG 12s ease infinite;
         }
 
-        /* Blobs */
         .blob { position:absolute; filter:blur(72px); pointer-events:none; }
         .blob-1 { width:480px;height:480px; background:rgba(34,197,94,.2);  top:-120px;   left:-120px;  animation:blobMorph 12s ease-in-out infinite; }
         .blob-2 { width:540px;height:540px; background:rgba(16,185,129,.15); bottom:-160px;right:-160px; animation:blobMorph 16s ease-in-out 4s infinite reverse; }
         .blob-3 { width:300px;height:300px; background:rgba(74,222,128,.15); top:50%;      left:35%;     animation:blobMorph 10s ease-in-out 8s infinite; }
 
-        /* Iconos flotantes */
         .fi { position:absolute; display:flex; align-items:center; justify-content:center;
               background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; pointer-events:none; }
         .fi-1  { width:42px;height:42px; top:10%;   left:8%;  animation:floatUp   6s ease-in-out infinite; }
@@ -60,14 +58,12 @@
         .fi-5  { width:34px;height:34px; bottom:32%;left:14%; animation:floatUp   8s ease-in-out 3.5s infinite; }
         .fi-6  { width:38px;height:38px; top:72%;   right:15%;animation:floatDown 7s ease-in-out 2s infinite; }
 
-        /* Card glass */
         .glass {
             background: rgba(255,255,255,.97);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
         }
 
-        /* Logo pulse */
         .logo-pulse { position:relative; }
         .logo-pulse::before {
             content:''; position:absolute; inset:-5px; border-radius:20px;
@@ -75,7 +71,6 @@
             animation:pulseRing 2.4s ease-out infinite;
         }
 
-        /* Fade-up staggered */
         .fu1 { animation:fadeUp .7s ease-out .05s both; }
         .fu2 { animation:fadeUp .7s ease-out .15s both; }
         .fu3 { animation:fadeUp .7s ease-out .25s both; }
@@ -83,7 +78,6 @@
         .fu5 { animation:fadeUp .7s ease-out .45s both; }
         .fu6 { animation:fadeUp .7s ease-out .55s both; }
 
-        /* Inputs */
         .input-wrap { position:relative; display:flex; align-items:center; }
         .input-icon {
             position:absolute; left:0; top:0; bottom:0;
@@ -113,7 +107,6 @@
         }
         .eye-btn:hover { color:#475569; }
 
-        /* Botón */
         .btn-login {
             position:relative; overflow:hidden;
             width:100%; padding:.82rem 1rem;
@@ -156,7 +149,8 @@
 
         {{-- Logo --}}
         <div class="fu1 flex flex-col items-center mb-8">
-            <div class="logo-pulse w-16 h-16 bg-linear-to-br from-emerald-500 to-green-700 rounded-2xl flex items-center justify-center mb-4 shadow-lg" style="box-shadow:0 8px 24px rgba(22,163,74,.35)">
+            <div class="logo-pulse w-16 h-16 bg-linear-to-br from-emerald-500 to-green-700 rounded-2xl flex items-center justify-center mb-4 shadow-lg"
+                 style="box-shadow:0 8px 24px rgba(22,163,74,.35)">
                 <i class="fas fa-plus text-white text-2xl"></i>
             </div>
             <p class="text-2xl font-bold text-slate-800 tracking-tight">BOTICA</p>
