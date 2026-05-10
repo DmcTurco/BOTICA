@@ -41,12 +41,12 @@
         </div>
 
         {{-- ── Cuerpo: tres columnas ───────────────────────────── --}}
-        <div class="flex-1 flex overflow-hidden">
+        <div class="flex-1 grid grid-cols-[35%_35%_30%] overflow-hidden min-h-0">
 
             {{-- ┌──────────────────────────────────────────────────┐
                  │  COL 1 — Catálogo de productos                   │
                  └──────────────────────────────────────────────────┘ --}}
-            <div class="w-[40%] shrink-0 flex flex-col border-r border-slate-200 overflow-hidden">
+            <div class="flex flex-col border-r border-slate-200 overflow-hidden min-h-0">
 
                 {{-- Buscador --}}
                 <div class="shrink-0 p-3 border-b border-slate-100 bg-slate-50">
@@ -153,7 +153,7 @@
             {{-- ┌──────────────────────────────────────────────────┐
                  │  COL 2 — Carrito                                 │
                  └──────────────────────────────────────────────────┘ --}}
-            <div class="flex-1 flex flex-col overflow-hidden border-r border-slate-200">
+            <div class="flex flex-col overflow-hidden border-r border-slate-200 min-h-0">
 
                 {{-- Cabecera carrito --}}
                 <div class="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50">
@@ -201,7 +201,7 @@
             {{-- ┌──────────────────────────────────────────────────┐
                  │  COL 3 — Pago / Cliente                          │
                  └──────────────────────────────────────────────────┘ --}}
-            <div class="w-64 shrink-0 flex flex-col bg-slate-50/30 overflow-hidden">
+            <div class="flex flex-col bg-slate-50/30 overflow-hidden min-h-0">
 
                 {{-- Cabecera pago --}}
                 <div class="shrink-0 flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 bg-slate-50">

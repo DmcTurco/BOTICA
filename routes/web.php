@@ -25,6 +25,8 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
     })->withoutMiddleware('auth:company');
     
     Route::get('/home', [Company\CompanyController::class, 'index'])->name('home');
+    Route::get('sales/historial', [Company\SalesController::class, 'historial'])->name('sales.historial');
+    Route::get('sales/{sale}/detalle', [Company\SalesController::class, 'detalle'])->name('sales.detalle');
     Route::resource('sales', Company\SalesController::class);
     Route::get('consultar-documento', [Company\SalesController::class, 'consultarDocumento'])->name('consultar-documento');
     Route::resource('products', Company\ProductController::class);

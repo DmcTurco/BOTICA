@@ -21,7 +21,7 @@
                 <li>
                     <a href="{{ route('company.home') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ ($elementActive ?? '') == 'dashboard' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                              {{ request()->routeIs('company.home') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
                         <i class="fas fa-gauge-high w-4 text-center shrink-0"></i>
                         Dashboard
                     </a>
@@ -35,15 +35,23 @@
                 <li>
                     <a href="{{ route('company.sales.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ ($elementActive ?? '') == 'sales' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                              {{ request()->routeIs('company.sales.index') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
                         <i class="fas fa-cash-register w-4 text-center shrink-0"></i>
-                        Punto de Venta
+                        Ventas
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('company.sales.historial') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('company.sales.historial') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                        <i class="fas fa-receipt w-4 text-center shrink-0"></i>
+                        Historial de Ventas
                     </a>
                 </li>
                 <li>
                     <a href="{{ route('company.products.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ ($elementActive ?? '') == 'products' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                              {{ request()->routeIs('company.products.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
                         <i class="fas fa-pills w-4 text-center shrink-0"></i>
                         Productos
                     </a>
@@ -51,7 +59,7 @@
                 <li>
                     <a href="{{ route('company.categories.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ ($elementActive ?? '') == 'categories' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                              {{ request()->routeIs('company.categories.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
                         <i class="fas fa-tags w-4 text-center shrink-0"></i>
                         Categorías
                     </a>
@@ -59,7 +67,7 @@
                 <li>
                     <a href="{{ route('company.laboratories.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ ($elementActive ?? '') == 'laboratories' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                              {{ request()->routeIs('company.laboratories.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
                         <i class="fas fa-flask w-4 text-center shrink-0"></i>
                         Laboratorios
                     </a>

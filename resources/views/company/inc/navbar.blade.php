@@ -4,8 +4,19 @@
         <i class="fas fa-bars text-lg"></i>
     </button>
 
+    @php
+        $pageTitle = match(true) {
+            request()->routeIs('company.home')             => 'Dashboard',
+            request()->routeIs('company.sales.historial')  => 'Historial de Ventas',
+            request()->routeIs('company.sales.*')          => 'Ventas',
+            request()->routeIs('company.products.*')       => 'Productos',
+            request()->routeIs('company.categories.*')     => 'Categorías',
+            request()->routeIs('company.laboratories.*')   => 'Laboratorios',
+            default                                        => 'Dashboard',
+        };
+    @endphp
     <div class="flex-1">
-        <p class="text-sm font-semibold text-slate-800">{{ $pageTitle ?? 'Dashboard' }}</p>
+        <p class="text-sm font-semibold text-slate-800">{{ $pageTitle }}</p>
     </div>
 
     <div class="flex items-center gap-2">

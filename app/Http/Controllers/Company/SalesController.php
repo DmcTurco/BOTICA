@@ -12,6 +12,67 @@ use Illuminate\Support\Facades\Log;
 
 class SalesController extends Controller
 {
+    public function historial(Request $request)
+    {
+        $query = Sales::orderBy('created_at', 'desc');
+
+        if ($request->filled('buscar')) {
+            $search = $request->buscar;
+            $query->where(function ($q) use ($search) {
+                $q->where('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_document', 'like', "%{$search}%")
+                  ->orWhere('id', $search);
+            });
+        }
+
+        if ($request->filled('tipo_comprobante')) {
+            $query->where('voucher_type', $request->tipo_comprobante);
+        }
+
+        if ($request->filled('tipo_pago')) {
+            $query->where('payment_type', $request->tipo_pago);
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('created_at', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('created_at', '<=', $request->fecha_hasta);
+        }
+
+        $ventas = $query->paginate(15)->withQueryString();
+
+        return view('company.pages.sales.historial', compact('ventas'));
+    }
+
+    public function detalle(Sales $sale)
+    {
+        $sale->load('detalles');
+
+        return response()->json([
+            'id'                => $sale->id,
+            'created_at'        => $sale->created_at->format('d/m/Y H:i'),
+            'customer_name'     => $sale->customer_name,
+            'customer_document' => $sale->customer_document,
+            'voucher_type'      => $sale->voucher_type,
+            'voucher_number'    => $sale->voucher_number,
+            'payment_type'      => $sale->payment_type,
+            'operation_number'  => $sale->operation_number,
+            'subtotal'          => $sale->subtotal,
+            'igv'               => $sale->igv,
+            'total'             => $sale->total,
+            'status'            => $sale->status,
+            'detalles'          => $sale->detalles->map(fn($d) => [
+                'product_code' => $d->product_code,
+                'product_name' => $d->product_name,
+                'unit_price'   => $d->unit_price,
+                'quantity'     => $d->quantity,
+                'subtotal'     => $d->subtotal,
+            ]),
+        ]);
+    }
+
     public function index()
     {
         $productos = Product::with(['laboratorio', 'presentaciones.unidadMedida'])
