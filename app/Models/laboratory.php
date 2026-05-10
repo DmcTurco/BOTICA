@@ -4,17 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Laboratory extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'laboratories';
-    protected $primaryKey = 'id';
 
     protected $fillable = [
         'name',
-        'status'
+        'description',
+        'country',
+        'phone',
+        'email',
+        'status',
     ];
 
     public function productos()

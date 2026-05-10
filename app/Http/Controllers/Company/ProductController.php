@@ -14,214 +14,216 @@ use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categorias = Category::where('status', 1)->get();
-        $laboratorios = Laboratory::where('status', 1)->get();
-        $presentaciones = Presentation::where('status', 1)->get();
-        $unidades = Unit::where('status', 1)->get();
-        return view('company.pages.products.index', compact('categorias', 'laboratorios', 'presentaciones', 'unidades'));
+        $query = Product::with(['categoria', 'laboratorio', 'unidadMedida']);
+
+        if ($request->filled('buscar')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('code', 'like', '%' . $request->buscar . '%')
+                  ->orWhere('came', 'like', '%' . $request->buscar . '%')
+                  ->orWhere('active_ingredient', 'like', '%' . $request->buscar . '%');
+            });
+        }
+
+        if ($request->filled('categoria')) {
+            $query->where('category_id', $request->categoria);
+        }
+
+        if ($request->filled('laboratorio')) {
+            $query->where('laboratory_id', $request->laboratorio);
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('status', $request->estado);
+        }
+
+        $productos    = $query->orderBy('came')->paginate(9)->withQueryString();
+        $categorias   = Category::where('status', 1)->orderBy('name')->get();
+        $laboratorios = Laboratory::where('status', 1)->orderBy('name')->get();
+
+        return view('company.pages.products.index', compact('productos', 'categorias', 'laboratorios'));
     }
 
     public function create()
     {
-        $categorias = Category::where('status', 1)->get();
-        $laboratorios = Laboratory::where('status', 1)->get();
+        $categorias     = Category::where('status', 1)->get();
+        $laboratorios   = Laboratory::where('status', 1)->get();
         $presentaciones = Presentation::where('status', 1)->get();
-        $unidades = Unit::where('status', 1)->get();
+        $unidades       = Unit::where('status', 1)->get();
         return view('company.pages.products.form', compact('categorias', 'laboratorios', 'presentaciones', 'unidades'));
     }
 
     public function store(Request $request)
     {
-        // Validar los datos del formulario
-        $validatedData = $request->validate([
-            'codigo' => 'required|max:20|unique:productos,codigo',
-            'nombre' => 'required|max:150',
-            'descripcion' => 'nullable|max:255',
-            'categoria_id' => 'required|exists:categorias,id',
-            'laboratorio_id' => 'nullable|exists:laboratorios,id',
-            'principio_activo' => 'nullable|max:100',
-            'unidad_medida_id' => 'required|exists:unidades_medida,id',
-            'precio_compra' => 'required|numeric|min:0',
+        $request->validate([
+            'codigo'              => 'required|max:20|unique:products,code',
+            'nombre'              => 'required|max:150',
+            'descripcion'         => 'nullable|max:255',
+            'categoria_id'        => 'required|exists:categories,id',
+            'laboratorio_id'      => 'nullable|exists:laboratories,id',
+            'principio_activo'    => 'nullable|max:100',
+            'unidad_medida_id'    => 'required|exists:units,id',
+            'precio_compra'       => 'required|numeric|min:0',
             'precio_venta_unidad' => 'required|numeric|min:0',
-            'precio_compra_paquete' => 'nullable|numeric|min:0',
-            'precio_venta_paquete' => 'nullable|numeric|min:0',
-            'unidades_por_paquete' => 'nullable|numeric|min:0',
-            'stock_actual' => 'required|numeric|min:0',
-            'stock_minimo' => 'nullable|numeric|min:0',
-            'stock_maximo' => 'nullable|numeric|min:0',
-            'fecha_vencimiento' => 'nullable|date',
-            'producto_gravado' => 'nullable|boolean',
-            'requiere_receta' => 'nullable|boolean',
-            'presentaciones' => 'nullable|array',
-            'presentaciones.*.unidad_medida_id' => 'required|exists:unidades_medida,id',
+            'precio_compra_paquete'   => 'nullable|numeric|min:0',
+            'precio_venta_paquete'    => 'nullable|numeric|min:0',
+            'unidades_por_paquete'    => 'nullable|numeric|min:0',
+            'stock_actual'        => 'required|numeric|min:0',
+            'stock_minimo'        => 'nullable|numeric|min:0',
+            'stock_maximo'        => 'nullable|numeric|min:0',
+            'fecha_vencimiento'   => 'nullable|date',
+            'presentaciones.*.unidad_medida_id'     => 'required|exists:units,id',
             'presentaciones.*.cantidad_equivalente' => 'required|numeric|min:0.01',
-            'presentaciones.*.precio_venta' => 'required|numeric|min:0',
-            'presentaciones.*.es_presentacion_principal' => 'nullable|boolean',
+            'presentaciones.*.precio_venta'         => 'required|numeric|min:0',
         ]);
 
-        // Iniciar transacción para garantizar la integridad de los datos
         DB::beginTransaction();
 
         try {
-            // Crear el producto
             $producto = new Product();
-            $producto->codigo = $request->codigo;
-            $producto->nombre = $request->nombre;
-            $producto->descripcion = $request->descripcion;
-            $producto->categoria_id = $request->categoria_id;
-            $producto->laboratorio_id = $request->laboratorio_id;
-            $producto->principio_activo = $request->principio_activo;
-            $producto->unidad_medida_id = $request->unidad_medida_id;
-            $producto->precio_compra = $request->precio_compra;
-            $producto->precio_venta_unidad = $request->precio_venta_unidad;
-            $producto->precio_compra_paquete = $request->precio_compra_paquete;
-            $producto->precio_venta_paquete = $request->precio_venta_paquete;
-            $producto->unidades_por_paquete = $request->unidades_por_paquete;
-            $producto->stock_actual = $request->stock_actual;
-            $producto->stock_minimo = $request->stock_minimo;
-            $producto->stock_maximo = $request->stock_maximo;
-            $producto->fecha_vencimiento = $request->fecha_vencimiento;
-            $producto->producto_gravado = $request->has('producto_gravado') ? 1 : 0;
-            $producto->requiere_receta = $request->has('requiere_receta') ? 1 : 0;
-
+            $producto->code                   = $request->codigo;
+            $producto->came                   = $request->nombre;
+            $producto->description            = $request->descripcion;
+            $producto->category_id            = $request->categoria_id;
+            $producto->laboratory_id          = $request->laboratorio_id;
+            $producto->active_ingredient      = $request->principio_activo;
+            $producto->unit_id                = $request->unidad_medida_id;
+            $producto->purchase_price         = $request->precio_compra;
+            $producto->unit_sale_price        = $request->precio_venta_unidad;
+            $producto->package_purchase_price = $request->precio_compra_paquete;
+            $producto->package_sale_price     = $request->precio_venta_paquete;
+            $producto->units_per_package      = $request->unidades_por_paquete;
+            $producto->stock_actual           = $request->stock_actual;
+            $producto->stock_minimum          = $request->stock_minimo;
+            $producto->stock_maximum          = $request->stock_maximo;
+            $producto->expiration_date        = $request->fecha_vencimiento;
+            $producto->taxed_product          = $request->has('producto_gravado') ? 1 : 0;
+            $producto->requires_recipe        = $request->has('requiere_receta') ? 1 : 0;
             $producto->save();
 
-            // Guardar presentaciones si existen
             if ($request->has('presentaciones') && is_array($request->presentaciones)) {
-                foreach ($request->presentaciones as $presentacionData) {
-                    // Verificar que los datos necesarios estén presentes
-                    if (
-                        isset($presentacionData['unidad_medida_id']) &&
-                        isset($presentacionData['cantidad_equivalente']) &&
-                        isset($presentacionData['precio_venta'])
-                    ) {
-                        $presentacion = new Presentation();
-                        $presentacion->producto_id = $producto->id;
-                        $presentacion->unidad_medida_id = $presentacionData['unidad_medida_id'];
-                        $presentacion->cantidad_equivalente = $presentacionData['cantidad_equivalente'];
-                        $presentacion->precio_venta = $presentacionData['precio_venta'];
-                        $presentacion->es_presentacion_principal = isset($presentacionData['es_presentacion_principal']) ? 1 : 0;
-
-                        $presentacion->save();
+                foreach ($request->presentaciones as $data) {
+                    if (isset($data['unidad_medida_id'], $data['cantidad_equivalente'], $data['precio_venta'])) {
+                        Presentation::create([
+                            'product_code'      => $producto->code,
+                            'unit_id'           => $data['unidad_medida_id'],
+                            'equivalent_amount' => $data['cantidad_equivalente'],
+                            'sale_price'        => $data['precio_venta'],
+                            'main_presentation' => isset($data['es_presentacion_principal']) ? 1 : 0,
+                            'status'            => 1,
+                        ]);
                     }
                 }
             }
 
-            // Confirmar transacción
             DB::commit();
 
-            // Redirigir con mensaje de éxito
-            return redirect()->route('productos.index')
+            return redirect()->route('company.products.index')
                 ->with('success', 'Producto creado correctamente.');
         } catch (\Exception $e) {
-            // Revertir transacción en caso de error
             DB::rollBack();
             Log::error('Error al crear producto: ' . $e->getMessage());
-
-            return redirect()->back()
-                ->withInput()
+            return redirect()->back()->withInput()
                 ->with('error', 'Error al crear el producto. Por favor, inténtelo de nuevo.');
         }
     }
 
-
-    public function update(Request $request, $codigo)
+    public function edit(Product $product)
     {
-        // Buscar el producto por código
-        $producto = Product::where('codigo', $codigo)->firstOrFail();
+        $categorias     = Category::where('status', 1)->get();
+        $laboratorios   = Laboratory::where('status', 1)->get();
+        $presentaciones = Presentation::where('status', 1)->get();
+        $unidades       = Unit::where('status', 1)->get();
+        $producto       = $product->load('presentaciones.unidadMedida');
+        return view('company.pages.products.form', compact('producto', 'categorias', 'laboratorios', 'presentaciones', 'unidades'));
+    }
 
-        // Validar los datos del formulario
-        // Nota: excluimos el código actual de la validación unique
-        $validatedData = $request->validate([
-            'nombre' => 'required|max:150',
-            'descripcion' => 'nullable|max:255',
-            'categoria_id' => 'required|exists:categorias,id',
-            'laboratorio_id' => 'nullable|exists:laboratorios,id',
-            'principio_activo' => 'nullable|max:100',
-            'unidad_medida_id' => 'required|exists:unidades_medida,id',
-            'precio_compra' => 'required|numeric|min:0',
+    public function update(Request $request, Product $product)
+    {
+        $request->validate([
+            'nombre'              => 'required|max:150',
+            'descripcion'         => 'nullable|max:255',
+            'categoria_id'        => 'required|exists:categories,id',
+            'laboratorio_id'      => 'nullable|exists:laboratories,id',
+            'principio_activo'    => 'nullable|max:100',
+            'unidad_medida_id'    => 'required|exists:units,id',
+            'precio_compra'       => 'required|numeric|min:0',
             'precio_venta_unidad' => 'required|numeric|min:0',
-            'precio_compra_paquete' => 'nullable|numeric|min:0',
-            'precio_venta_paquete' => 'nullable|numeric|min:0',
-            'unidades_por_paquete' => 'nullable|numeric|min:0',
-            'stock_actual' => 'required|numeric|min:0',
-            'stock_minimo' => 'nullable|numeric|min:0',
-            'stock_maximo' => 'nullable|numeric|min:0',
-            'fecha_vencimiento' => 'nullable|date',
-            'producto_gravado' => 'nullable|boolean',
-            'requiere_receta' => 'nullable|boolean',
-            'presentaciones' => 'nullable|array',
-            'presentaciones.*.unidad_medida_id' => 'required|exists:unidades_medida,id',
+            'precio_compra_paquete'   => 'nullable|numeric|min:0',
+            'precio_venta_paquete'    => 'nullable|numeric|min:0',
+            'unidades_por_paquete'    => 'nullable|numeric|min:0',
+            'stock_actual'        => 'required|numeric|min:0',
+            'stock_minimo'        => 'nullable|numeric|min:0',
+            'stock_maximo'        => 'nullable|numeric|min:0',
+            'fecha_vencimiento'   => 'nullable|date',
+            'presentaciones.*.unidad_medida_id'     => 'required|exists:units,id',
             'presentaciones.*.cantidad_equivalente' => 'required|numeric|min:0.01',
-            'presentaciones.*.precio_venta' => 'required|numeric|min:0',
-            'presentaciones.*.es_presentacion_principal' => 'nullable|boolean',
+            'presentaciones.*.precio_venta'         => 'required|numeric|min:0',
         ]);
 
-        // Iniciar transacción para garantizar la integridad de los datos
         DB::beginTransaction();
 
         try {
-            // Actualizar los datos del producto
-            $producto->nombre = $request->nombre;
-            $producto->descripcion = $request->descripcion;
-            $producto->categoria_id = $request->categoria_id;
-            $producto->laboratorio_id = $request->laboratorio_id;
-            $producto->principio_activo = $request->principio_activo;
-            $producto->unidad_medida_id = $request->unidad_medida_id;
-            $producto->precio_compra = $request->precio_compra;
-            $producto->precio_venta_unidad = $request->precio_venta_unidad;
-            $producto->precio_compra_paquete = $request->precio_compra_paquete;
-            $producto->precio_venta_paquete = $request->precio_venta_paquete;
-            $producto->unidades_por_paquete = $request->unidades_por_paquete;
-            $producto->stock_actual = $request->stock_actual;
-            $producto->stock_minimo = $request->stock_minimo;
-            $producto->stock_maximo = $request->stock_maximo;
-            $producto->fecha_vencimiento = $request->fecha_vencimiento;
-            $producto->producto_gravado = $request->has('producto_gravado') ? 1 : 0;
-            $producto->requiere_receta = $request->has('requiere_receta') ? 1 : 0;
+            $product->came                   = $request->nombre;
+            $product->description            = $request->descripcion;
+            $product->category_id            = $request->categoria_id;
+            $product->laboratory_id          = $request->laboratorio_id;
+            $product->active_ingredient      = $request->principio_activo;
+            $product->unit_id                = $request->unidad_medida_id;
+            $product->purchase_price         = $request->precio_compra;
+            $product->unit_sale_price        = $request->precio_venta_unidad;
+            $product->package_purchase_price = $request->precio_compra_paquete;
+            $product->package_sale_price     = $request->precio_venta_paquete;
+            $product->units_per_package      = $request->unidades_por_paquete;
+            $product->stock_actual           = $request->stock_actual;
+            $product->stock_minimum          = $request->stock_minimo;
+            $product->stock_maximum          = $request->stock_maximo;
+            $product->expiration_date        = $request->fecha_vencimiento;
+            $product->taxed_product          = $request->has('producto_gravado') ? 1 : 0;
+            $product->requires_recipe        = $request->has('requiere_receta') ? 1 : 0;
+            $product->save();
 
-            $producto->save();
+            $product->presentaciones()->delete();
 
-            // Eliminar presentaciones existentes
-            $producto->presentaciones()->delete();
-
-            // Guardar presentaciones nuevas si existen
             if ($request->has('presentaciones') && is_array($request->presentaciones)) {
-                foreach ($request->presentaciones as $presentacionData) {
-                    // Verificar que los datos necesarios estén presentes
-                    if (
-                        isset($presentacionData['unidad_medida_id']) &&
-                        isset($presentacionData['cantidad_equivalente']) &&
-                        isset($presentacionData['precio_venta'])
-                    ) {
-                        $presentacion = new Product();
-                        $presentacion->producto_id = $producto->id;
-                        $presentacion->unidad_medida_id = $presentacionData['unidad_medida_id'];
-                        $presentacion->cantidad_equivalente = $presentacionData['cantidad_equivalente'];
-                        $presentacion->precio_venta = $presentacionData['precio_venta'];
-                        $presentacion->es_presentacion_principal = isset($presentacionData['es_presentacion_principal']) ? 1 : 0;
-
-                        $presentacion->save();
+                foreach ($request->presentaciones as $data) {
+                    if (isset($data['unidad_medida_id'], $data['cantidad_equivalente'], $data['precio_venta'])) {
+                        Presentation::create([
+                            'product_code'      => $product->code,
+                            'unit_id'           => $data['unidad_medida_id'],
+                            'equivalent_amount' => $data['cantidad_equivalente'],
+                            'sale_price'        => $data['precio_venta'],
+                            'main_presentation' => isset($data['es_presentacion_principal']) ? 1 : 0,
+                            'status'            => 1,
+                        ]);
                     }
                 }
             }
 
-            // Confirmar transacción
             DB::commit();
 
-            // Redirigir con mensaje de éxito
-            return redirect()->route('productos.index')
+            return redirect()->route('company.products.index')
                 ->with('success', 'Producto actualizado correctamente.');
         } catch (\Exception $e) {
-            // Revertir transacción en caso de error
             DB::rollBack();
             Log::error('Error al actualizar producto: ' . $e->getMessage());
-
-            return redirect()->back()
-                ->withInput()
+            return redirect()->back()->withInput()
                 ->with('error', 'Error al actualizar el producto. Por favor, inténtelo de nuevo.');
+        }
+    }
+
+    public function destroy(Product $product)
+    {
+        try {
+            $product->presentaciones()->delete();
+            $product->delete();
+            return redirect()->route('company.products.index')
+                ->with('success', 'Producto eliminado correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al eliminar producto: ' . $e->getMessage());
+            return redirect()->route('company.products.index')
+                ->with('error', 'Error al eliminar el producto: ' . $e->getMessage());
         }
     }
 }

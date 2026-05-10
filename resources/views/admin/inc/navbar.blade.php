@@ -1,54 +1,27 @@
-<nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
-    <div class="container-fluid py-1 px-3">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-                <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Pages</a></li>
-                <li class="breadcrumb-item text-sm text-white active" aria-current="page">Dashboard</li>
-            </ol>
-            <h6 class="font-weight-bolder text-white mb-0">{{ str_replace('-', ' ', Request::path()) }}</h6>
-        </nav>
-        <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
-            <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                <div class="input-group">
-                    <span class="input-group-text text-body"><i class="fas fa-search" aria-hidden="true"></i></span>
-                    <input type="text" class="form-control" placeholder="Type here...">
-                </div>
+<header class="sticky top-0 bg-white border-b border-slate-200 z-10 h-16 flex items-center px-4 md:px-6 gap-4 shrink-0">
+
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-slate-700 p-1 rounded-md transition-colors">
+        <i class="fas fa-bars text-lg"></i>
+    </button>
+
+    <div class="flex-1">
+        <p class="text-sm font-semibold text-slate-800">{{ $pageTitle ?? 'Dashboard' }}</p>
+    </div>
+
+    <div class="flex items-center gap-2">
+        <button class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
+            <i class="fas fa-bell text-sm"></i>
+        </button>
+
+        <div class="flex items-center gap-2 pl-3 border-l border-slate-200">
+            <div class="w-8 h-8 bg-violet-700 rounded-full flex items-center justify-center shrink-0">
+                <span class="text-white text-xs font-semibold">
+                    {{ strtoupper(substr(auth()->guard('admin')->user()?->name ?? 'A', 0, 1)) }}
+                </span>
             </div>
-            <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
-                @csrf
-            </form>
-            <ul class="navbar-nav  justify-content-end">
-                <li class="nav-item d-flex align-items-center">
-                    <a href="javascript:;" class="nnav-link text-white font-weight-bold px-0">
-                        <i class="fa fa-user me-sm-1"></i>
-                        <span class="d-sm-inline d-none"
-                            onclick="event.preventDefault();document.getElementById('logout-form').submit();">Sign Out</span>
-                    </a>
-                </li>
-                <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
-                    <a href="javascript:;" class="nav-link text-white p-0" id="iconNavbarSidenav">
-                        <div class="sidenav-toggler-inner">
-                            <i class="sidenav-toggler-line bg-white"></i>
-                            <i class="sidenav-toggler-line bg-white"></i>
-                            <i class="sidenav-toggler-line bg-white"></i>
-                        </div>
-                    </a>
-                </li>
-                <li class="nav-item px-3 d-flex align-items-center">
-                    <a href="javascript:;" class="nav-link text-white p-0">
-                        <i class="fa fa-cog fixed-plugin-button-nav cursor-pointer"></i>
-                    </a>
-                </li>
-                <li class="nav-item dropdown pe-2 d-flex align-items-center">
-                    <a href="javascript:;" class="nav-link text-white p-0" id="dropdownMenuButton"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fa fa-bell cursor-pointer"></i>
-                    </a>
-                    <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4"
-                        aria-labelledby="dropdownMenuButton">
-                    </ul>
-                </li>
-            </ul>
+            <p class="hidden sm:block text-xs font-medium text-slate-700 max-w-[100px] truncate">
+                {{ auth()->guard('admin')->user()?->name ?? 'Admin' }}
+            </p>
         </div>
     </div>
-</nav>
+</header>

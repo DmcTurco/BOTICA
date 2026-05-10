@@ -1,177 +1,159 @@
 @extends('company/layouts/base')
 
-@section('title', 'Admin Home')
+@section('title', 'Dashboard')
 
 @section('content-area')
-    <div class="container-fluid py-4">
-        <div class="row">
-            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div class="card">
-                    <div class="card-body p-3">
-                        <div class="row">
-                            <div class="col-8">
-                                <div class="numbers">
-                                    <p class="text-sm mb-0 text-uppercase font-weight-bold">Today's Money</p>
-                                    <h5 class="font-weight-bolder">
-                                        $53,000
-                                    </h5>
-                                    <p class="mb-0">
-                                        <span class="text-success text-sm font-weight-bolder">+55%</span>
-                                        since yesterday
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-4 text-end">
-                                <div class="icon icon-shape bg-gradient-primary shadow-primary text-center rounded-circle">
-                                    <i class="ni ni-money-coins text-lg opacity-10" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div class="space-y-6">
+
+    {{-- Banner de bienvenida --}}
+    <div class="rounded-2xl overflow-hidden relative" style="background:linear-gradient(135deg,#15803d 0%,#059669 60%,#0d9488 100%)">
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-48 h-48 rounded-full" style="background:rgba(255,255,255,.07)"></div>
+            <div class="absolute -bottom-16 -left-8 w-56 h-56 rounded-full" style="background:rgba(255,255,255,.05)"></div>
+            <div class="absolute top-4 right-32 w-24 h-24 rounded-full" style="background:rgba(255,255,255,.06)"></div>
+        </div>
+        <div class="relative px-6 py-6 flex items-center justify-between gap-4">
+            <div>
+                <p class="text-emerald-100 text-sm font-medium mb-1">
+                    <i class="fas fa-leaf mr-1.5"></i>Bienvenido de nuevo
+                </p>
+                <h1 class="text-2xl font-bold text-white">
+                    {{ auth()->guard('company')->user()?->name ?? 'Administrador' }}
+                </h1>
+                <p class="text-emerald-200 text-sm mt-1">Aquí tienes el resumen de tu farmacia hoy</p>
             </div>
-            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div class="card">
-                    <div class="card-body p-3">
-                        <div class="row">
-                            <div class="col-8">
-                                <div class="numbers">
-                                    <p class="text-sm mb-0 text-uppercase font-weight-bold">Today's Users</p>
-                                    <h5 class="font-weight-bolder">
-                                        2,300
-                                    </h5>
-                                    <p class="mb-0">
-                                        <span class="text-success text-sm font-weight-bolder">+3%</span>
-                                        since last week
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-4 text-end">
-                                <div class="icon icon-shape bg-gradient-danger shadow-danger text-center rounded-circle">
-                                    <i class="ni ni-world text-lg opacity-10" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div class="card">
-                    <div class="card-body p-3">
-                        <div class="row">
-                            <div class="col-8">
-                                <div class="numbers">
-                                    <p class="text-sm mb-0 text-uppercase font-weight-bold">New Clients</p>
-                                    <h5 class="font-weight-bolder">
-                                        +3,462
-                                    </h5>
-                                    <p class="mb-0">
-                                        <span class="text-danger text-sm font-weight-bolder">-2%</span>
-                                        since last quarter
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-4 text-end">
-                                <div class="icon icon-shape bg-gradient-success shadow-success text-center rounded-circle">
-                                    <i class="ni ni-paper-diploma text-lg opacity-10" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-sm-6">
-                <div class="card">
-                    <div class="card-body p-3">
-                        <div class="row">
-                            <div class="col-8">
-                                <div class="numbers">
-                                    <p class="text-sm mb-0 text-uppercase font-weight-bold">Sales</p>
-                                    <h5 class="font-weight-bolder">
-                                        $103,430
-                                    </h5>
-                                    <p class="mb-0">
-                                        <span class="text-success text-sm font-weight-bolder">+5%</span> than last month
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-4 text-end">
-                                <div class="icon icon-shape bg-gradient-warning shadow-warning text-center rounded-circle">
-                                    <i class="ni ni-cart text-lg opacity-10" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="hidden sm:flex items-center gap-3">
+                <a href="{{ route('company.sales.index') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white text-sm font-semibold rounded-xl transition-colors backdrop-blur-sm">
+                    <i class="fas fa-cash-register text-xs"></i> Nueva Venta
+                </a>
             </div>
         </div>
-        <div class="row mt-4">
-            <div class="col-lg-7 mb-lg-0 mb-4">
-                <div class="card z-index-2 h-100">
-                    <div class="card-header pb-0 pt-3 bg-transparent">
-                        <h6 class="text-capitalize">Sales overview</h6>
-                        <p class="text-sm mb-0">
-                            <i class="fa fa-arrow-up text-success"></i>
-                            <span class="font-weight-bold">4% more</span> in 2021
-                        </p>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="chart">
-                            <canvas id="chart-line" class="chart-canvas" height="300"></canvas>
-                        </div>
-                    </div>
+    </div>
+
+    {{-- Stats --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ventas Hoy</p>
+                <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-emerald-600 text-sm"></i>
                 </div>
             </div>
-            <div class="col-lg-5">
-                <div class="card card-carousel overflow-hidden h-100 p-0">
-                    <div id="carouselExampleCaptions" class="carousel slide h-100" data-bs-ride="carousel">
-                        <div class="carousel-inner border-radius-lg h-100">
-                            <div class="carousel-item h-100 active"
-                                style="background-image: url('../assets/img/carousel-1.jpg'); background-size: cover;">
-                                <div class="carousel-caption d-none d-md-block bottom-0 text-start start-0 ms-5">
-                                    <div class="icon icon-shape icon-sm bg-white text-center border-radius-md mb-3">
-                                        <i class="ni ni-camera-compact text-dark opacity-10"></i>
-                                    </div>
-                                    <h5 class="text-white mb-1">Get started with Argon</h5>
-                                    <p>There’s nothing I really wanted to do in life that I wasn’t able to get good at.</p>
-                                </div>
-                            </div>
-                            <div class="carousel-item h-100"
-                                style="background-image: url('../assets/img/carousel-2.jpg'); background-size: cover;">
-                                <div class="carousel-caption d-none d-md-block bottom-0 text-start start-0 ms-5">
-                                    <div class="icon icon-shape icon-sm bg-white text-center border-radius-md mb-3">
-                                        <i class="ni ni-bulb-61 text-dark opacity-10"></i>
-                                    </div>
-                                    <h5 class="text-white mb-1">Faster way to create web pages</h5>
-                                    <p>That’s my skill. I’m not really specifically talented at anything except for the
-                                        ability to learn.</p>
-                                </div>
-                            </div>
-                            <div class="carousel-item h-100"
-                                style="background-image: url('../assets/img/carousel-3.jpg'); background-size: cover;">
-                                <div class="carousel-caption d-none d-md-block bottom-0 text-start start-0 ms-5">
-                                    <div class="icon icon-shape icon-sm bg-white text-center border-radius-md mb-3">
-                                        <i class="ni ni-trophy text-dark opacity-10"></i>
-                                    </div>
-                                    <h5 class="text-white mb-1">Share with us your design tips!</h5>
-                                    <p>Don’t be afraid to be wrong because you can’t learn anything from a compliment.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="carousel-control-prev w-5 me-3" type="button"
-                            data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next w-5 me-3" type="button"
-                            data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
-                    </div>
+            <p class="text-2xl font-bold text-slate-800">S/. 0.00</p>
+            <p class="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
+                <span class="text-emerald-500 font-medium flex items-center gap-0.5">
+                    <i class="fas fa-arrow-up text-xs"></i>0%
+                </span> vs ayer
+            </p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Productos</p>
+                <div class="w-9 h-9 bg-sky-50 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-pills text-sky-500 text-sm"></i>
                 </div>
+            </div>
+            <p class="text-2xl font-bold text-slate-800">0</p>
+            <p class="text-xs text-slate-500 mt-1.5">En inventario</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock Bajo</p>
+                <div class="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-triangle-exclamation text-amber-500 text-sm"></i>
+                </div>
+            </div>
+            <p class="text-2xl font-bold text-slate-800">0</p>
+            <p class="text-xs text-slate-500 mt-1.5">Requieren restock</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ventas Mes</p>
+                <div class="w-9 h-9 bg-violet-50 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-chart-line text-violet-500 text-sm"></i>
+                </div>
+            </div>
+            <p class="text-2xl font-bold text-slate-800">S/. 0.00</p>
+            <p class="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
+                <span class="text-emerald-500 font-medium flex items-center gap-0.5">
+                    <i class="fas fa-arrow-up text-xs"></i>0%
+                </span> vs mes anterior
+            </p>
+        </div>
+    </div>
+
+    {{-- Acceso rápido + Estado --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-sm font-semibold text-slate-800 mb-4">Acceso Rápido</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <a href="{{ route('company.sales.index') }}"
+                   class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors group">
+                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                        <i class="fas fa-cash-register text-emerald-600"></i>
+                    </div>
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-emerald-700 text-center">Nueva Venta</span>
+                </a>
+                <a href="{{ route('company.products.create') }}"
+                   class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50 transition-colors group">
+                    <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center group-hover:bg-sky-200 transition-colors">
+                        <i class="fas fa-box-open text-sky-600"></i>
+                    </div>
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-sky-700 text-center">Nuevo Producto</span>
+                </a>
+                <a href="{{ route('company.products.index') }}"
+                   class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-amber-300 hover:bg-amber-50 transition-colors group">
+                    <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                        <i class="fas fa-pills text-amber-600"></i>
+                    </div>
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-amber-700 text-center">Ver Productos</span>
+                </a>
+                <a href="{{ route('company.categories.index') }}"
+                   class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50 transition-colors group">
+                    <div class="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center group-hover:bg-rose-200 transition-colors">
+                        <i class="fas fa-tags text-rose-600"></i>
+                    </div>
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-rose-700 text-center">Categorías</span>
+                </a>
+                <a href="{{ route('company.laboratories.index') }}"
+                   class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-cyan-300 hover:bg-cyan-50 transition-colors group">
+                    <div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center group-hover:bg-cyan-200 transition-colors">
+                        <i class="fas fa-flask text-cyan-600"></i>
+                    </div>
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-cyan-700 text-center">Laboratorios</span>
+                </a>
             </div>
         </div>
 
+        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-sm font-semibold text-slate-800 mb-4">Estado del Sistema</h2>
+            <div class="space-y-1">
+                <div class="flex items-center justify-between py-2.5 border-b border-slate-100">
+                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                        <i class="fas fa-circle text-emerald-400 text-[9px]"></i> Base de datos
+                    </div>
+                    <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Online</span>
+                </div>
+                <div class="flex items-center justify-between py-2.5 border-b border-slate-100">
+                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                        <i class="fas fa-circle text-emerald-400 text-[9px]"></i> Laravel
+                    </div>
+                    <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">v12.x</span>
+                </div>
+                <div class="flex items-center justify-between py-2.5">
+                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                        <i class="fas fa-circle text-emerald-400 text-[9px]"></i> Tailwind CSS
+                    </div>
+                    <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">v4.0</span>
+                </div>
+            </div>
+        </div>
     </div>
+
+</div>
 @endsection

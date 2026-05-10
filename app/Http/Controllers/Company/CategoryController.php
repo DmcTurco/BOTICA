@@ -28,7 +28,7 @@ class CategoryController extends Controller
 
         // Ordenar y paginar resultados
         $categorias = $query->orderBy('name', 'asc')
-            ->paginate(10)
+            ->paginate(9)
             ->withQueryString();
 
         return view('company.pages.category.index', compact('categorias'));

@@ -1,48 +1,44 @@
-<aside class="sidenav  bg-gray-600 navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-4 "
-    id="sidenav-main">
-    <div class="sidenav-header">
-        <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
-            aria-hidden="true" id="iconSidenav"></i>
-        <a class="navbar-brand m-0" href="">
-            <img src="{{ asset('assets/svg/logo.svg') }}" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-1 text-white font-weight-bold">Media Player</span>
-        </a>
+<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-30 flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300">
+
+    <div class="flex items-center gap-3 h-16 px-5 border-b border-slate-200 shrink-0">
+        <div class="w-8 h-8 bg-sky-600 rounded-lg flex items-center justify-center shrink-0">
+            <i class="fas fa-plus text-white text-sm"></i>
+        </div>
+        <div>
+            <p class="font-bold text-slate-800 text-sm leading-none">BOTICA</p>
+            <p class="text-xs text-slate-400 mt-0.5">Panel Empleado</p>
+        </div>
     </div>
-    <hr class="horizontal dark mt-0">
-    <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
-        <ul class="navbar-nav">
-            {{-- Dashboard --}}
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.home') ? 'active' : '' }}" href="{{ route('employee.home') }}">
-                    <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="ni ni-tv-2 text-primary text-lg opacity-10"></i>
-                    </div>
-                    <span class="nav-link-text text-white font-weight-bold ms-1">Dashboard</span>
-                </a>
-            </li>
 
-            {{-- Reservaciones --}}
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.video.*') ? 'active' : '' }}" href="">
-                    <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="ni ni-calendar-grid-58 text-warning text-lg opacity-10"></i>
-                    </div>
-                    <span class="nav-link-text text-white font-weight-bold ms-1">Videos</span>
-                </a>
-            </li>
+    <nav class="flex-1 px-3 py-4 overflow-y-auto">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">Mi Panel</p>
 
-            {{-- Cuartos --}}
-            {{-- <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}" href="">
-                    <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="ni ni-building text-success text-lg opacity-10"></i>
-                    </div>
-                    <span class="nav-link-text text-white font-weight-bold ms-1">Cuartos</span>
-                </a>
-            </li> --}}
+        <a href="{{ route('employee.home') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-0.5
+                  {{ Route::currentRouteName() == 'employee.home' ? 'bg-sky-50 text-sky-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800' }}">
+            <i class="fas fa-house w-4 text-center text-sm"></i>
+            Dashboard
+        </a>
 
+        <div class="pt-4 pb-1">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">Acciones</p>
+        </div>
 
+        <a href="#"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-0.5 text-slate-600 hover:bg-slate-50 hover:text-slate-800">
+            <i class="fas fa-cash-register w-4 text-center text-sm"></i>
+            Nueva Venta
+        </a>
+    </nav>
 
-        </ul>
+    <div class="px-3 py-3 border-t border-slate-200">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit"
+                    class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors">
+                <i class="fas fa-right-from-bracket w-4 text-center text-sm"></i>
+                Cerrar sesión
+            </button>
+        </form>
     </div>
 </aside>

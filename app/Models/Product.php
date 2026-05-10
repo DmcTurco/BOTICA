@@ -5,14 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Psy\VarDumper\Presenter;
 
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $table = 'products';
-    protected $primaryKey = 'codigo';
+    protected $primaryKey = 'code';
     protected $keyType = 'string';
     public $incrementing = false;
 
@@ -36,8 +35,14 @@ class Product extends Model
         'requires_recipe',
         'expiration_date',
         'location',
-        'status'
+        'status',
     ];
+
+    // Accessor para usar $producto->nombre en vistas y controlador
+    public function getNombreAttribute(): string
+    {
+        return $this->came ?? '';
+    }
 
     protected $casts = [
         'purchase_price' => 'decimal:2',

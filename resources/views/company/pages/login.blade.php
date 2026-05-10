@@ -1,137 +1,240 @@
 <!DOCTYPE html>
 <html lang="es">
-@include('company/inc/head')
-
-<body class="">
-    <div class="container position-sticky z-index-sticky top-0">
-        <div class="row">
-            <div class="col-12">
-                <!-- Navbar -->
-                <nav
-                    class="navbar navbar-expand-lg blur border-radius-lg top-0 z-index-3 shadow position-absolute mt-4 py-2 start-0 end-0 mx-4">
-                    <div class="container-fluid">
-                        <a class="navbar-brand font-weight-bolder ms-lg-0 ms-3 " href="#">
-                            MediTrack - Sistema de Gestión Farmacéutica
-                        </a>
-                        <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#navigation" aria-controls="navigation" aria-expanded="false"
-                            aria-label="Toggle navigation">
-                            <span class="navbar-toggler-icon mt-2">
-                                <span class="navbar-toggler-bar bar1"></span>
-                                <span class="navbar-toggler-bar bar2"></span>
-                                <span class="navbar-toggler-bar bar3"></span>
-                            </span>
-                        </button>
-                    </div>
-                </nav>
-                <!-- End Navbar -->
-            </div>
-        </div>
-    </div>
-    <main class="main-content mt-0">
-        <section>
-            <div class="page-header min-vh-100">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-xl-4 col-lg-5 col-md-7 d-flex flex-column mx-lg-0 mx-auto">
-                            <div class="card card-plain">
-                                <div class="card-header pb-0 text-start">
-                                    <h4 class="font-weight-bolder">Iniciar Sesión</h4>
-                                    <p class="mb-0">Ingrese su correo y contraseña para acceder</p>
-                                </div>
-                                <div class="card-body">
-                                    <form method="POST" action="{{ route('login') }}" >
-                                        @csrf
-                                        <div class="mb-3">
-                                            <input type="email" class="form-control form-control-lg" name="email"
-                                                placeholder="Correo electrónico" aria-label="Email">
-                                        </div>
-                                        <div class="mb-3">
-                                            <input type="password" class="form-control form-control-lg" name="password"
-                                                placeholder="Contraseña" aria-label="Password">
-                                        </div>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="rememberMe">
-                                            <label class="form-check-label" for="rememberMe">Recordar sesión</label>
-                                        </div>
-                                        <div class="text-center">
-                                            <button type="submit"
-                                                class="btn btn-lg btn-primary btn-lg w-100 mt-4 mb-0">Ingresar</button>
-                                        </div>
-                                    </form>
-                                </div>
-                                <div class="card-footer text-center pt-0 px-lg-2 px-1">
-                                    <p class="mb-4 text-sm mx-auto">
-                                        ¿No tiene una cuenta?
-                                        <a href="javascript:;" class="text-primary text-gradient font-weight-bold">Registrarse</a>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            class="col-6 d-lg-flex d-none h-100 my-auto pe-0 position-absolute top-0 end-0 text-center justify-content-center flex-column">
-                            <div class="position-relative bg-gradient-primary h-100 m-3 px-7 border-radius-lg d-flex flex-column justify-content-center overflow-hidden"
-                                style="background-image: url('../assets/img/farmacia.jpg'); background-size: cover;">
-                                <span class="mask bg-gradient-primary opacity-6"></span>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="100" height="100" style="margin-bottom: 20px;">
-                                    <g fill="#ffffff">
-                                        <path d="M120 20c-8.3 0-15 6.7-15 15v45H60c-8.3 0-15 6.7-15 15v50c0 8.3 6.7 15 15 15h45v45c0 8.3 6.7 15 15 15h50c8.3 0 15-6.7 15-15v-45h45c8.3 0 15-6.7 15-15v-50c0-8.3-6.7-15-15-15h-45V35c0-8.3-6.7-15-15-15h-50z"/>
-                                    </g>
-                                </svg>
-                                <h4 class="mt-5 text-white font-weight-bolder position-relative">Sistema de Gestión Farmacéutica</h4>
-                                <p class="text-white position-relative">Administre su inventario y ventas de manera eficiente</p>
-                                <div class="row mt-5 w-100">
-                                    <div class="col-4 text-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="#ffffff">
-                                            <path d="M19 6h-4V2H9v4H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-8 11c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/>
-                                        </svg>
-                                        <h6 class="text-white mt-2">Inventario</h6>
-                                    </div>
-                                    <div class="col-4 text-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="#ffffff">
-                                            <path d="M19 3h-4.2c-.4-1.2-1.5-2-2.8-2-1.3 0-2.4.8-2.8 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.6 0 1 .4 1 1s-.4 1-1 1-1-.4-1-1 .4-1 1-1zm-2 14l-4-4 1.4-1.4L9 13.2l6.6-6.6L17 8l-7 7z"/>
-                                        </svg>
-                                        <h6 class="text-white mt-2">Recetas</h6>
-                                    </div>
-                                    <div class="col-4 text-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="#ffffff">
-                                            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zm-6-7h-4v-1h4v1zm-8 3h12v1H6v-1zm0-2h12v1H6v-1z"/>
-                                        </svg>
-                                        <h6 class="text-white mt-2">Ventas</h6>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BOTICA — Iniciar Sesión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        :root {
-            --bs-primary: #2D8B61;
-            --bs-primary-rgb: 45, 139, 97;
+        @keyframes blobMorph {
+            0%,100% { border-radius:60% 40% 30% 70% / 60% 30% 70% 40%; }
+            25%      { border-radius:40% 60% 55% 45% / 45% 55% 45% 55%; }
+            50%      { border-radius:30% 60% 70% 40% / 50% 60% 30% 60%; }
+            75%      { border-radius:55% 45% 40% 60% / 35% 65% 35% 65%; }
         }
-        
-        .btn-primary {
-            background-color: #2D8B61;
-            border-color: #2D8B61;
+        @keyframes floatUp {
+            0%,100% { transform:translateY(0) rotate(0deg);  }
+            50%      { transform:translateY(-28px) rotate(8deg); }
         }
-        
-        .btn-primary:hover {
-            background-color: #1A5D40;
-            border-color: #1A5D40;
+        @keyframes floatDown {
+            0%,100% { transform:translateY(0) rotate(0deg);  }
+            50%      { transform:translateY(20px) rotate(-6deg); }
         }
-        
-        .text-primary {
-            color: #2D8B61 !important;
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(22px); }
+            to   { opacity:1; transform:translateY(0);    }
         }
-        
-        .bg-gradient-primary {
-            background-image: linear-gradient(195deg, #2D8B61 0%, #1A5D40 100%);
+        @keyframes shimmer {
+            0%   { transform:translateX(-120%) skewX(-20deg); }
+            100% { transform:translateX(250%)  skewX(-20deg); }
+        }
+        @keyframes pulseRing {
+            0%   { transform:scale(1);   opacity:.5; }
+            100% { transform:scale(2);   opacity:0;  }
+        }
+        @keyframes gradBG {
+            0%,100% { background-position:0% 50%;   }
+            50%      { background-position:100% 50%; }
+        }
+
+        body {
+            background: linear-gradient(135deg,#052e16 0%,#14532d 45%,#0f172a 100%);
+            background-size: 300% 300%;
+            animation: gradBG 12s ease infinite;
+        }
+
+        /* Blobs */
+        .blob { position:absolute; filter:blur(72px); pointer-events:none; }
+        .blob-1 { width:480px;height:480px; background:rgba(34,197,94,.2);  top:-120px;   left:-120px;  animation:blobMorph 12s ease-in-out infinite; }
+        .blob-2 { width:540px;height:540px; background:rgba(16,185,129,.15); bottom:-160px;right:-160px; animation:blobMorph 16s ease-in-out 4s infinite reverse; }
+        .blob-3 { width:300px;height:300px; background:rgba(74,222,128,.15); top:50%;      left:35%;     animation:blobMorph 10s ease-in-out 8s infinite; }
+
+        /* Iconos flotantes */
+        .fi { position:absolute; display:flex; align-items:center; justify-content:center;
+              background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; pointer-events:none; }
+        .fi-1  { width:42px;height:42px; top:10%;   left:8%;  animation:floatUp   6s ease-in-out infinite; }
+        .fi-2  { width:48px;height:48px; top:20%;   right:9%; animation:floatDown 8s ease-in-out 1s infinite; }
+        .fi-3  { width:36px;height:36px; top:55%;   left:6%;  animation:floatUp   7s ease-in-out 2.5s infinite; }
+        .fi-4  { width:44px;height:44px; bottom:22%;right:8%; animation:floatDown 9s ease-in-out 4s infinite; }
+        .fi-5  { width:34px;height:34px; bottom:32%;left:14%; animation:floatUp   8s ease-in-out 3.5s infinite; }
+        .fi-6  { width:38px;height:38px; top:72%;   right:15%;animation:floatDown 7s ease-in-out 2s infinite; }
+
+        /* Card glass */
+        .glass {
+            background: rgba(255,255,255,.97);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+
+        /* Logo pulse */
+        .logo-pulse { position:relative; }
+        .logo-pulse::before {
+            content:''; position:absolute; inset:-5px; border-radius:20px;
+            background:rgba(34,197,94,.3);
+            animation:pulseRing 2.4s ease-out infinite;
+        }
+
+        /* Fade-up staggered */
+        .fu1 { animation:fadeUp .7s ease-out .05s both; }
+        .fu2 { animation:fadeUp .7s ease-out .15s both; }
+        .fu3 { animation:fadeUp .7s ease-out .25s both; }
+        .fu4 { animation:fadeUp .7s ease-out .35s both; }
+        .fu5 { animation:fadeUp .7s ease-out .45s both; }
+        .fu6 { animation:fadeUp .7s ease-out .55s both; }
+
+        /* Inputs */
+        .input-wrap { position:relative; display:flex; align-items:center; }
+        .input-icon {
+            position:absolute; left:0; top:0; bottom:0;
+            width:2.75rem; display:flex; align-items:center; justify-content:center;
+            pointer-events:none; color:#94a3b8; font-size:.875rem;
+        }
+        .inp {
+            width:100%; padding:.75rem 1rem .75rem 2.75rem;
+            font-size:.875rem; border-radius:.75rem;
+            border:1.5px solid #e2e8f0; background:#f8fafc;
+            color:#1e293b; outline:none;
+            transition: border-color .25s, box-shadow .25s, background .25s;
+        }
+        .inp:focus {
+            border-color:#16a34a;
+            box-shadow:0 0 0 3px rgba(22,163,74,.14);
+            background:#fff;
+        }
+        .inp::placeholder { color:#94a3b8; }
+        .inp-pr { padding-right:2.75rem; }
+
+        .eye-btn {
+            position:absolute; right:0; top:0; bottom:0;
+            width:2.75rem; display:flex; align-items:center; justify-content:center;
+            color:#94a3b8; cursor:pointer; background:none; border:none;
+            transition:color .2s;
+        }
+        .eye-btn:hover { color:#475569; }
+
+        /* Botón */
+        .btn-login {
+            position:relative; overflow:hidden;
+            width:100%; padding:.82rem 1rem;
+            background:linear-gradient(135deg,#16a34a,#15803d);
+            color:#fff; font-weight:600; font-size:.875rem;
+            border:none; border-radius:.75rem; cursor:pointer;
+            transition: transform .25s, box-shadow .25s;
+        }
+        .btn-login:hover {
+            transform:translateY(-2px);
+            box-shadow:0 12px 30px rgba(22,163,74,.4);
+        }
+        .btn-login:active { transform:translateY(0); }
+        .btn-login::after {
+            content:'';
+            position:absolute; top:0; left:0; width:35%; height:100%;
+            background:linear-gradient(to right,transparent,rgba(255,255,255,.25),transparent);
+            animation:shimmer 3s ease-in-out infinite;
         }
     </style>
-</body>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 overflow-hidden relative">
 
+    {{-- Blobs de fondo --}}
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    {{-- Iconos flotantes --}}
+    <div class="fi fi-1"><i class="fas fa-pills text-emerald-300 text-sm"></i></div>
+    <div class="fi fi-2"><i class="fas fa-heartbeat text-green-300"></i></div>
+    <div class="fi fi-3"><i class="fas fa-flask text-teal-300 text-xs"></i></div>
+    <div class="fi fi-4"><i class="fas fa-stethoscope text-emerald-300 text-sm"></i></div>
+    <div class="fi fi-5"><i class="fas fa-capsules text-green-300 text-xs"></i></div>
+    <div class="fi fi-6"><i class="fas fa-syringe text-teal-300 text-xs"></i></div>
+
+    {{-- Card --}}
+    <div class="glass relative z-10 w-full max-w-md rounded-3xl p-8 md:p-10"
+         style="box-shadow:0 32px 80px rgba(5,46,22,.55)">
+
+        {{-- Logo --}}
+        <div class="fu1 flex flex-col items-center mb-8">
+            <div class="logo-pulse w-16 h-16 bg-linear-to-br from-emerald-500 to-green-700 rounded-2xl flex items-center justify-center mb-4 shadow-lg" style="box-shadow:0 8px 24px rgba(22,163,74,.35)">
+                <i class="fas fa-plus text-white text-2xl"></i>
+            </div>
+            <p class="text-2xl font-bold text-slate-800 tracking-tight">BOTICA</p>
+            <span class="mt-1.5 text-xs font-semibold px-3 py-0.5 bg-emerald-100 text-emerald-700 rounded-full tracking-wide">Panel de Empresa</span>
+        </div>
+
+        {{-- Heading --}}
+        <div class="fu2 mb-6">
+            <h1 class="text-xl font-bold text-slate-800">Bienvenido de nuevo</h1>
+            <p class="text-slate-500 text-sm mt-1">Ingresa tus credenciales para acceder</p>
+        </div>
+
+        {{-- Alertas --}}
+        @if ($errors->any())
+        <div class="fu2 bg-red-50 border border-red-200 text-red-700 rounded-xl p-3.5 mb-5 text-sm space-y-1">
+            @foreach ($errors->all() as $error)
+                <p class="flex items-center gap-2"><i class="fas fa-circle-exclamation text-xs"></i> {{ $error }}</p>
+            @endforeach
+        </div>
+        @endif
+
+        @if (session('status'))
+        <div class="fu2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-3.5 mb-5 text-sm">
+            {{ session('status') }}
+        </div>
+        @endif
+
+        <form method="POST" action="{{ route('login') }}" class="space-y-4">
+            @csrf
+
+            {{-- Email --}}
+            <div class="fu3">
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Correo electrónico</label>
+                <div class="input-wrap">
+                    <span class="input-icon"><i class="fas fa-envelope"></i></span>
+                    <input type="email" name="email" value="{{ old('email') }}" required autofocus
+                           class="inp" placeholder="correo@farmacia.com">
+                </div>
+            </div>
+
+            {{-- Contraseña --}}
+            <div class="fu4">
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Contraseña</label>
+                <div class="input-wrap">
+                    <span class="input-icon"><i class="fas fa-lock"></i></span>
+                    <input type="password" name="password" id="pwd" required
+                           class="inp inp-pr" placeholder="••••••••">
+                    <button type="button" class="eye-btn" onclick="togglePwd()">
+                        <i id="eyeIcon" class="fas fa-eye text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Recordar --}}
+            <div class="fu5 flex items-center gap-2">
+                <input type="checkbox" name="remember" id="remember"
+                       class="w-4 h-4 rounded border-slate-300" style="accent-color:#16a34a">
+                <label for="remember" class="text-sm text-slate-600 cursor-pointer select-none">Recordar sesión</label>
+            </div>
+
+            {{-- Submit --}}
+            <div class="fu6 pt-1">
+                <button type="submit" class="btn-login">
+                    Iniciar sesión &nbsp;<i class="fas fa-arrow-right text-xs"></i>
+                </button>
+            </div>
+        </form>
+
+        <p class="fu6 text-center text-xs text-slate-400 mt-6">BOTICA · Sistema Farmacéutico v1.0</p>
+    </div>
+
+    <script>
+    function togglePwd() {
+        const i = document.getElementById('pwd');
+        const e = document.getElementById('eyeIcon');
+        i.type = i.type === 'password' ? 'text' : 'password';
+        e.className = i.type === 'password' ? 'fas fa-eye text-sm' : 'fas fa-eye-slash text-sm';
+    }
+    </script>
+</body>
 </html>

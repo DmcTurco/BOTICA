@@ -1,137 +1,97 @@
 <!DOCTYPE html>
 <html lang="es">
-@include('admin/inc/head')
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BOTICA Admin — Iniciar Sesión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="bg-slate-50 antialiased">
+<div class="min-h-screen flex">
 
-<body class="">
-    <div class="container position-sticky z-index-sticky top-0">
-        <div class="row">
-            <div class="col-12">
-                <!-- Navbar -->
-                <nav
-                    class="navbar navbar-expand-lg blur border-radius-lg top-0 z-index-3 shadow position-absolute mt-4 py-2 start-0 end-0 mx-4">
-                    <div class="container-fluid">
-                        <a class="navbar-brand font-weight-bolder ms-lg-0 ms-3 " href="#">
-                            MediTrack - Sistema de Gestión Farmacéutica
-                        </a>
-                        <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#navigation" aria-controls="navigation" aria-expanded="false"
-                            aria-label="Toggle navigation">
-                            <span class="navbar-toggler-icon mt-2">
-                                <span class="navbar-toggler-bar bar1"></span>
-                                <span class="navbar-toggler-bar bar2"></span>
-                                <span class="navbar-toggler-bar bar3"></span>
-                            </span>
-                        </button>
-                    </div>
-                </nav>
-                <!-- End Navbar -->
+    <div class="flex-1 flex items-center justify-center p-8">
+        <div class="w-full max-w-sm">
+
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 bg-violet-700 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-shield-halved text-white text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800 text-lg leading-none">BOTICA Admin</p>
+                    <p class="text-xs text-slate-400">Panel de Administración</p>
+                </div>
+            </div>
+
+            <h1 class="text-2xl font-bold text-slate-800 mb-1">Acceso Admin</h1>
+            <p class="text-slate-500 text-sm mb-8">Ingresa tus credenciales de administrador</p>
+
+            @if ($errors->any())
+            <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-6 text-sm space-y-1">
+                @foreach ($errors->all() as $error)
+                    <p class="flex items-center gap-2"><i class="fas fa-circle-exclamation text-xs"></i> {{ $error }}</p>
+                @endforeach
+            </div>
+            @endif
+
+            <form method="POST" action="{{ route('login') }}" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Correo electrónico</label>
+                    <input type="email" name="email" value="{{ old('email') }}" required autofocus
+                           class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white
+                                  focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+                           placeholder="admin@botica.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Contraseña</label>
+                    <input type="password" name="password" required
+                           class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white
+                                  focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+                           placeholder="••••••••">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="remember" id="remember" class="w-4 h-4 rounded border-slate-300 text-violet-600">
+                    <label for="remember" class="text-sm text-slate-600 cursor-pointer select-none">Recordar sesión</label>
+                </div>
+                <button type="submit"
+                        class="w-full bg-violet-700 hover:bg-violet-800 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm">
+                    Ingresar como Admin
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="hidden lg:flex w-[440px] bg-violet-700 flex-col items-center justify-center p-12 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 pointer-events-none">
+            <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full border-2 border-white"></div>
+            <div class="absolute -bottom-24 -left-24 w-96 h-96 rounded-full border-2 border-white"></div>
+        </div>
+        <div class="relative text-center text-white">
+            <div class="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                <i class="fas fa-shield-halved text-white text-4xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-3">Panel de Administración</h2>
+            <p class="text-violet-200 text-sm mb-10 leading-relaxed">
+                Acceso exclusivo para administradores.<br>Gestiona empresas, usuarios y configuración del sistema.
+            </p>
+            <div class="grid grid-cols-3 gap-3">
+                <div class="bg-white/10 rounded-xl p-4">
+                    <i class="fas fa-building text-2xl mb-2 block"></i>
+                    <p class="text-xs text-violet-200">Empresas</p>
+                </div>
+                <div class="bg-white/10 rounded-xl p-4">
+                    <i class="fas fa-users text-2xl mb-2 block"></i>
+                    <p class="text-xs text-violet-200">Usuarios</p>
+                </div>
+                <div class="bg-white/10 rounded-xl p-4">
+                    <i class="fas fa-gear text-2xl mb-2 block"></i>
+                    <p class="text-xs text-violet-200">Config</p>
+                </div>
             </div>
         </div>
     </div>
-    <main class="main-content mt-0">
-        <section>
-            <div class="page-header min-vh-100">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-xl-4 col-lg-5 col-md-7 d-flex flex-column mx-lg-0 mx-auto">
-                            <div class="card card-plain">
-                                <div class="card-header pb-0 text-start">
-                                    <h4 class="font-weight-bolder">Iniciar Sesión</h4>
-                                    <p class="mb-0">Ingrese su correo y contraseña para acceder</p>
-                                </div>
-                                <div class="card-body">
-                                    <form method="POST" action="{{ route('login') }}" >
-                                        @csrf
-                                        <div class="mb-3">
-                                            <input type="email" class="form-control form-control-lg" name="email"
-                                                placeholder="Correo electrónico" aria-label="Email">
-                                        </div>
-                                        <div class="mb-3">
-                                            <input type="password" class="form-control form-control-lg" name="password"
-                                                placeholder="Contraseña" aria-label="Password">
-                                        </div>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="rememberMe">
-                                            <label class="form-check-label" for="rememberMe">Recordar sesión</label>
-                                        </div>
-                                        <div class="text-center">
-                                            <button type="submit"
-                                                class="btn btn-lg btn-primary btn-lg w-100 mt-4 mb-0">Ingresar</button>
-                                        </div>
-                                    </form>
-                                </div>
-                                <div class="card-footer text-center pt-0 px-lg-2 px-1">
-                                    <p class="mb-4 text-sm mx-auto">
-                                        ¿No tiene una cuenta?
-                                        <a href="javascript:;" class="text-primary text-gradient font-weight-bold">Registrarse</a>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            class="col-6 d-lg-flex d-none h-100 my-auto pe-0 position-absolute top-0 end-0 text-center justify-content-center flex-column">
-                            <div class="position-relative bg-gradient-primary h-100 m-3 px-7 border-radius-lg d-flex flex-column justify-content-center overflow-hidden"
-                                style="background-image: url('../assets/img/farmacia.jpg'); background-size: cover;">
-                                <span class="mask bg-gradient-primary opacity-6"></span>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="100" height="100" style="margin-bottom: 20px;">
-                                    <g fill="#ffffff">
-                                        <path d="M120 20c-8.3 0-15 6.7-15 15v45H60c-8.3 0-15 6.7-15 15v50c0 8.3 6.7 15 15 15h45v45c0 8.3 6.7 15 15 15h50c8.3 0 15-6.7 15-15v-45h45c8.3 0 15-6.7 15-15v-50c0-8.3-6.7-15-15-15h-45V35c0-8.3-6.7-15-15-15h-50z"/>
-                                    </g>
-                                </svg>
-                                <h4 class="mt-5 text-white font-weight-bolder position-relative">Sistema de Gestión Farmacéutica</h4>
-                                <p class="text-white position-relative">Administre su inventario y ventas de manera eficiente</p>
-                                <div class="row mt-5 w-100">
-                                    <div class="col-4 text-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="#ffffff">
-                                            <path d="M19 6h-4V2H9v4H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-8 11c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/>
-                                        </svg>
-                                        <h6 class="text-white mt-2">Inventario</h6>
-                                    </div>
-                                    <div class="col-4 text-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="#ffffff">
-                                            <path d="M19 3h-4.2c-.4-1.2-1.5-2-2.8-2-1.3 0-2.4.8-2.8 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.6 0 1 .4 1 1s-.4 1-1 1-1-.4-1-1 .4-1 1-1zm-2 14l-4-4 1.4-1.4L9 13.2l6.6-6.6L17 8l-7 7z"/>
-                                        </svg>
-                                        <h6 class="text-white mt-2">Recetas</h6>
-                                    </div>
-                                    <div class="col-4 text-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="#ffffff">
-                                            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zm-6-7h-4v-1h4v1zm-8 3h12v1H6v-1zm0-2h12v1H6v-1z"/>
-                                        </svg>
-                                        <h6 class="text-white mt-2">Ventas</h6>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
 
-    <style>
-        :root {
-            --bs-primary: #3918cc;
-            --bs-primary-rgb: 45, 139, 97;
-        }
-        
-        .btn-primary {
-            background-color: #3918cc;
-            border-color: #3918cc;
-        }
-        
-        .btn-primary:hover {
-            background-color: #3918cc;
-            border-color: #3918cc;
-        }
-        
-        .text-primary {
-            color: #3918cc !important;
-        }
-        
-        .bg-gradient-primary {
-            background-image: linear-gradient(195deg, #3918cc 0%, #1A5D40 100%);
-        }
-    </style>
+</div>
 </body>
-
 </html>
