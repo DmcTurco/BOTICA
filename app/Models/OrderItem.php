@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class SaleDetail extends Model
+class OrderItem extends Model
 {
-    protected $table = 'sale_details';
+    protected $table = 'order_detail';
 
     protected $fillable = [
-        'sale_id',
+        'order_id',
         'product_code',
         'product_name',
         'unit_price',
@@ -23,12 +23,14 @@ class SaleDetail extends Model
         'subtotal'   => 'decimal:2',
     ];
 
-    public function venta()
+    // Relación con el pedido al que pertenece este ítem
+    public function order()
     {
-        return $this->belongsTo(Sales::class, 'sale_id');
+        return $this->belongsTo(Order::class, 'order_id');
     }
 
-    public function producto()
+    // Relación con el producto
+    public function product()
     {
         return $this->belongsTo(Product::class, 'product_code', 'code');
     }

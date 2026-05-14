@@ -78,14 +78,14 @@ class Product extends Model
     // Calcular utilidad por unidad
     public function getUtilidadUnidadAttribute()
     {
-        return $this->precio_venta_unidad - $this->precio_compra;
+        return $this->unit_sale_price - $this->purchase_price;
     }
 
     // Calcular utilidad por paquete
     public function getUtilidadPaqueteAttribute()
     {
-        if ($this->precio_venta_paquete && $this->precio_compra_paquete) {
-            return $this->precio_venta_paquete - $this->precio_compra_paquete;
+        if ($this->package_sale_price && $this->package_purchase_price) {
+            return $this->package_sale_price - $this->package_purchase_price;
         }
         return null;
     }
@@ -93,7 +93,7 @@ class Product extends Model
     // Valor de inventario
     public function getValorInventarioAttribute()
     {
-        return $this->stock_actual * $this->precio_compra;
+        return $this->stock_actual * $this->purchase_price;
     }
 
     // Calcular si está en stock
@@ -105,9 +105,9 @@ class Product extends Model
     // Calcular si está por debajo del stock mínimo
     public function getBajoStockAttribute()
     {
-        if ($this->stock_minimo === null) {
+        if ($this->stock_minimum === null) {
             return false;
         }
-        return $this->stock_actual <= $this->stock_minimo;
+        return $this->stock_actual <= $this->stock_minimum;
     }
 }

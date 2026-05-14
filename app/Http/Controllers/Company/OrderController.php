@@ -1,20 +1,24 @@
 <?php
 
 namespace App\Http\Controllers\Company;
+
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
-use App\Models\Sales;
-use App\Models\SaleDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class SalesController extends Controller
+class OrderController extends Controller
 {
+    /**
+     * Muestra el historial de órdenes con filtros.
+     */
     public function historial(Request $request)
     {
-        $query = Sales::orderBy('created_at', 'desc');
+        $query = Order::orderBy('created_at', 'desc');
 
         if ($request->filled('buscar')) {
             $search = $request->buscar;
@@ -41,49 +45,58 @@ class SalesController extends Controller
             $query->whereDate('created_at', '<=', $request->fecha_hasta);
         }
 
-        $ventas = $query->paginate(15)->withQueryString();
+        $orders = $query->paginate(15)->withQueryString();
 
-        return view('company.pages.sales.historial', compact('ventas'));
+        return view('company.pages.orders.historial', compact('orders'));
     }
 
-    public function detalle(Sales $sale)
+    /**
+     * Devuelve el detalle de una orden en JSON (para modal).
+     */
+    public function detalle(Order $order)
     {
-        $sale->load('detalles');
+        $order->load('items');
 
         return response()->json([
-            'id'                => $sale->id,
-            'created_at'        => $sale->created_at->format('d/m/Y H:i'),
-            'customer_name'     => $sale->customer_name,
-            'customer_document' => $sale->customer_document,
-            'voucher_type'      => $sale->voucher_type,
-            'voucher_number'    => $sale->voucher_number,
-            'payment_type'      => $sale->payment_type,
-            'operation_number'  => $sale->operation_number,
-            'subtotal'          => $sale->subtotal,
-            'igv'               => $sale->igv,
-            'total'             => $sale->total,
-            'status'            => $sale->status,
-            'detalles'          => $sale->detalles->map(fn($d) => [
-                'product_code' => $d->product_code,
-                'product_name' => $d->product_name,
-                'unit_price'   => $d->unit_price,
-                'quantity'     => $d->quantity,
-                'subtotal'     => $d->subtotal,
+            'id'                => $order->id,
+            'created_at'        => $order->created_at->format('d/m/Y H:i'),
+            'customer_name'     => $order->customer_name,
+            'customer_document' => $order->customer_document,
+            'voucher_type'      => $order->voucher_type,
+            'voucher_number'    => $order->voucher_number,
+            'payment_type'      => $order->payment_type,
+            'operation_number'  => $order->operation_number,
+            'subtotal'          => $order->subtotal,
+            'igv'               => $order->igv,
+            'total'             => $order->total,
+            'status'            => $order->status,
+            'items'             => $order->items->map(fn($item) => [
+                'product_code' => $item->product_code,
+                'product_name' => $item->product_name,
+                'unit_price'   => $item->unit_price,
+                'quantity'     => $item->quantity,
+                'subtotal'     => $item->subtotal,
             ]),
         ]);
     }
 
+    /**
+     * Muestra la pantalla de punto de venta.
+     */
     public function index()
     {
-        $productos = Product::with(['laboratorio', 'presentaciones.unidadMedida'])
+        $products = Product::with(['laboratorio', 'presentaciones.unidadMedida'])
             ->where('status', 1)
             ->where('stock_actual', '>', 0)
             ->orderBy('came')
             ->get();
 
-        return view('company.pages.sales.index', compact('productos'));
+        return view('company.pages.orders.index', compact('products'));
     }
 
+    /**
+     * Consulta nombre de cliente por DNI o RUC en APIs externas.
+     */
     public function consultarDocumento(Request $request)
     {
         $numero = preg_replace('/\D/', '', $request->query('numero', ''));
@@ -120,29 +133,32 @@ class SalesController extends Controller
         }
     }
 
+    /**
+     * Registra una nueva orden y descuenta stock atómicamente.
+     */
     public function store(Request $request)
     {
         $request->validate([
-            'items'              => 'required|array|min:1',
-            'items.*.code'       => 'required|exists:products,code',
-            'items.*.qty'        => 'required|numeric|min:1',
-            'items.*.price'      => 'required|numeric|min:0',
-            'items.*.name'       => 'required|string',
-            'payment_type'       => 'required|in:1,2,3,4',
-            'voucher_type'       => 'required|in:1,2,3',
-            'subtotal'           => 'required|numeric|min:0',
-            'igv'                => 'required|numeric|min:0',
-            'total'              => 'required|numeric|min:0',
+            'items'        => 'required|array|min:1',
+            'items.*.code' => 'required|exists:products,code',
+            'items.*.qty'  => 'required|numeric|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.name' => 'required|string',
+            'payment_type' => 'required|in:1,2,3,4',
+            'voucher_type' => 'required|in:1,2,3',
+            'subtotal'     => 'required|numeric|min:0',
+            'igv'          => 'required|numeric|min:0',
+            'total'        => 'required|numeric|min:0',
         ]);
 
         DB::beginTransaction();
 
         try {
-            // Verificar stock antes de descontar
+            // Verificar stock de todos los productos antes de registrar nada
             foreach ($request->items as $item) {
-                $producto = Product::where('code', $item['code'])->lockForUpdate()->first();
+                $product = Product::where('code', $item['code'])->lockForUpdate()->first();
 
-                if (!$producto || $producto->stock_actual < $item['qty']) {
+                if (!$product || $product->stock_actual < $item['qty']) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -151,7 +167,9 @@ class SalesController extends Controller
                 }
             }
 
-            $venta = Sales::create([
+            // Crear la orden
+            $order = Order::create([
+                'cash_register_id'  => session('cash_register_id'),
                 'customer_name'     => $request->customer_name ?: null,
                 'customer_document' => $request->customer_document ?: null,
                 'voucher_type'      => $request->voucher_type,
@@ -164,9 +182,10 @@ class SalesController extends Controller
                 'status'            => 1,
             ]);
 
+            // Registrar ítems y descontar stock
             foreach ($request->items as $item) {
-                SaleDetail::create([
-                    'sale_id'      => $venta->id,
+                OrderItem::create([
+                    'order_id'     => $order->id,
                     'product_code' => $item['code'],
                     'product_name' => $item['name'],
                     'unit_price'   => $item['price'],
@@ -181,17 +200,17 @@ class SalesController extends Controller
             DB::commit();
 
             return response()->json([
-                'success' => true,
-                'message' => 'Venta registrada correctamente.',
-                'sale_id' => $venta->id,
+                'success'  => true,
+                'message'  => 'Orden registrada correctamente.',
+                'order_id' => $order->id,
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al registrar venta: ' . $e->getMessage());
+            Log::error('Error al registrar orden: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error interno al registrar la venta.',
+                'message' => 'Error interno al registrar la orden.',
             ], 500);
         }
     }

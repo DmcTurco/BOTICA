@@ -12,7 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Alias para verificar que hay una caja abierta antes de acceder a órdenes
+        $middleware->alias([
+            'cash.open' => \App\Http\Middleware\EnsureCashRegisterIsOpen::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

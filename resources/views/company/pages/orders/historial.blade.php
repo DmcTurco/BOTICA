@@ -1,4 +1,4 @@
-@extends('company/layouts/base', ['elementActive' => 'sales-historial'])
+@extends('company/layouts/base', ['elementActive' => 'orders-historial'])
 
 @section('title', 'Historial de Ventas')
 @section('main-padding', 'p-2 md:p-3')
@@ -12,7 +12,7 @@
             <h1 class="text-xl font-bold text-slate-800">Historial de Ventas</h1>
             <p class="text-sm text-slate-500 mt-0.5">Consulta y filtra todas las ventas registradas</p>
         </div>
-        <a href="{{ route('company.sales.index') }}"
+        <a href="{{ route('company.orders.index') }}"
            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-cash-register text-xs"></i> Punto de Venta
         </a>
@@ -20,7 +20,7 @@
 
     {{-- Filtros --}}
     <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-sm shrink-0">
-        <form action="{{ route('company.sales.historial') }}" method="GET">
+        <form action="{{ route('company.orders.historial') }}" method="GET">
             <div class="flex flex-col gap-3">
                 <div class="flex flex-col sm:flex-row gap-3">
                     <div class="flex-1 relative">
@@ -62,7 +62,7 @@
                             <i class="fas fa-search text-xs"></i> Filtrar
                         </button>
                         @if(request()->hasAny(['buscar','tipo_comprobante','tipo_pago','fecha_desde','fecha_hasta']))
-                        <a href="{{ route('company.sales.historial') }}"
+                        <a href="{{ route('company.orders.historial') }}"
                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
                             <i class="fas fa-xmark text-xs"></i> Limpiar
                         </a>
@@ -80,7 +80,7 @@
         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 shrink-0">
             <p class="text-sm font-semibold text-slate-800">
                 Ventas registradas
-                <span class="ml-2 text-xs font-normal text-slate-400">{{ $ventas->total() }} registros</span>
+                <span class="ml-2 text-xs font-normal text-slate-400">{{ $orders->total() }} registros</span>
             </p>
         </div>
 
@@ -100,41 +100,41 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    @forelse($ventas as $venta)
+                    @forelse($orders as $order)
                     @php
                         $comprobantes = [1 => 'Boleta', 2 => 'Factura', 3 => 'Nota de Venta'];
                         $pagos        = [1 => 'Efectivo', 2 => 'Tarjeta', 3 => 'Transferencia', 4 => 'Yape'];
                         $pagoIcons    = [1 => 'fa-money-bill-wave', 2 => 'fa-credit-card', 3 => 'fa-building-columns', 4 => 'fa-mobile-screen'];
                     @endphp
                     <tr class="hover:bg-slate-50 transition-colors cursor-pointer fila-venta"
-                        data-id="{{ $venta->id }}">
+                        data-id="{{ $order->id }}">
                         <td class="px-4 py-3">
-                            <span class="font-mono text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">#{{ str_pad($venta->id, 5, '0', STR_PAD_LEFT) }}</span>
+                            <span class="font-mono text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</span>
                         </td>
                         <td class="px-4 py-3 text-xs text-slate-600">
-                            <div>{{ $venta->created_at->format('d/m/Y') }}</div>
-                            <div class="text-slate-400">{{ $venta->created_at->format('H:i') }}</div>
+                            <div>{{ $order->created_at->format('d/m/Y') }}</div>
+                            <div class="text-slate-400">{{ $order->created_at->format('H:i') }}</div>
                         </td>
                         <td class="px-4 py-3 hidden md:table-cell">
-                            <div class="font-medium text-slate-700 text-xs">{{ $venta->customer_name ?: '—' }}</div>
-                            <div class="text-slate-400 text-xs">{{ $venta->customer_document ?: '' }}</div>
+                            <div class="font-medium text-slate-700 text-xs">{{ $order->customer_name ?: '—' }}</div>
+                            <div class="text-slate-400 text-xs">{{ $order->customer_document ?: '' }}</div>
                         </td>
                         <td class="px-4 py-3 text-center hidden lg:table-cell">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700">
-                                {{ $comprobantes[$venta->voucher_type] ?? '—' }}
+                                {{ $comprobantes[$order->voucher_type] ?? '—' }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-center hidden lg:table-cell">
                             <span class="inline-flex items-center gap-1 text-xs text-slate-600">
-                                <i class="fas {{ $pagoIcons[$venta->payment_type] ?? 'fa-money-bill' }} text-slate-400 text-xs"></i>
-                                {{ $pagos[$venta->payment_type] ?? '—' }}
+                                <i class="fas {{ $pagoIcons[$order->payment_type] ?? 'fa-money-bill' }} text-slate-400 text-xs"></i>
+                                {{ $pagos[$order->payment_type] ?? '—' }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-right font-semibold text-slate-800">
-                            S/ {{ number_format($venta->total, 2) }}
+                            S/ {{ number_format($order->total, 2) }}
                         </td>
                         <td class="px-4 py-3 text-center">
-                            @if($venta->status)
+                            @if($order->status)
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">Activa</span>
                             @else
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600">Anulada</span>
@@ -143,7 +143,7 @@
                         <td class="px-4 py-3 text-right">
                             <button type="button"
                                     class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors btn-detalle"
-                                    data-id="{{ $venta->id }}" title="Ver detalle">
+                                    data-id="{{ $order->id }}" title="Ver detalle">
                                 <i class="fas fa-eye text-xs"></i>
                             </button>
                         </td>
@@ -163,9 +163,9 @@
         </div>
 
         {{-- Paginador --}}
-        @if($ventas->hasPages())
+        @if($orders->hasPages())
         <div class="px-5 py-3 border-t border-slate-200 shrink-0 bg-slate-50">
-            {{ $ventas->links() }}
+            {{ $orders->links() }}
         </div>
         @endif
 
@@ -309,7 +309,7 @@ function fmt(num) {
 function abrirDetalle(id) {
     mostrarLoader(true);
 
-    fetch(`{{ url('company/sales') }}/${id}/detalle`, {
+    fetch(`{{ url('company/orders') }}/${id}/detalle`, {
         headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
     })
     .then(r => r.json())
@@ -330,7 +330,7 @@ function abrirDetalle(id) {
 
         const tbody = document.getElementById('modal-items');
         tbody.innerHTML = '';
-        (v.detalles ?? []).forEach(d => {
+        (v.items ?? []).forEach(d => {
             tbody.insertAdjacentHTML('beforeend', `
                 <tr class="hover:bg-slate-50">
                     <td class="px-4 py-2.5">

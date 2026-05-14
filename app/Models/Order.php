@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Sales extends Model
+class Order extends Model
 {
-    protected $table = 'sales';
+    protected $table = 'orders';
 
     protected $fillable = [
+        'cash_register_id',
         'customer_name',
         'customer_document',
         'voucher_type',
@@ -27,8 +28,15 @@ class Sales extends Model
         'total'    => 'decimal:2',
     ];
 
-    public function detalles()
+    // Relación con los ítems del pedido
+    public function items()
     {
-        return $this->hasMany(SaleDetail::class, 'sale_id');
+        return $this->hasMany(OrderItem::class, 'order_id');
+    }
+
+    // Relación con la caja en la que se registró
+    public function cashRegister()
+    {
+        return $this->belongsTo(CashRegister::class, 'cash_register_id');
     }
 }

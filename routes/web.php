@@ -25,10 +25,21 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
     })->withoutMiddleware('auth:company');
     
     Route::get('/home', [Company\CompanyController::class, 'index'])->name('home');
-    Route::get('sales/historial', [Company\SalesController::class, 'historial'])->name('sales.historial');
-    Route::get('sales/{sale}/detalle', [Company\SalesController::class, 'detalle'])->name('sales.detalle');
-    Route::resource('sales', Company\SalesController::class);
-    Route::get('consultar-documento', [Company\SalesController::class, 'consultarDocumento'])->name('consultar-documento');
+
+    // Rutas de caja registradora
+    Route::post('cash-register/open',  [Company\CashRegisterController::class, 'open'])->name('cash-register.open');
+    Route::post('cash-register/close', [Company\CashRegisterController::class, 'close'])->name('cash-register.close');
+    Route::get('cash-register/status', [Company\CashRegisterController::class, 'status'])->name('cash-register.status');
+
+    // Rutas de órdenes (punto de venta) — protegidas por caja abierta
+    Route::middleware('cash.open')->group(function () {
+        Route::get('orders/historial', [Company\OrderController::class, 'historial'])->name('orders.historial');
+        Route::get('orders/{order}/detalle', [Company\OrderController::class, 'detalle'])->name('orders.detalle');
+        Route::resource('orders', Company\OrderController::class);
+    });
+    Route::get('consultar-documento', [Company\OrderController::class, 'consultarDocumento'])->name('consultar-documento');
+
+    // Rutas de catálogos
     Route::resource('products', Company\ProductController::class);
     Route::resource('laboratories', Company\LaboratoryController::class);
     Route::resource('categories', Company\CategoryController::class);

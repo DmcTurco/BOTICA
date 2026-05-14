@@ -62,7 +62,7 @@
                     </div>
                     <div class="flex items-center justify-between mt-2 px-0.5">
                         <p class="text-xs text-slate-400">
-                            <span id="contadorProductos">{{ $productos->count() }}</span> productos disponibles
+                            <span id="contadorProductos">{{ $products->count() }}</span> productos disponibles
                         </p>
                         <label class="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer">
                             <input type="checkbox" id="soloConStock" class="w-3 h-3 rounded" style="accent-color:#16a34a" checked>
@@ -83,35 +83,35 @@
                             </tr>
                         </thead>
                         <tbody id="tablaProductos" class="divide-y divide-slate-100">
-                            @forelse($productos as $producto)
+                            @forelse($products as $product)
                             <tr class="hover:bg-emerald-50/40 transition-colors cursor-default producto-row"
-                                data-code="{{ $producto->code }}"
-                                data-search="{{ strtolower($producto->came . ' ' . $producto->code . ' ' . $producto->active_ingredient) }}"
-                                data-stock="{{ $producto->stock_actual }}"
-                                data-name="{{ $producto->nombre }}"
-                                data-price="{{ $producto->unit_sale_price }}">
+                                data-code="{{ $product->code }}"
+                                data-search="{{ strtolower($product->came . ' ' . $product->code . ' ' . $product->active_ingredient) }}"
+                                data-stock="{{ $product->stock_actual }}"
+                                data-name="{{ $product->nombre }}"
+                                data-price="{{ $product->unit_sale_price }}">
                                 <td class="px-4 py-2.5">
-                                    <p class="font-medium text-slate-800 leading-tight">{{ $producto->nombre }}</p>
-                                    <p class="text-slate-400 mt-0.5 font-mono">{{ $producto->code }}
-                                        @if($producto->laboratorio)
-                                            · <span class="font-sans">{{ $producto->laboratorio->name }}</span>
+                                    <p class="font-medium text-slate-800 leading-tight">{{ $product->nombre }}</p>
+                                    <p class="text-slate-400 mt-0.5 font-mono">{{ $product->code }}
+                                        @if($product->laboratorio)
+                                            · <span class="font-sans">{{ $product->laboratorio->name }}</span>
                                         @endif
                                     </p>
                                 </td>
                                 <td class="px-3 py-2.5 text-right font-semibold text-slate-700 whitespace-nowrap">
-                                    S/ {{ number_format($producto->unit_sale_price, 2) }}
+                                    S/ {{ number_format($product->unit_sale_price, 2) }}
                                 </td>
                                 <td class="px-3 py-2.5 text-center">
                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold
-                                        {{ $producto->stock_actual <= ($producto->stock_minimum ?? 0)
+                                        {{ $product->stock_actual <= ($product->stock_minimum ?? 0)
                                             ? 'bg-amber-100 text-amber-700'
                                             : 'bg-emerald-100 text-emerald-700' }}">
-                                        {{ (int)$producto->stock_actual }}
+                                        {{ (int)$product->stock_actual }}
                                     </span>
                                 </td>
                                 <td class="px-2 py-2.5">
                                     @php
-                                        $presData = $producto->presentaciones->where('status', 1)->map(function($p) {
+                                        $presData = $product->presentaciones->where('status', 1)->map(function($p) {
                                             return [
                                                 'id'     => $p->id,
                                                 'label'  => optional($p->unidadMedida)->name ?? 'Presentación',
@@ -121,10 +121,10 @@
                                         })->values();
                                     @endphp
                                     <button class="btn-agregar w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all"
-                                            data-code="{{ $producto->code }}"
-                                            data-name="{{ $producto->nombre }}"
-                                            data-price="{{ $producto->unit_sale_price }}"
-                                            data-stock="{{ (int)$producto->stock_actual }}"
+                                            data-code="{{ $product->code }}"
+                                            data-name="{{ $product->nombre }}"
+                                            data-price="{{ $product->unit_sale_price }}"
+                                            data-stock="{{ (int)$product->stock_actual }}"
                                             data-presentations='@json($presData)'
                                             title="Agregar al carrito">
                                         <i class="fas fa-plus text-[10px]"></i>
@@ -692,7 +692,7 @@ $('#btnTerminarVenta').on('click', function() {
     const $btn = $(this).prop('disabled', true).text('Procesando...');
 
     $.ajax({
-        url:         '{{ route("company.sales.store") }}',
+        url:         '{{ route("company.orders.store") }}',
         method:      'POST',
         contentType: 'application/json',
         headers:     { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Company\CategoryRequest;
 use App\Models\Category;
-use Carbon\Exceptions\Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -39,15 +39,8 @@ class CategoryController extends Controller
         return view('company.pages.category.form');
     }
 
-    public function store(Request $request)
+    public function store(CategoryRequest $request)
     {
-        $validated = $request->validate([
-            'nombre' => 'required|max:100|unique:categories,name',
-            'descripcion' => 'nullable|max:255',
-            'icono' => 'nullable|max:50',
-            'activo' => 'nullable|boolean',
-        ]);
-
         try {
             $categoria = new Category();
             $categoria->name = $request->nombre;
@@ -77,16 +70,9 @@ class CategoryController extends Controller
     }
 
 
-    public function update(Request $request, $id)
+    public function update(CategoryRequest $request, $id)
     {
         $categoria = Category::findOrFail($id);
-
-        $validated = $request->validate([
-            'nombre' => 'required|max:100|unique:categories,name,' . $id,
-            'descripcion' => 'nullable|max:255',
-            'icono' => 'nullable|max:50',
-            'activo' => 'nullable|boolean',
-        ]);
 
         try {
             $categoria->name = $request->nombre;

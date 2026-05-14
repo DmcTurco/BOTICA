@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Company\LaboratoryRequest;
 use App\Models\Laboratory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -35,17 +36,8 @@ class LaboratoryController extends Controller
         return view('company.pages.laboratories.form');
     }
 
-    public function store(Request $request)
+    public function store(LaboratoryRequest $request)
     {
-        $request->validate([
-            'nombre'      => 'required|max:100|unique:laboratories,name',
-            'descripcion' => 'nullable|max:255',
-            'pais'        => 'nullable|max:80',
-            'telefono'    => 'nullable|max:30',
-            'email'       => 'nullable|email|max:100',
-            'activo'      => 'nullable|boolean',
-        ]);
-
         try {
             Laboratory::create([
                 'name'        => $request->nombre,
@@ -73,18 +65,9 @@ class LaboratoryController extends Controller
         return view('company.pages.laboratories.form', compact('laboratorio', 'productosCount'));
     }
 
-    public function update(Request $request, $id)
+    public function update(LaboratoryRequest $request, $id)
     {
         $laboratorio = Laboratory::findOrFail($id);
-
-        $request->validate([
-            'nombre'      => 'required|max:100|unique:laboratories,name,' . $id,
-            'descripcion' => 'nullable|max:255',
-            'pais'        => 'nullable|max:80',
-            'telefono'    => 'nullable|max:30',
-            'email'       => 'nullable|email|max:100',
-            'activo'      => 'nullable|boolean',
-        ]);
 
         try {
             $laboratorio->update([

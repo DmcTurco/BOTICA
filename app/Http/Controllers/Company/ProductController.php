@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Company\ProductRequest;
 use App\Models\Category;
 use App\Models\Laboratory;
 use App\Models\Presentation;
@@ -54,30 +55,8 @@ class ProductController extends Controller
         return view('company.pages.products.form', compact('categorias', 'laboratorios', 'presentaciones', 'unidades'));
     }
 
-    public function store(Request $request)
+    public function store(ProductRequest $request)
     {
-        $request->validate([
-            'codigo'              => 'required|max:20|unique:products,code',
-            'nombre'              => 'required|max:150',
-            'descripcion'         => 'nullable|max:255',
-            'categoria_id'        => 'required|exists:categories,id',
-            'laboratorio_id'      => 'nullable|exists:laboratories,id',
-            'principio_activo'    => 'nullable|max:100',
-            'unidad_medida_id'    => 'required|exists:units,id',
-            'precio_compra'       => 'required|numeric|min:0',
-            'precio_venta_unidad' => 'required|numeric|min:0',
-            'precio_compra_paquete'   => 'nullable|numeric|min:0',
-            'precio_venta_paquete'    => 'nullable|numeric|min:0',
-            'unidades_por_paquete'    => 'nullable|numeric|min:0',
-            'stock_actual'        => 'required|numeric|min:0',
-            'stock_minimo'        => 'nullable|numeric|min:0',
-            'stock_maximo'        => 'nullable|numeric|min:0',
-            'fecha_vencimiento'   => 'nullable|date',
-            'presentaciones.*.unidad_medida_id'     => 'required|exists:units,id',
-            'presentaciones.*.cantidad_equivalente' => 'required|numeric|min:0.01',
-            'presentaciones.*.precio_venta'         => 'required|numeric|min:0',
-        ]);
-
         DB::beginTransaction();
 
         try {
@@ -139,29 +118,8 @@ class ProductController extends Controller
         return view('company.pages.products.form', compact('producto', 'categorias', 'laboratorios', 'presentaciones', 'unidades'));
     }
 
-    public function update(Request $request, Product $product)
+    public function update(ProductRequest $request, Product $product)
     {
-        $request->validate([
-            'nombre'              => 'required|max:150',
-            'descripcion'         => 'nullable|max:255',
-            'categoria_id'        => 'required|exists:categories,id',
-            'laboratorio_id'      => 'nullable|exists:laboratories,id',
-            'principio_activo'    => 'nullable|max:100',
-            'unidad_medida_id'    => 'required|exists:units,id',
-            'precio_compra'       => 'required|numeric|min:0',
-            'precio_venta_unidad' => 'required|numeric|min:0',
-            'precio_compra_paquete'   => 'nullable|numeric|min:0',
-            'precio_venta_paquete'    => 'nullable|numeric|min:0',
-            'unidades_por_paquete'    => 'nullable|numeric|min:0',
-            'stock_actual'        => 'required|numeric|min:0',
-            'stock_minimo'        => 'nullable|numeric|min:0',
-            'stock_maximo'        => 'nullable|numeric|min:0',
-            'fecha_vencimiento'   => 'nullable|date',
-            'presentaciones.*.unidad_medida_id'     => 'required|exists:units,id',
-            'presentaciones.*.cantidad_equivalente' => 'required|numeric|min:0.01',
-            'presentaciones.*.precio_venta'         => 'required|numeric|min:0',
-        ]);
-
         DB::beginTransaction();
 
         try {

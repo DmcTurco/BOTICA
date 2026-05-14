@@ -44,7 +44,8 @@ app/
         PresentationController.php
       Employee/
         EmployeeController.php
-    Requests/           # Form Requests (pendiente de crear)
+    Requests/
+      Company/          # Form Requests por recurso (ProductRequest, CategoryRequest, LaboratoryRequest)
     Responses/          # Respuestas personalizadas (Fortify)
   Models/               # Modelos Eloquent
   Providers/            # Service Providers
@@ -81,13 +82,33 @@ GET  /api/user                  usuario autenticado (Sanctum)
 - `employee` — acceso al panel de empleado
 
 ## Reglas y convenciones
+
+### Comunicación
+- **Responder siempre en español** — toda explicación, pregunta y resumen va en español
+- **Código en inglés** — nombres de variables, métodos, clases, rutas, columnas de BD, todo en inglés
+- **Comentarios en español** — los comentarios dentro del código se escriben en español para facilitar la comprensión
+
+### Laravel
 - Seguir convenciones Laravel estrictas (MVC)
 - Nombres de clases en PascalCase, métodos en camelCase
 - **Validar inputs en Form Requests** — nunca validar directamente en el controlador
+- Un solo Form Request por recurso (el método `rules()` detecta store vs update con `$this->route()`)
 - Usar Eloquent ORM, evitar queries SQL crudas
 - Las migraciones deben tener método `down()` completo
 - API rutas protegidas con Sanctum
 - Documentar métodos públicos con PHPDoc
+
+### Migraciones — relaciones entre tablas
+- **Nunca usar `foreignId()` ni `->foreign()`**
+- Usar siempre `unsignedBigInteger` + `->index()` para las FK:
+  ```php
+  // Correcto
+  $table->unsignedBigInteger('category_id')->index();
+
+  // Incorrecto — no usar
+  $table->foreignId('category_id')->constrained();
+  $table->foreign('category_id')->references('id')->on('categories');
+  ```
 
 ## Contexto de negocio
 - Los **precios y el stock son críticos** — validar siempre antes de vender
