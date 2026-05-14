@@ -18,18 +18,6 @@
         </a>
     </div>
 
-    {{-- Alertas --}}
-    @if(session('success'))
-    <div class="shrink-0 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-4 py-3 text-sm flex items-center gap-2">
-        <i class="fas fa-circle-check text-xs"></i> {{ session('success') }}
-    </div>
-    @endif
-    @if(session('error'))
-    <div class="shrink-0 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm flex items-center gap-2">
-        <i class="fas fa-circle-exclamation text-xs"></i> {{ session('error') }}
-    </div>
-    @endif
-
     {{-- Filtros --}}
     <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-sm shrink-0">
         <form action="{{ route('company.laboratories.index') }}" method="GET">

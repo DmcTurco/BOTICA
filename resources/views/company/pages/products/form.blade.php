@@ -268,15 +268,33 @@
                     <div>
                         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Control de Stock</p>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+
+                            {{-- Stock actual: editable solo en creación --}}
+                            @if(!isset($producto))
                             <div>
                                 <label for="stock_actual" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Stock Actual <span class="text-red-500">*</span>
+                                    Stock Inicial <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" id="stock_actual" name="stock_actual" required min="0" step="1"
-                                       value="{{ old('stock_actual', $producto->stock_actual ?? 0) }}"
+                                       value="{{ old('stock_actual', 0) }}"
                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                 @error('stock_actual') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
+                            @else
+                            {{-- En edición: solo lectura con acceso a compras --}}
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Stock Actual</label>
+                                <div class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 flex items-center justify-between">
+                                    <span class="font-semibold text-slate-800">{{ $producto->stock_actual }}</span>
+                                    <a href="{{ route('company.purchases.create', ['product' => $producto->code]) }}"
+                                       class="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1">
+                                        <i class="fas fa-plus-circle text-[10px]"></i> Registrar compra
+                                    </a>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">El stock se actualiza mediante compras registradas.</p>
+                            </div>
+                            @endif
+
                             <div>
                                 <label for="stock_minimo" class="block text-sm font-medium text-slate-700 mb-1.5">Stock Mínimo</label>
                                 <input type="number" id="stock_minimo" name="stock_minimo" min="0" step="1"

@@ -37,7 +37,6 @@ class ProductRequest extends FormRequest
             'precio_compra_paquete'               => 'nullable|numeric|min:0',
             'precio_venta_paquete'                => 'nullable|numeric|min:0',
             'unidades_por_paquete'                => 'nullable|numeric|min:0',
-            'stock_actual'                        => 'required|numeric|min:0',
             'stock_minimo'                        => 'nullable|numeric|min:0',
             'stock_maximo'                        => 'nullable|numeric|min:0',
             'fecha_vencimiento'                   => 'nullable|date',
@@ -46,9 +45,10 @@ class ProductRequest extends FormRequest
             'presentaciones.*.precio_venta'       => 'required|numeric|min:0',
         ];
 
-        // El código solo se valida en store (es la PK y no puede cambiar en update)
+        // El código y stock inicial solo se validan en store
         if (!$product) {
-            $rules['codigo'] = 'required|max:20|unique:products,code';
+            $rules['codigo']       = 'required|max:20|unique:products,code';
+            $rules['stock_actual'] = 'required|numeric|min:0';
         }
 
         return $rules;

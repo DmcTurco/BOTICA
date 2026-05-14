@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -193,8 +194,20 @@ class OrderController extends Controller
                     'subtotal'     => round($item['price'] * $item['qty'], 2),
                 ]);
 
-                Product::where('code', $item['code'])
-                    ->decrement('stock_actual', $item['qty']);
+                // Descontar stock y obtener el saldo resultante para el kardex
+                $prod = Product::where('code', $item['code'])->lockForUpdate()->first();
+                $prod->decrement('stock_actual', $item['qty']);
+
+                // Registrar salida en el kardex
+                StockMovement::create([
+                    'product_code'   => $item['code'],
+                    'type'           => 'salida',
+                    'reference_type' => 'order',
+                    'reference_id'   => $order->id,
+                    'quantity'       => (int) $item['qty'],
+                    'unit_cost'      => $item['price'],
+                    'balance'        => (int) $prod->stock_actual,
+                ]);
             }
 
             DB::commit();

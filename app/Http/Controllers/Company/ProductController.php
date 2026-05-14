@@ -134,7 +134,7 @@ class ProductController extends Controller
             $product->package_purchase_price = $request->precio_compra_paquete;
             $product->package_sale_price     = $request->precio_venta_paquete;
             $product->units_per_package      = $request->unidades_por_paquete;
-            $product->stock_actual           = $request->stock_actual;
+            // stock_actual no se modifica en update; solo se incrementa vía compras
             $product->stock_minimum          = $request->stock_minimo;
             $product->stock_maximum          = $request->stock_maximo;
             $product->expiration_date        = $request->fecha_vencimiento;

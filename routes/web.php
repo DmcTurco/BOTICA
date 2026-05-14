@@ -31,18 +31,30 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
     Route::post('cash-register/close', [Company\CashRegisterController::class, 'close'])->name('cash-register.close');
     Route::get('cash-register/status', [Company\CashRegisterController::class, 'status'])->name('cash-register.status');
 
-    // Rutas de órdenes (punto de venta) — protegidas por caja abierta
-    Route::middleware('cash.open')->group(function () {
-        Route::get('orders/historial', [Company\OrderController::class, 'historial'])->name('orders.historial');
-        Route::get('orders/{order}/detalle', [Company\OrderController::class, 'detalle'])->name('orders.detalle');
-        Route::resource('orders', Company\OrderController::class);
-    });
+    // Rutas de órdenes — historial y detalle sin restricción de caja
+    Route::get('orders/historial', [Company\OrderController::class, 'historial'])->name('orders.historial');
+    Route::get('orders/{order}/detalle', [Company\OrderController::class, 'detalle'])->name('orders.detalle');
     Route::get('consultar-documento', [Company\OrderController::class, 'consultarDocumento'])->name('consultar-documento');
+
+    // Punto de venta — requiere caja abierta para ver pantalla y registrar órdenes
+    Route::middleware('cash.open')->group(function () {
+        Route::get('orders', [Company\OrderController::class, 'index'])->name('orders.index');
+        Route::post('orders', [Company\OrderController::class, 'store'])->name('orders.store');
+    });
 
     // Rutas de catálogos
     Route::resource('products', Company\ProductController::class);
     Route::resource('laboratories', Company\LaboratoryController::class);
     Route::resource('categories', Company\CategoryController::class);
+
+    // Kardex de inventario
+    Route::get('kardex', [Company\KardexController::class, 'index'])->name('kardex.index');
+
+    // Rutas de compras (ingreso de stock)
+    Route::get('purchases', [Company\PurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('purchases/create', [Company\PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('purchases', [Company\PurchaseController::class, 'store'])->name('purchases.store');
+    Route::get('purchases/{purchase}', [Company\PurchaseController::class, 'show'])->name('purchases.show');
 });
 
 Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employee.')->group(function () {
