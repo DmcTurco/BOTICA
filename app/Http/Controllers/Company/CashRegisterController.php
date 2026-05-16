@@ -10,21 +10,51 @@ use Illuminate\Support\Facades\Log;
 class CashRegisterController extends Controller
 {
     /**
-     * Abre una nueva caja con el monto inicial declarado.
+     * Denominaciones válidas del sol peruano.
      */
-    public function open(Request $request)
-    {
-        $request->validate([
-            'opening_amount' => 'required|numeric|min:0',
-        ], [
-            'opening_amount.required' => 'Ingresa el monto inicial de caja.',
-            'opening_amount.numeric'  => 'El monto debe ser un número válido.',
-            'opening_amount.min'      => 'El monto no puede ser negativo.',
-        ]);
+    private const DENOMINACIONES = [
+        'billetes' => [200, 100, 50, 20, 10],
+        'monedas'  => [5, 2, 1, 0.50, 0.20, 0.10],
+    ];
 
+    /**
+     * Construye el array de denominaciones a partir del request.
+     * Devuelve [denominaciones[], total_calculado].
+     */
+    private function parsearDenominaciones(Request $request): array
+    {
+        $denominaciones = [];
+        $total          = 0;
+
+        foreach (self::DENOMINACIONES as $grupo => $valores) {
+            foreach ($valores as $valor) {
+                $key      = 'den_' . str_replace('.', '_', $valor);
+                $cantidad = max(0, (int) $request->input($key, 0));
+                $subtotal = round($cantidad * $valor, 2);
+
+                if ($cantidad > 0) {
+                    $denominaciones[] = [
+                        'valor'    => $valor,
+                        'grupo'    => $grupo,
+                        'cantidad' => $cantidad,
+                        'subtotal' => $subtotal,
+                    ];
+                }
+
+                $total += $subtotal;
+            }
+        }
+
+        return [$denominaciones, round($total, 2)];
+    }
+
+    /**
+     * Muestra la página de apertura de caja.
+     */
+    public function showOpen()
+    {
         $company = auth()->guard('company')->user();
 
-        // Verificar que no haya una caja ya abierta
         $cajaActiva = CashRegister::open()->where('company_id', $company->id)->first();
 
         if ($cajaActiva) {
@@ -32,24 +62,102 @@ class CashRegisterController extends Controller
                 ->with('info', 'Ya tienes una caja abierta.');
         }
 
+        return view('company.pages.cash-register.open');
+    }
+
+    /**
+     * Abre una nueva caja guardando el desglose de denominaciones.
+     */
+    public function open(Request $request)
+    {
+        $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $company = auth()->guard('company')->user();
+
+        $cajaActiva = CashRegister::open()->where('company_id', $company->id)->first();
+
+        if ($cajaActiva) {
+            return redirect()->route('company.orders.index')
+                ->with('info', 'Ya tienes una caja abierta.');
+        }
+
+        [$denominaciones, $total] = $this->parsearDenominaciones($request);
+
         try {
             $caja = CashRegister::create([
-                'company_id'     => $company->id,
-                'opening_amount' => $request->opening_amount,
-                'status'         => 1,
-                'opened_at'      => now(),
+                'company_id'            => $company->id,
+                'opening_amount'        => $total,
+                'opening_denominations' => $denominaciones,
+                'notes'                 => $request->notes,
+                'status'                => 1,
+                'opened_at'             => now(),
             ]);
 
-            // Guardar ID en sesión para vincular órdenes
             session(['cash_register_id' => $caja->id]);
 
             return redirect()->route('company.orders.index')
-                ->with('success', 'Caja abierta correctamente. ¡Listo para vender!');
+                ->with('success', 'Caja abierta con S/ ' . number_format($total, 2) . '. ¡Listo para vender!');
 
         } catch (\Exception $e) {
             Log::error('Error al abrir caja: ' . $e->getMessage());
-            return redirect()->route('company.home')
+            return redirect()->route('company.cash-register.show-open')
                 ->with('error', 'No se pudo abrir la caja. Intenta de nuevo.');
+        }
+    }
+
+    /**
+     * Muestra el formulario para editar la apertura de la caja activa.
+     */
+    public function edit()
+    {
+        $company = auth()->guard('company')->user();
+
+        $caja = CashRegister::open()->where('company_id', $company->id)->latest('opened_at')->first();
+
+        if (!$caja) {
+            return redirect()->route('company.cash-register.show-open')
+                ->with('error', 'No hay una caja abierta para editar.');
+        }
+
+        return view('company.pages.cash-register.edit', compact('caja'));
+    }
+
+    /**
+     * Actualiza el monto y denominaciones de la apertura de la caja activa.
+     */
+    public function update(Request $request)
+    {
+        $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $company = auth()->guard('company')->user();
+
+        $caja = CashRegister::open()->where('company_id', $company->id)->latest('opened_at')->first();
+
+        if (!$caja) {
+            return redirect()->route('company.cash-register.show-open')
+                ->with('error', 'No hay una caja abierta para editar.');
+        }
+
+        [$denominaciones, $total] = $this->parsearDenominaciones($request);
+
+        try {
+            $caja->update([
+                'opening_amount'        => $total,
+                'opening_denominations' => $denominaciones,
+                'notes'                 => $request->notes,
+            ]);
+
+            return redirect()->route('company.cash-register.edit')
+                ->with('success', 'Apertura actualizada. Nuevo total: S/ ' . number_format($total, 2));
+
+        } catch (\Exception $e) {
+            Log::error('Error al editar apertura de caja: ' . $e->getMessage());
+            return redirect()->route('company.cash-register.edit')
+                ->with('error', 'No se pudo actualizar la apertura. Intenta de nuevo.');
         }
     }
 
@@ -76,7 +184,6 @@ class CashRegisterController extends Controller
         }
 
         try {
-            // Suma todas las órdenes activas registradas en esta caja
             $expectedAmount = $caja->calcularTotalOrdenes();
             $difference     = (float) $request->closing_amount - $expectedAmount;
 
@@ -89,7 +196,6 @@ class CashRegisterController extends Controller
                 'closed_at'       => now(),
             ]);
 
-            // Limpiar sesión de caja
             session()->forget('cash_register_id');
 
             return redirect()->route('company.home')

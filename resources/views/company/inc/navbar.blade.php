@@ -6,13 +6,18 @@
 
     @php
         $pageTitle = match(true) {
-            request()->routeIs('company.home')             => 'Dashboard',
-            request()->routeIs('company.orders.historial')  => 'Historial de Ventas',
-            request()->routeIs('company.orders.*')          => 'Ventas',
-            request()->routeIs('company.products.*')       => 'Productos',
-            request()->routeIs('company.categories.*')     => 'Categorías',
-            request()->routeIs('company.laboratories.*')   => 'Laboratorios',
-            default                                        => 'Dashboard',
+            request()->routeIs('company.home')                      => 'Dashboard',
+            request()->routeIs('company.cash-register.show-open')   => 'Apertura de Caja',
+            request()->routeIs('company.cash-register.edit')        => 'Editar Apertura de Caja',
+            request()->routeIs('company.orders.historial')           => 'Historial de Ventas',
+            request()->routeIs('company.orders.*')                   => 'Ventas',
+            request()->routeIs('company.products.*')                => 'Productos',
+            request()->routeIs('company.categories.*')              => 'Categorías',
+            request()->routeIs('company.laboratories.*')            => 'Laboratorios',
+            request()->routeIs('company.purchases.*')               => 'Compras',
+            request()->routeIs('company.kardex.*')                  => 'Kardex',
+            request()->routeIs('company.clients.*')                 => 'Clientes',
+            default                                                  => 'Dashboard',
         };
     @endphp
     <div class="flex-1">

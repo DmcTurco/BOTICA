@@ -11,7 +11,9 @@ class CashRegister extends Model
     protected $fillable = [
         'company_id',
         'opening_amount',
+        'opening_denominations',
         'closing_amount',
+        'closing_denominations',
         'expected_amount',
         'difference',
         'status',
@@ -21,12 +23,14 @@ class CashRegister extends Model
     ];
 
     protected $casts = [
-        'opening_amount'  => 'decimal:2',
-        'closing_amount'  => 'decimal:2',
-        'expected_amount' => 'decimal:2',
-        'difference'      => 'decimal:2',
-        'opened_at'       => 'datetime',
-        'closed_at'       => 'datetime',
+        'opening_amount'        => 'decimal:2',
+        'opening_denominations' => 'array',
+        'closing_amount'        => 'decimal:2',
+        'closing_denominations' => 'array',
+        'expected_amount'       => 'decimal:2',
+        'difference'            => 'decimal:2',
+        'opened_at'             => 'datetime',
+        'closed_at'             => 'datetime',
     ];
 
     // Órdenes registradas en esta caja

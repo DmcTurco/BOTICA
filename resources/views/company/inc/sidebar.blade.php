@@ -29,9 +29,34 @@
             </ul>
         </div>
 
+        {{-- Ventas --}}
         <div>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Gestión</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Ventas</p>
             <ul class="space-y-0.5">
+                <li>
+                    <a href="{{ route('company.cash-register.show-open') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('company.cash-register.show-open') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                        <i class="fas fa-lock-open w-4 text-center shrink-0"></i>
+                        Apertura de caja
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('company.cash-register.edit') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('company.cash-register.edit') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                        <i class="fas fa-pen-to-square w-4 text-center shrink-0"></i>
+                        Editar apertura
+                    </a>
+                </li>
+                <li>
+                    <button onclick="abrirModalCierre()"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                                   text-slate-400 hover:bg-emerald-900 hover:text-white text-left">
+                        <i class="fas fa-lock w-4 text-center shrink-0"></i>
+                        Cierre de caja
+                    </button>
+                </li>
                 <li>
                     <a href="{{ route('company.orders.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -45,9 +70,24 @@
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                               {{ request()->routeIs('company.orders.historial') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
                         <i class="fas fa-receipt w-4 text-center shrink-0"></i>
-                        Historial de Ventas
+                        Historial
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('company.clients.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('company.clients.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                        <i class="fas fa-users w-4 text-center shrink-0"></i>
+                        Clientes
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        {{-- Inventario --}}
+        <div>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Inventario</p>
+            <ul class="space-y-0.5">
                 <li>
                     <a href="{{ route('company.products.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors

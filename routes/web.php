@@ -27,7 +27,10 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
     Route::get('/home', [Company\CompanyController::class, 'index'])->name('home');
 
     // Rutas de caja registradora
+    Route::get('cash-register/open',   [Company\CashRegisterController::class, 'showOpen'])->name('cash-register.show-open');
     Route::post('cash-register/open',  [Company\CashRegisterController::class, 'open'])->name('cash-register.open');
+    Route::get('cash-register/edit',   [Company\CashRegisterController::class, 'edit'])->name('cash-register.edit');
+    Route::put('cash-register/edit',   [Company\CashRegisterController::class, 'update'])->name('cash-register.update');
     Route::post('cash-register/close', [Company\CashRegisterController::class, 'close'])->name('cash-register.close');
     Route::get('cash-register/status', [Company\CashRegisterController::class, 'status'])->name('cash-register.status');
 
@@ -41,6 +44,10 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
         Route::get('orders', [Company\OrderController::class, 'index'])->name('orders.index');
         Route::post('orders', [Company\OrderController::class, 'store'])->name('orders.store');
     });
+
+    // Rutas de clientes
+    Route::get('clients/search', [Company\ClientController::class, 'search'])->name('clients.search');
+    Route::resource('clients', Company\ClientController::class)->except(['show', 'destroy']);
 
     // Rutas de catálogos
     Route::resource('products', Company\ProductController::class);

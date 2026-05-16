@@ -11,6 +11,7 @@ class Order extends Model
     protected $fillable = [
         'cash_register_id',
         'customer_name',
+        'document_type_id',
         'customer_document',
         'voucher_type',
         'voucher_number',
@@ -38,5 +39,11 @@ class Order extends Model
     public function cashRegister()
     {
         return $this->belongsTo(CashRegister::class, 'cash_register_id');
+    }
+
+    // Tipo de documento del cliente
+    public function documentType()
+    {
+        return $this->belongsTo(DocumentType::class, 'document_type_id');
     }
 }

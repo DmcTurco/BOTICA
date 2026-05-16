@@ -29,12 +29,12 @@ class EnsureCashRegisterIsOpen
                 return response()->json([
                     'success' => false,
                     'message' => 'No hay una caja abierta. Abre la caja antes de registrar una orden.',
-                    'redirect' => route('company.home', ['open_cash' => 1]),
+                    'redirect' => route('company.cash-register.show-open'),
                 ], 403);
             }
 
-            // Redirige al home con parámetro para activar el modal de apertura
-            return redirect()->route('company.home', ['open_cash' => 1]);
+            // Redirige a la página dedicada de apertura de caja
+            return redirect()->route('company.cash-register.show-open');
         }
 
         // Inyecta el ID de la caja en la sesión para usarlo al crear órdenes

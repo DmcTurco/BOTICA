@@ -25,10 +25,9 @@
             <div class="flex items-center gap-2">
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50">
                     <i class="fas fa-receipt text-slate-400 text-xs"></i>
-                    <span class="text-xs text-slate-500">Nro Comprobante</span>
-                    <input type="text" id="nroComprobante"
-                           class="w-24 text-xs font-mono text-slate-700 bg-transparent focus:outline-none"
-                           placeholder="Automático">
+                    <span class="text-xs text-slate-500">Comprobante</span>
+                    <span id="nroComprobante"
+                          class="text-xs font-mono text-slate-400 italic">— automático —</span>
                 </div>
                 <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors" title="Imprimir">
                     <i class="fas fa-print text-xs"></i>
@@ -215,6 +214,7 @@
                     {{-- Inputs ocultos para los valores seleccionados --}}
                     <input type="hidden" id="tipoPago" value="1">
                     <input type="hidden" id="tipoComprobante" value="3">
+                    <input type="hidden" id="tipoDocumentoId" value="">
 
                     {{-- ─ Tipo de Pago ──────────────────────────────── --}}
                     <div>
@@ -266,20 +266,52 @@
                         <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
                             <i class="fas fa-user"></i> Cliente
                         </label>
-                        <input type="text" id="cliente"
-                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                               placeholder="Cliente general">
+                        <input type="hidden" id="clienteId" value="">
+                        <div class="relative">
+                            <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs pointer-events-none"></i>
+                            <input type="text" id="cliente" autocomplete="off"
+                                   class="w-full pl-8 pr-8 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                   placeholder="Buscar o escribir nombre...">
+                            <button type="button" id="btnLimpiarCliente"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors hidden"
+                                    title="Limpiar cliente">
+                                <i class="fas fa-xmark text-xs"></i>
+                            </button>
+                            {{-- Dropdown de sugerencias --}}
+                            <div id="clienteDropdown"
+                                 class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 hidden max-h-52 overflow-y-auto">
+                            </div>
+                        </div>
+                        <p id="clienteSeleccionado" class="text-xs text-emerald-600 mt-1 hidden">
+                            <i class="fas fa-circle-check mr-1"></i><span></span>
+                        </p>
                     </div>
 
-                    {{-- ─ DNI / RUC ─────────────────────────────────── --}}
+                    {{-- ─ Tipo de documento + Número ───────────────────── --}}
                     <div>
                         <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                            <i class="fas fa-id-card"></i> DNI / RUC
+                            <i class="fas fa-id-card"></i> Documento
                         </label>
+
+                        {{-- Chips de tipo de documento --}}
+                        <div class="flex flex-wrap gap-1.5 mb-2" id="tiposDocumento">
+                            @foreach($documentTypes as $dt)
+                            <button type="button"
+                                    class="btn-tipo-doc px-2.5 py-1 rounded-lg border text-xs font-medium transition-all
+                                           border-slate-200 bg-white text-slate-500 hover:border-emerald-400 hover:text-emerald-700"
+                                    data-id="{{ $dt->id }}"
+                                    data-digits="{{ $dt->digits ?? '' }}"
+                                    data-name="{{ $dt->name }}">
+                                {{ $dt->name }}
+                            </button>
+                            @endforeach
+                        </div>
+
+                        {{-- Número de documento --}}
                         <div class="relative">
-                            <input type="text" id="documento" maxlength="11"
+                            <input type="text" id="documento" maxlength="15"
                                    class="w-full pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                   placeholder="DNI (8 dígitos) o RUC (11)">
+                                   placeholder="Número de documento">
                             <span id="dniEstado" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm hidden"></span>
                         </div>
                         <p id="dniMensaje" class="text-xs mt-1 hidden"></p>
@@ -391,9 +423,11 @@
 
 @section('scripts')
 <script>
-// ── Estilos de botones de pago / comprobante ──────────────────
+// ── Estilos de botones de pago / comprobante / tipo de doc ───
 const PAGO_ACTIVO   = ['border-emerald-500','bg-emerald-50','text-emerald-700'];
 const PAGO_INACTIVO = ['border-slate-200','bg-white','text-slate-500'];
+const DOC_ACTIVO    = ['border-emerald-500','bg-emerald-50','text-emerald-700'];
+const DOC_INACTIVO  = ['border-slate-200','bg-white','text-slate-500'];
 
 function activarBtn(selector, $clicked) {
     $(selector).each(function() {
@@ -415,6 +449,29 @@ $(document).on('click', '.btn-pago', function() {
 $(document).on('click', '.btn-comprobante', function() {
     activarBtn('.btn-comprobante', $(this));
     $('#tipoComprobante').val($(this).data('value'));
+
+    // Factura (2) → forzar selección de RUC si hay documento
+    if ($(this).data('value') == 2) {
+        seleccionarTipoDocPorId(3); // RUC
+    }
+});
+
+// ── Tipo de documento del cliente ────────────────────────────
+function seleccionarTipoDocPorId(id) {
+    const $btn = $('.btn-tipo-doc[data-id="' + id + '"]');
+    if (!$btn.length) return;
+    $('.btn-tipo-doc').removeClass(DOC_ACTIVO.join(' ')).addClass(DOC_INACTIVO.join(' '));
+    $btn.removeClass(DOC_INACTIVO.join(' ')).addClass(DOC_ACTIVO.join(' '));
+    $('#tipoDocumentoId').val(id);
+
+    // Ajustar maxlength según dígitos esperados
+    const digits = $btn.data('digits');
+    $('#documento').attr('maxlength', digits ? digits : 20);
+}
+
+$(document).on('click', '.btn-tipo-doc', function() {
+    seleccionarTipoDocPorId($(this).data('id'));
+    $('#documento').focus();
 });
 
 // Aplicar estilos iniciales a los botones activos al cargar
@@ -655,9 +712,16 @@ function nuevaVenta() {
     carrito = {};
     renderCarrito();
     $('#inputBusqueda').val('').trigger('input');
-    $('#cliente, #documento, #nroOperacion, #nroComprobante').val('');
+    $('#cliente, #documento, #nroOperacion').val('');
+    $('#clienteId').val('');
+    $('#btnLimpiarCliente').addClass('hidden');
+    $('#clienteSeleccionado').addClass('hidden').find('span').text('');
+    $('#clienteDropdown').addClass('hidden').empty();
+    $('#nroComprobante').text('— automático —').removeClass('text-emerald-700 font-semibold').addClass('text-slate-400 italic');
     $('#dniEstado').addClass('hidden').html('');
-    $('#dniMensaje').addClass('hidden').text('');
+    $('#dniMensaje').addClass('hidden').text('').removeClass('text-emerald-600 text-slate-400 text-red-400');
+    $('#tipoDocumentoId').val('');
+    $('.btn-tipo-doc').removeClass(DOC_ACTIVO.join(' ')).addClass(DOC_INACTIVO.join(' '));
     location.reload();
 }
 
@@ -678,7 +742,9 @@ $('#btnTerminarVenta').on('click', function() {
 
     const payload = {
         items,
+        client_id:         $('#clienteId').val()        || null,
         customer_name:     $('#cliente').val(),
+        document_type_id:  $('#tipoDocumentoId').val()  || null,
         customer_document: $('#documento').val(),
         payment_type:      $('#tipoPago').val(),
         voucher_type:      $('#tipoComprobante').val(),
@@ -698,11 +764,28 @@ $('#btnTerminarVenta').on('click', function() {
         headers:     { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         data:        JSON.stringify(payload),
         success: function(res) {
-            mostrarToast('success', res.message);
+            // Mostrar número de comprobante generado
+            const numComp = res.voucher_number ?? '';
+            mostrarToast('success', res.message, numComp);
+
+            // Mostrar el número en el campo del topbar brevemente
+            $('#nroComprobante').text(numComp).removeClass('text-slate-400 italic').addClass('text-emerald-700 font-semibold');
+            setTimeout(function() {
+                $('#nroComprobante').text('— automático —').removeClass('text-emerald-700 font-semibold').addClass('text-slate-400 italic');
+            }, 5000);
+
             carrito = {};
             renderCarrito();
             $('#inputBusqueda').val('').trigger('input');
-            $('#cliente, #documento, #nroOperacion, #nroComprobante').val('');
+            $('#cliente, #documento, #nroOperacion').val('');
+            $('#clienteId').val('');
+            $('#btnLimpiarCliente').addClass('hidden');
+            $('#clienteSeleccionado').addClass('hidden').find('span').text('');
+            $('#clienteDropdown').addClass('hidden').empty();
+            $('#tipoDocumentoId').val('');
+            $('.btn-tipo-doc').removeClass(DOC_ACTIVO.join(' ')).addClass(DOC_INACTIVO.join(' '));
+            $('#dniEstado').addClass('hidden').html('');
+            $('#dniMensaje').addClass('hidden').text('').removeClass('text-emerald-600 text-slate-400 text-red-400');
             $.get(window.location.href, function(html) {
                 const $nuevaTabla = $(html).find('#tablaProductos');
                 $('#tablaProductos').html($nuevaTabla.html());
@@ -722,17 +805,128 @@ $('#btnTerminarVenta').on('click', function() {
 });
 
 // ── Toast de notificación ─────────────────────────────────────
-function mostrarToast(tipo, mensaje) {
-    const color  = tipo === 'success' ? 'bg-emerald-600' : 'bg-red-600';
-    const icon   = tipo === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+function mostrarToast(tipo, mensaje, subtitulo = '') {
+    const color = tipo === 'success' ? 'bg-emerald-600' : 'bg-red-600';
+    const icon  = tipo === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+    const sub   = subtitulo
+        ? `<p class="text-xs text-white/80 font-mono mt-0.5">${subtitulo}</p>`
+        : '';
     const $toast = $(`
-        <div class="fixed top-4 right-4 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl text-white text-sm font-medium shadow-lg ${color} transition-all">
-            <i class="fas ${icon}"></i>
-            <span>${mensaje}</span>
+        <div class="fixed top-4 right-4 z-[100] flex items-start gap-3 px-4 py-3 rounded-xl text-white text-sm font-medium shadow-lg ${color} transition-all">
+            <i class="fas ${icon} mt-0.5 shrink-0"></i>
+            <div>
+                <p>${mensaje}</p>
+                ${sub}
+            </div>
         </div>`);
     $('body').append($toast);
-    setTimeout(() => $toast.fadeOut(300, function() { $(this).remove(); }), 3500);
+    setTimeout(() => $toast.fadeOut(300, function() { $(this).remove(); }), 4500);
 }
+
+// ── Autocomplete de clientes ──────────────────────────────────
+let clienteTimer = null;
+
+$('#cliente').on('input', function() {
+    const term = $(this).val().trim();
+    clearTimeout(clienteTimer);
+
+    // Si limpiaron el campo, resetear selección
+    if (!term) {
+        limpiarClienteSeleccionado(false);
+        $('#clienteDropdown').addClass('hidden').empty();
+        return;
+    }
+
+    $('#btnLimpiarCliente').removeClass('hidden');
+
+    if (term.length < 2) {
+        $('#clienteDropdown').addClass('hidden').empty();
+        return;
+    }
+
+    clienteTimer = setTimeout(function() {
+        $.getJSON('{{ route("company.clients.search") }}', { q: term }, function(data) {
+            const $dd = $('#clienteDropdown').empty();
+            if (!data.length) {
+                $dd.html('<p class="px-4 py-3 text-xs text-slate-400 text-center">Sin resultados</p>').removeClass('hidden');
+                return;
+            }
+            data.forEach(function(c) {
+                const docInfo = c.document_type && c.document_number
+                    ? `<span class="text-slate-400">${c.document_type} ${c.document_number}</span>`
+                    : '';
+                $dd.append(`
+                    <button type="button"
+                            class="cliente-opcion w-full text-left px-4 py-2.5 hover:bg-emerald-50 transition-colors border-b border-slate-100 last:border-0"
+                            data-id="${c.id}"
+                            data-name="${c.name}"
+                            data-doc-type-id="${c.document_type_id ?? ''}"
+                            data-doc-number="${c.document_number ?? ''}">
+                        <p class="text-sm font-medium text-slate-800">${c.name}</p>
+                        <p class="text-xs mt-0.5 flex items-center gap-1.5">
+                            <span class="font-mono text-slate-300">${c.code}</span>
+                            ${docInfo}
+                            ${c.phone ? `<span class="text-slate-300">· ${c.phone}</span>` : ''}
+                        </p>
+                    </button>`);
+            });
+            $dd.removeClass('hidden');
+        });
+    }, 280);
+});
+
+$(document).on('click', '.cliente-opcion', function() {
+    const id        = $(this).data('id');
+    const name      = $(this).data('name');
+    const docTypeId = $(this).data('doc-type-id');
+    const docNumber = $(this).data('doc-number');
+
+    // Llenar campos
+    $('#cliente').val(name);
+    $('#clienteId').val(id);
+    $('#btnLimpiarCliente').removeClass('hidden');
+    $('#clienteSeleccionado').removeClass('hidden').find('span').text(name);
+    $('#clienteDropdown').addClass('hidden').empty();
+
+    // Auto-seleccionar tipo de documento
+    if (docTypeId) {
+        seleccionarTipoDocPorId(docTypeId);
+    }
+
+    // Auto-rellenar número de documento
+    if (docNumber) {
+        $('#documento').val(docNumber);
+        // Limpiar estado anterior del DNI lookup
+        $('#dniEstado').addClass('hidden').html('');
+        $('#dniMensaje').addClass('hidden').text('').removeClass('text-emerald-600 text-slate-400 text-red-400');
+    }
+});
+
+$('#btnLimpiarCliente').on('click', function() {
+    limpiarClienteSeleccionado(true);
+});
+
+function limpiarClienteSeleccionado(limpiarCampos) {
+    $('#clienteId').val('');
+    $('#clienteSeleccionado').addClass('hidden').find('span').text('');
+    $('#btnLimpiarCliente').addClass('hidden');
+    $('#clienteDropdown').addClass('hidden').empty();
+    if (limpiarCampos) {
+        $('#cliente').val('').focus();
+        $('#documento').val('');
+        $('#tipoDocumentoId').val('');
+        $('.btn-tipo-doc').removeClass(DOC_ACTIVO.join(' ')).addClass(DOC_INACTIVO.join(' '));
+        $('#dniEstado').addClass('hidden').html('');
+        $('#dniMensaje').addClass('hidden').text('').removeClass('text-emerald-600 text-slate-400 text-red-400');
+    }
+}
+
+// Cerrar dropdown al hacer click fuera
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('#cliente, #clienteDropdown').length) {
+        $('#clienteDropdown').addClass('hidden');
+    }
+});
 
 // ── Teclado: F5 = terminar venta, F2 = foco búsqueda ─────────
 $(document).on('keydown', function(e) {
@@ -749,7 +943,14 @@ $('#documento').on('input', function() {
     clearTimeout(dniTimer);
 
     $('#dniEstado').addClass('hidden').html('');
-    $('#dniMensaje').addClass('hidden').text('');
+    $('#dniMensaje').addClass('hidden').text('').removeClass('text-emerald-600 text-slate-400 text-red-400');
+
+    // Auto-seleccionar tipo de documento por longitud
+    if (num.length === 8) {
+        seleccionarTipoDocPorId(1); // DNI
+    } else if (num.length === 11) {
+        seleccionarTipoDocPorId(3); // RUC
+    }
 
     if (num.length !== 8 && num.length !== 11) return;
 

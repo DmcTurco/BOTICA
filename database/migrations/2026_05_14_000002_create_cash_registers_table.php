@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('company_id')->index();       // empresa dueña de la caja
             $table->decimal('opening_amount', 10, 2)->default(0);   // monto declarado al abrir
+            $table->json('opening_denominations')->nullable();      // desglose de billetes/monedas al abrir
             $table->decimal('closing_amount', 10, 2)->nullable();   // monto contado al cerrar
+            $table->json('closing_denominations')->nullable();      // desglose de billetes/monedas al cerrar
             $table->decimal('expected_amount', 10, 2)->nullable();  // suma de órdenes del turno
             $table->decimal('difference', 10, 2)->nullable();       // closing - expected
             $table->unsignedTinyInteger('status')->default(1)
