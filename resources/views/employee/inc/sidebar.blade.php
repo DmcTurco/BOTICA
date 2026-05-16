@@ -10,25 +10,124 @@
         </div>
     </div>
 
-    <nav class="flex-1 px-3 py-4 overflow-y-auto">
-        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">Mi Panel</p>
+    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-5">
 
-        <a href="{{ route('employee.home') }}"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-0.5
-                  {{ Route::currentRouteName() == 'employee.home' ? 'bg-sky-50 text-sky-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800' }}">
-            <i class="fas fa-house w-4 text-center text-sm"></i>
-            Dashboard
-        </a>
-
-        <div class="pt-4 pb-1">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">Acciones</p>
+        <div>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Principal</p>
+            <ul class="space-y-0.5">
+                <li>
+                    <a href="{{ route('employee.home') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.home') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-gauge-high w-4 text-center shrink-0"></i>
+                        Dashboard
+                    </a>
+                </li>
+            </ul>
         </div>
 
-        <a href="#"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-0.5 text-slate-600 hover:bg-slate-50 hover:text-slate-800">
-            <i class="fas fa-cash-register w-4 text-center text-sm"></i>
-            Nueva Venta
-        </a>
+        {{-- Ventas --}}
+        <div>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Ventas</p>
+            <ul class="space-y-0.5">
+                <li>
+                    <a href="{{ route('employee.cash-register.show-open') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.cash-register.show-open') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-lock-open w-4 text-center shrink-0"></i>
+                        Apertura de caja
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('employee.cash-register.edit') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.cash-register.edit') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-pen-to-square w-4 text-center shrink-0"></i>
+                        Editar apertura
+                    </a>
+                </li>
+                <li>
+                    <button onclick="abrirModalCierre()"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                                    text-slate-400 hover:bg-sky-600 hover:text-white text-left">
+                        <i class="fas fa-lock w-4 text-center shrink-0"></i>
+                        Cierre de caja
+                    </button>
+                </li>
+                <li>
+                    <a href="{{ route('employee.orders.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.orders.index') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-cash-register w-4 text-center shrink-0"></i>
+                        Ventas
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('employee.orders.historial') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.orders.historial') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-receipt w-4 text-center shrink-0"></i>
+                        Historial
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('employee.clients.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.clients.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-users w-4 text-center shrink-0"></i>
+                        Clientes
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        {{-- Inventario --}}
+        <div>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Inventario</p>
+            <ul class="space-y-0.5">
+                <li>
+                    <a href="{{ route('employee.products.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.products.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-pills w-4 text-center shrink-0"></i>
+                        Productos
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('employee.categories.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.categories.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-tags w-4 text-center shrink-0"></i>
+                        Categorías
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('employee.laboratories.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.laboratories.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-flask w-4 text-center shrink-0"></i>
+                        Laboratorios
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('employee.purchases.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.purchases.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-truck-ramp-box w-4 text-center shrink-0"></i>
+                        Compras
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('employee.kardex.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.kardex.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-chart-gantt w-4 text-center shrink-0"></i>
+                        Kardex
+                    </a>
+                </li>
+            </ul>
+        </div>
+
     </nav>
 
     <div class="px-3 py-3 border-t border-slate-200">

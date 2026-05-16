@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('laboratories', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->index();    // catálogo pertenece a la compañía
             $table->string('name', 100);
             $table->string('description', 255)->nullable();
             $table->string('country', 80)->nullable();

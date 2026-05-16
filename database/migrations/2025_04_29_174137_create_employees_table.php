@@ -15,6 +15,9 @@ return new class extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->index();    // compañía a la que pertenece
+            $table->unsignedBigInteger('branch_id')->index();     // sede principal del empleado
+            $table->unsignedBigInteger('role_id')->index();       // rol: branch_admin (2) o employee (3)
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
@@ -23,10 +26,14 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // role_id 2 = branch_admin (ver roles seeder)
         DB::table('employees')->insert([
-            'name' => 'Employee Name',
-            'email' => 'employee@example.com',
-            'password' => Hash::make('0000'),
+            'company_id' => 1,
+            'branch_id'  => 1,
+            'role_id'    => 2,
+            'name'       => 'Employee Name',
+            'email'      => 'employee@example.com',
+            'password'   => Hash::make('0000'),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

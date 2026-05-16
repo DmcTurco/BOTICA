@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('purchases', function (Blueprint $table) {
             $table->id();
 
-            $table->unsignedBigInteger('company_id')->index();
+            $table->unsignedBigInteger('company_id')->index();    // compañía a la que pertenece la compra
+            $table->unsignedBigInteger('branch_id')->index();     // sede que recibe el stock
+            $table->unsignedBigInteger('employee_id')->index();   // empleado que registró la compra
 
             // Tipo de documento: 1=boleta, 2=factura, 3=nota de ingreso
             $table->unsignedTinyInteger('document_type')->default(1)

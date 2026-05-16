@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
                 return MyApp::ADMINS_SUBDIR;
             } else if (preg_match("#^/" . MyApp::COMPANY_SUBDIR . "/#", $requestUri)) {
                 return MyApp::COMPANY_SUBDIR;
-            } else if (preg_match("#^/" . MyApp::COMPANY_SUBDIR . "/#", $requestUri)) {
+            } else if (preg_match("#^/" . MyApp::EMPLOYEE_SUBDIR . "/#", $requestUri)) {
                 return MyApp::EMPLOYEE_SUBDIR;
             } else {
                 return null;

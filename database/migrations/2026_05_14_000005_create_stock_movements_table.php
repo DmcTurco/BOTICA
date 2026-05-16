@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
 
-            $table->string('product_code', 20)->index();
+            $table->unsignedBigInteger('company_id')->index();    // compañía a la que pertenece el movimiento
+            $table->unsignedBigInteger('branch_id')->index();     // sede donde ocurrió el movimiento de stock
+            $table->string('product_code', 20)->index();          // producto afectado
 
             // Tipo: entrada (compra) o salida (venta)
             $table->enum('type', ['entrada', 'salida', 'ajuste'])

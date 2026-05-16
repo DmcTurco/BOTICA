@@ -13,10 +13,8 @@ return new class extends Migration
     {
         Schema::create('presentations', function (Blueprint $table) {
             $table->id();
-            $table->string('product_code', 20);
-            $table->foreign('product_code')->references('code')->on('products')->cascadeOnDelete();
-            $table->unsignedBigInteger('unit_id');
-            $table->foreign('unit_id')->references('id')->on('units')->restrictOnDelete();
+            $table->string('product_code', 20)->index(); // FK lógica a products.code
+            $table->unsignedBigInteger('unit_id')->index(); // FK lógica a units.id
             $table->decimal('equivalent_amount', 10, 2)->comment('Cuántas unidades base equivale esta presentación');
             $table->decimal('sale_price', 10, 2);
             $table->boolean('main_presentation')->default(false);

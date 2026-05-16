@@ -35,7 +35,11 @@ return new class extends Migration
 
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->index();                   // compañía a la que pertenece la orden
+            $table->unsignedBigInteger('branch_id')->index();                    // sede donde se realizó la venta
             $table->unsignedBigInteger('cash_register_id')->nullable()->index(); // caja en la que se registró
+            $table->unsignedBigInteger('employee_id')->index();                  // vendedor/cajero que registró la orden
+            $table->unsignedBigInteger('client_id')->nullable()->index();        // FK lógica a clients.id (null = venta anónima)
             $table->string('customer_name')->nullable();
             $table->unsignedTinyInteger('document_type_id')->nullable()->index(); // tipo de doc del cliente (FK a document_types)
             $table->string('customer_document', 20)->nullable();

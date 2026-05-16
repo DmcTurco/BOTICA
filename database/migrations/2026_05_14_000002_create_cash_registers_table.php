@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('cash_registers', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('company_id')->index();       // empresa dueña de la caja
+            $table->unsignedBigInteger('company_id')->index();        // compañía a la que pertenece la caja
+            $table->unsignedBigInteger('branch_id')->index();         // sede donde está la caja
+            $table->unsignedBigInteger('employee_id')->index();       // empleado responsable de la caja
             $table->decimal('opening_amount', 10, 2)->default(0);   // monto declarado al abrir
             $table->json('opening_denominations')->nullable();      // desglose de billetes/monedas al abrir
             $table->decimal('closing_amount', 10, 2)->nullable();   // monto contado al cerrar

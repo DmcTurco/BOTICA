@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Company;
+namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\CashRegister;
@@ -53,16 +53,16 @@ class CashRegisterController extends Controller
      */
     public function showOpen()
     {
-        $company = auth()->guard('company')->user();
+        $employee = auth()->guard('employee')->user();
 
-        $cajaActiva = CashRegister::open()->where('company_id', $company->id)->first();
+        $cajaActiva = CashRegister::open()->where('employee_id', $employee->id)->first();
 
         if ($cajaActiva) {
-            return redirect()->route('company.orders.index')
+            return redirect()->route('employee.orders.index')
                 ->with('info', 'Ya tienes una caja abierta.');
         }
 
-        return view('company.pages.cash-register.open');
+        return view('employee.pages.cash-register.open');
     }
 
     /**
@@ -74,12 +74,12 @@ class CashRegisterController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $company = auth()->guard('company')->user();
+        $employee = auth()->guard('employee')->user();
 
-        $cajaActiva = CashRegister::open()->where('company_id', $company->id)->first();
+        $cajaActiva = CashRegister::open()->where('employee_id', $employee->id)->first();
 
         if ($cajaActiva) {
-            return redirect()->route('company.orders.index')
+            return redirect()->route('employee.orders.index')
                 ->with('info', 'Ya tienes una caja abierta.');
         }
 
@@ -87,7 +87,7 @@ class CashRegisterController extends Controller
 
         try {
             $caja = CashRegister::create([
-                'company_id'            => $company->id,
+                'company_id'            => $employee->company_id,
                 'opening_amount'        => $total,
                 'opening_denominations' => $denominaciones,
                 'notes'                 => $request->notes,
@@ -102,7 +102,7 @@ class CashRegisterController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error al abrir caja: ' . $e->getMessage());
-            return redirect()->route('company.cash-register.show-open')
+            return redirect()->route('employee.cash-register.show-open')
                 ->with('error', 'No se pudo abrir la caja. Intenta de nuevo.');
         }
     }
@@ -112,16 +112,16 @@ class CashRegisterController extends Controller
      */
     public function edit()
     {
-        $company = auth()->guard('company')->user();
+        $employee = auth()->guard('employee')->user();
 
-        $caja = CashRegister::open()->where('company_id', $company->id)->latest('opened_at')->first();
+        $caja = CashRegister::open()->where('employee_id', $employee->id)->latest('opened_at')->first();
 
         if (!$caja) {
-            return redirect()->route('company.cash-register.show-open')
+            return redirect()->route('employee.cash-register.show-open')
                 ->with('error', 'No hay una caja abierta para editar.');
         }
 
-        return view('company.pages.cash-register.edit', compact('caja'));
+        return view('employee.pages.cash-register.edit', compact('caja'));
     }
 
     /**
@@ -133,12 +133,12 @@ class CashRegisterController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $company = auth()->guard('company')->user();
+        $employee = auth()->guard('employee')->user();
 
-        $caja = CashRegister::open()->where('company_id', $company->id)->latest('opened_at')->first();
+        $caja = CashRegister::open()->where('employee_id', $employee->id)->latest('opened_at')->first();
 
         if (!$caja) {
-            return redirect()->route('company.cash-register.show-open')
+            return redirect()->route('employee.cash-register.show-open')
                 ->with('error', 'No hay una caja abierta para editar.');
         }
 
@@ -151,12 +151,12 @@ class CashRegisterController extends Controller
                 'notes'                 => $request->notes,
             ]);
 
-            return redirect()->route('company.cash-register.edit')
+            return redirect()->route('employee.cash-register.edit')
                 ->with('success', 'Apertura actualizada. Nuevo total: S/ ' . number_format($total, 2));
 
         } catch (\Exception $e) {
             Log::error('Error al editar apertura de caja: ' . $e->getMessage());
-            return redirect()->route('company.cash-register.edit')
+            return redirect()->route('employee.cash-register.edit')
                 ->with('error', 'No se pudo actualizar la apertura. Intenta de nuevo.');
         }
     }
@@ -174,12 +174,12 @@ class CashRegisterController extends Controller
             'closing_amount.numeric'  => 'El monto debe ser un número válido.',
         ]);
 
-        $company = auth()->guard('company')->user();
+        $employee = auth()->guard('employee')->user();
 
-        $caja = CashRegister::open()->where('company_id', $company->id)->latest('opened_at')->first();
+        $caja = CashRegister::open()->where('employee_id', $employee->id)->latest('opened_at')->first();
 
         if (!$caja) {
-            return redirect()->route('company.home')
+            return redirect()->route('employee.home')
                 ->with('error', 'No hay una caja abierta para cerrar.');
         }
 
@@ -198,13 +198,13 @@ class CashRegisterController extends Controller
 
             session()->forget('cash_register_id');
 
-            return redirect()->route('company.home')
+            return redirect()->route('employee.home')
                 ->with('success', 'Caja cerrada. Total esperado: S/ ' . number_format($expectedAmount, 2) .
                     ' | Diferencia: S/ ' . number_format($difference, 2));
 
         } catch (\Exception $e) {
             Log::error('Error al cerrar caja: ' . $e->getMessage());
-            return redirect()->route('company.home')
+            return redirect()->route('employee.home')
                 ->with('error', 'No se pudo cerrar la caja. Intenta de nuevo.');
         }
     }
@@ -214,10 +214,10 @@ class CashRegisterController extends Controller
      */
     public function status()
     {
-        $company = auth()->guard('company')->user();
+        $employee = auth()->guard('employee')->user();
 
         $caja = CashRegister::open()
-            ->where('company_id', $company->id)
+            ->where('employee_id', $employee->id)
             ->latest('opened_at')
             ->first();
 
