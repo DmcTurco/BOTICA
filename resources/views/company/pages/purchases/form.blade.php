@@ -91,7 +91,7 @@
                     </div>
 
                     {{-- Lista de productos --}}
-                    <div class="flex-1 overflow-auto">
+                    <div class="flex-1 min-h-0 overflow-auto">
                         <table class="w-full text-sm" id="tablaProductos">
                             <thead class="sticky top-0 z-10">
                                 <tr class="bg-slate-50 border-b border-slate-200">
@@ -110,17 +110,17 @@
                             <tbody class="divide-y divide-slate-100" id="cuerpoProductos">
                                 @foreach ($productos as $p)
                                     <tr class="hover:bg-emerald-50 transition-colors cursor-pointer fila-producto"
-                                        data-code="{{ $p->code }}" data-name="{{ $p->came }}"
+                                        data-code="{{ $p->code }}" data-name="{{ $p->name }}"
                                         data-cost="{{ $p->purchase_price ?? 0 }}">
                                         <td class="px-4 py-2.5">
-                                            <p class="font-medium text-slate-800 text-xs">{{ $p->came }}</p>
+                                            <p class="font-medium text-slate-800 text-xs">{{ $p->name }}</p>
                                             <p class="text-[10px] text-slate-400 font-mono">{{ $p->code }}</p>
                                         </td>
                                         <td class="px-4 py-2.5 text-center">
                                             <span
                                                 class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                        {{ $p->stock_actual <= ($p->stock_minimum ?? 0) ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700' }}">
-                                                {{ $p->stock_actual }}
+                                        {{ ($p->branchStocks->first()?->stock_actual ?? 0) <= ($p->branchStocks->first()?->stock_minimum ?? 0) ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700' }}">
+                                                {{ $p->branchStocks->first()?->stock_actual ?? 0 }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-2.5 text-right text-xs text-slate-500">
@@ -168,7 +168,7 @@
                     @enderror
 
                     {{-- Lista scrollable --}}
-                    <div class="flex-1 overflow-auto" id="contenedorSeleccionados">
+                    <div class="flex-1 min-h-0 overflow-auto" id="contenedorSeleccionados">
 
                         {{-- Estado vacío --}}
                         <div id="emptyState" class="flex flex-col items-center justify-center h-full py-16 text-slate-300">

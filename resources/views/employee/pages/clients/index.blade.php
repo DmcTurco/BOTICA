@@ -4,7 +4,7 @@
 @section('main-padding', 'p-2 md:p-3')
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
     {{-- Header --}}
     <div class="flex items-center justify-between shrink-0">
@@ -60,7 +60,7 @@
         </div>
 
         {{-- Área scrollable --}}
-        <div class="flex-1 overflow-auto">
+        <div class="flex-1 min-h-0 overflow-auto">
             <table class="w-full text-sm">
                 <thead class="sticky top-0 z-10">
                     <tr class="bg-slate-50 border-b border-slate-200">

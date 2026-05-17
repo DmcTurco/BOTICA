@@ -10,6 +10,8 @@ class StockMovement extends Model
     protected $table = 'stock_movements';
 
     protected $fillable = [
+        'company_id',
+        'branch_id',
         'product_code',
         'type',
         'reference_type',
@@ -28,7 +30,19 @@ class StockMovement extends Model
 
     // ── Relaciones ──────────────────────────────────────────────
 
-    /** Producto al que pertenece este movimiento */
+    /** Compañía a la que pertenece */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    /** Sede donde ocurrió el movimiento */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    /** Producto afectado */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'product_code', 'code');
@@ -36,7 +50,7 @@ class StockMovement extends Model
 
     // ── Accessors ───────────────────────────────────────────────
 
-    /** Etiqueta de tipo con color para las vistas */
+    /** Badge de tipo para las vistas */
     public function getTipoBadgeAttribute(): array
     {
         return match ($this->type) {

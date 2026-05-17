@@ -17,7 +17,11 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Client::with('documentType')->orderBy('name');
+        $employee = auth()->guard('employee')->user();
+
+        $query = Client::with('documentType')
+            ->where('company_id', $employee->company_id)
+            ->orderBy('name');
 
         if ($request->filled('buscar')) {
             $search = $request->buscar;
@@ -35,7 +39,7 @@ class ClientController extends Controller
 
         $clients = $query->paginate(15)->withQueryString();
 
-        return view('company.pages.clients.index', compact('clients'));
+        return view('employee.pages.clients.index', compact('clients'));
     }
 
     /**
@@ -44,7 +48,7 @@ class ClientController extends Controller
     public function create()
     {
         $documentTypes = DocumentType::activos()->get();
-        return view('company.pages.clients.form', compact('documentTypes'));
+        return view('employee.pages.clients.form', compact('documentTypes'));
     }
 
     /**
@@ -64,11 +68,14 @@ class ClientController extends Controller
             'email.email'   => 'El correo electrónico no tiene un formato válido.',
         ]);
 
+        $employee = auth()->guard('employee')->user();
+
         try {
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request, $employee) {
                 $code = DocumentSeries::siguiente(DocumentSeries::CLIENTE);
 
                 Client::create([
+                    'company_id'       => $employee->company_id,
                     'code'             => $code,
                     'name'             => $request->name,
                     'document_type_id' => $request->document_type_id ?: null,
@@ -80,7 +87,7 @@ class ClientController extends Controller
                 ]);
             });
 
-            return redirect()->route('company.clients.index')
+            return redirect()->route('employee.clients.index')
                 ->with('success', 'Cliente registrado correctamente.');
 
         } catch (\Exception $e) {
@@ -95,8 +102,11 @@ class ClientController extends Controller
      */
     public function edit(Client $client)
     {
+        $employee = auth()->guard('employee')->user();
+        abort_if($client->company_id !== $employee->company_id, 403);
+
         $documentTypes = DocumentType::activos()->get();
-        return view('company.pages.clients.form', compact('client', 'documentTypes'));
+        return view('employee.pages.clients.form', compact('client', 'documentTypes'));
     }
 
     /**
@@ -104,6 +114,8 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client)
     {
+        $employee = auth()->guard('employee')->user();
+        abort_if($client->company_id !== $employee->company_id, 403);
         $request->validate([
             'name'             => 'required|string|max:150',
             'document_type_id' => 'nullable|exists:document_types,id',
@@ -125,7 +137,7 @@ class ClientController extends Controller
                 'status'           => $request->status,
             ]);
 
-            return redirect()->route('company.clients.index')
+            return redirect()->route('employee.clients.index')
                 ->with('success', "Cliente {$client->code} actualizado correctamente.");
 
         } catch (\Exception $e) {
@@ -147,7 +159,10 @@ class ClientController extends Controller
             return response()->json([]);
         }
 
+        $employee = auth()->guard('employee')->user();
+
         $clients = Client::with('documentType')
+            ->where('company_id', $employee->company_id)
             ->activos()
             ->where(function ($q) use ($term) {
                 $q->where('name', 'like', "%{$term}%")

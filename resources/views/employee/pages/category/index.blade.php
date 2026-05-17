@@ -4,7 +4,7 @@
 @section('main-padding', 'p-2 md:p-3')
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
     {{-- Header --}}
     <div class="flex items-center justify-between shrink-0">
@@ -55,7 +55,7 @@
         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 shrink-0">
             <p class="text-sm font-semibold text-slate-800">
                 Lista de categorías
-                <span class="ml-2 text-xs font-normal text-slate-400">{{ $categorias->total() }} registros</span>
+                <span class="ml-2 text-xs font-normal text-slate-400">{{ $categories->total() }} registros</span>
             </p>
             <div class="relative">
                 <button id="exportBtn"
@@ -74,7 +74,7 @@
         </div>
 
         {{-- Área scrollable --}}
-        <div class="flex-1 overflow-auto">
+        <div class="flex-1 min-h-0 overflow-auto">
             <table class="w-full text-sm">
                 <thead class="sticky top-0 z-10">
                     <tr class="bg-slate-50 border-b border-slate-200">
@@ -87,7 +87,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    @forelse($categorias as $categoria)
+                    @forelse($categories as $categoria)
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-5 py-3">
                             <div class="flex items-center gap-3">
@@ -145,9 +145,9 @@
         </div>
 
         {{-- Paginador (footer estático) --}}
-        @if($categorias->hasPages())
+        @if($categories->hasPages())
         <div class="px-5 py-3 border-t border-slate-200 shrink-0 bg-slate-50">
-            {{ $categorias->withQueryString()->links() }}
+            {{ $categories->withQueryString()->links() }}
         </div>
         @endif
 

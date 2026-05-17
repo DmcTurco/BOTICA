@@ -15,6 +15,8 @@ class Purchase extends Model
 
     protected $fillable = [
         'company_id',
+        'branch_id',
+        'employee_id',
         'document_type',
         'document_number',
         'supplier',
@@ -33,7 +35,6 @@ class Purchase extends Model
         'total'        => 'decimal:2',
     ];
 
-    /** Tipos de documento disponibles */
     const DOCUMENT_TYPES = [
         1 => 'Boleta',
         2 => 'Factura',
@@ -42,16 +43,28 @@ class Purchase extends Model
 
     // ── Relaciones ──────────────────────────────────────────────
 
-    /** Líneas de detalle de esta compra */
-    public function items(): HasMany
-    {
-        return $this->hasMany(PurchaseDetail::class, 'purchase_id');
-    }
-
-    /** Empresa que registró la compra */
+    /** Compañía a la que pertenece */
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    /** Sede que recibió el stock */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    /** Empleado que registró la compra */
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    /** Líneas de detalle */
+    public function items(): HasMany
+    {
+        return $this->hasMany(PurchaseDetail::class, 'purchase_id');
     }
 
     // ── Accessors ───────────────────────────────────────────────

@@ -4,7 +4,7 @@
 @section('main-padding', 'p-2 md:p-3')
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
     {{-- Header --}}
     <div class="flex items-center justify-between shrink-0">
@@ -86,7 +86,7 @@
         </div>
 
         {{-- Área scrollable --}}
-        <div class="flex-1 overflow-auto">
+        <div class="flex-1 min-h-0 overflow-auto">
             <table class="w-full text-sm">
                 <thead class="sticky top-0 z-10">
                     <tr class="bg-slate-50 border-b border-slate-200">
@@ -113,21 +113,21 @@
                             </div>
                         </td>
                         <td class="px-5 py-3 text-slate-600 text-xs hidden md:table-cell">
-                            {{ $producto->categoria->name ?? '—' }}
+                            {{ $producto->category->name ?? '—' }}
                         </td>
                         <td class="px-5 py-3 text-center">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                {{ $producto->stock_minimum && $producto->stock_actual <= $producto->stock_minimum
+                                {{ ($producto->branchStocks->first()?->stock_minimum) && ($producto->branchStocks->first()?->stock_actual ?? 0) <= $producto->branchStocks->first()?->stock_minimum
                                     ? 'bg-amber-50 text-amber-700'
                                     : 'bg-emerald-50 text-emerald-700' }}">
-                                {{ $producto->stock_actual }}
+                                {{ $producto->branchStocks->first()?->stock_actual ?? 0 }}
                             </span>
                         </td>
                         <td class="px-5 py-3 text-center text-slate-600 text-xs hidden lg:table-cell">
                             S/. {{ number_format($producto->unit_sale_price, 2) }}
                         </td>
                         <td class="px-5 py-3 text-center text-slate-500 text-xs hidden xl:table-cell">
-                            {{ $producto->laboratorio->name ?? '—' }}
+                            {{ $producto->laboratory->name ?? '—' }}
                         </td>
                         <td class="px-5 py-3 text-center">
                             @if($producto->status)

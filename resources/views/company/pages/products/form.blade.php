@@ -5,7 +5,7 @@
 @section('main-padding', 'p-2 md:p-3')
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
     {{-- Header --}}
     <div class="flex items-center gap-3 shrink-0">
@@ -148,12 +148,11 @@
                             </select>
                             @error('unidad_medida_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
-                        <div>
-                            <label for="fecha_vencimiento" class="block text-sm font-medium text-slate-700 mb-1.5">Fecha de Vencimiento</label>
-                            <input type="date" id="fecha_vencimiento" name="fecha_vencimiento"
-                                   value="{{ old('fecha_vencimiento', isset($producto->expiration_date) ? \Carbon\Carbon::parse($producto->expiration_date)->format('Y-m-d') : '') }}"
-                                   class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            @error('fecha_vencimiento') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        <div class="flex items-end">
+                            <p class="text-xs text-slate-400 pb-2">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                La fecha de vencimiento se registra por lote al registrar una compra.
+                            </p>
                         </div>
                     </div>
 
@@ -270,35 +269,27 @@
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
 
                             {{-- Stock actual: editable solo en creación --}}
-                            @if(!isset($producto))
+                            {{-- Stock: siempre en solo lectura (se actualiza mediante compras) --}}
                             <div>
-                                <label for="stock_actual" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Stock Inicial <span class="text-red-500">*</span>
-                                </label>
-                                <input type="number" id="stock_actual" name="stock_actual" required min="0" step="1"
-                                       value="{{ old('stock_actual', 0) }}"
-                                       class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                @error('stock_actual') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                            </div>
-                            @else
-                            {{-- En edición: solo lectura con acceso a compras --}}
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Stock Actual</label>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Stock en esta sede</label>
                                 <div class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 flex items-center justify-between">
-                                    <span class="font-semibold text-slate-800">{{ $producto->stock_actual }}</span>
+                                    <span class="font-semibold text-slate-800">
+                                        {{ $producto->branchStocks->first()?->stock_actual ?? 0 }}
+                                    </span>
+                                    @if(isset($producto))
                                     <a href="{{ route('company.purchases.create', ['product' => $producto->code]) }}"
                                        class="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1">
                                         <i class="fas fa-plus-circle text-[10px]"></i> Registrar compra
                                     </a>
+                                    @endif
                                 </div>
                                 <p class="text-xs text-slate-400 mt-1">El stock se actualiza mediante compras registradas.</p>
                             </div>
-                            @endif
 
                             <div>
                                 <label for="stock_minimo" class="block text-sm font-medium text-slate-700 mb-1.5">Stock Mínimo</label>
                                 <input type="number" id="stock_minimo" name="stock_minimo" min="0" step="1"
-                                       value="{{ old('stock_minimo', $producto->stock_minimum ?? '') }}"
+                                       value="{{ old('stock_minimo', $producto->branchStocks->first()?->stock_minimum ?? '') }}"
                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                        placeholder="0">
                                 @error('stock_minimo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -306,7 +297,7 @@
                             <div>
                                 <label for="stock_maximo" class="block text-sm font-medium text-slate-700 mb-1.5">Stock Máximo</label>
                                 <input type="number" id="stock_maximo" name="stock_maximo" min="0" step="1"
-                                       value="{{ old('stock_maximo', $producto->stock_maximum ?? '') }}"
+                                       value="{{ old('stock_maximo', $producto->branchStocks->first()?->stock_maximum ?? '') }}"
                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                        placeholder="0">
                                 @error('stock_maximo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -412,8 +403,8 @@ $(document).ready(function() {
     inicializarSelect2();
     inicializarEventos();
 
-    @if(isset($producto) && $producto->presentaciones->count())
-        @foreach($producto->presentaciones as $presentacion)
+    @if(isset($producto) && $producto->presentations->count())
+        @foreach($producto->presentations as $presentacion)
             agregarPresentacion({
                 unidad_medida_id: '{{ $presentacion->unit_id }}',
                 cantidad_equivalente: '{{ $presentacion->equivalent_amount }}',

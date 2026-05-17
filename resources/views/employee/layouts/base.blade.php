@@ -8,9 +8,9 @@
 
     @include('employee/inc/sidebar')
 
-    <div class="lg:ml-64 flex flex-col min-h-screen">
+    <div class="lg:ml-64 flex flex-col h-screen">
         @include('employee/inc/navbar')
-        <main class="flex-1 p-4 md:p-6">
+        <main class="flex-1 min-h-0 flex flex-col @yield('main-padding', 'p-4 md:p-6') @yield('main-class', 'overflow-auto')">
             @yield('content-area')
         </main>
     </div>

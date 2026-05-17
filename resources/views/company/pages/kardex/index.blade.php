@@ -27,7 +27,7 @@
                         <option value="">— Seleccionar producto —</option>
                         @foreach($productos as $p)
                             <option value="{{ $p->code }}" {{ request('producto') == $p->code ? 'selected' : '' }}>
-                                {{ $p->came }} ({{ $p->code }})
+                                {{ $p->name }} ({{ $p->code }})
                             </option>
                         @endforeach
                     </select>
@@ -70,7 +70,7 @@
                     <i class="fas fa-pills text-emerald-600 text-sm"></i>
                 </div>
                 <div>
-                    <p class="font-semibold text-slate-800">{{ $producto->came }}</p>
+                    <p class="font-semibold text-slate-800">{{ $producto->name }}</p>
                     <p class="text-xs text-slate-400 font-mono">{{ $producto->code }}</p>
                 </div>
             </div>
@@ -89,7 +89,7 @@
                 </div>
                 <div class="text-center">
                     <p class="text-xs text-slate-400 mb-0.5">Stock actual</p>
-                    <p class="text-lg font-bold text-slate-800">{{ $producto->stock_actual }}</p>
+                    <p class="text-lg font-bold text-slate-800">{{ $producto->stock_actual ?? 0 }}</p>
                 </div>
                 <div class="text-center">
                     <p class="text-xs text-slate-400 mb-0.5">Movimientos</p>
@@ -109,7 +109,7 @@
             </p>
         </div>
 
-        <div class="flex-1 overflow-auto">
+        <div class="flex-1 min-h-0 overflow-auto">
             <table class="w-full text-sm">
                 <thead class="sticky top-0 z-10">
                     <tr class="bg-slate-50 border-b border-slate-200">

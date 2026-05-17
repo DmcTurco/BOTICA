@@ -15,6 +15,7 @@
     {{-- Navegación --}}
     <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-5">
 
+        {{-- Principal --}}
         <div>
             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Principal</p>
             <ul class="space-y-0.5">
@@ -29,103 +30,24 @@
             </ul>
         </div>
 
-        {{-- Ventas --}}
+        {{-- Administración --}}
         <div>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Ventas</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Administración</p>
             <ul class="space-y-0.5">
                 <li>
-                    <a href="{{ route('company.cash-register.show-open') }}"
+                    <a href="{{ route('company.branches.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('company.cash-register.show-open') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
-                        <i class="fas fa-lock-open w-4 text-center shrink-0"></i>
-                        Apertura de caja
+                              {{ request()->routeIs('company.branches.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                        <i class="fas fa-building w-4 text-center shrink-0"></i>
+                        Sedes
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('company.cash-register.edit') }}"
+                    <a href="{{ route('company.employees.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('company.cash-register.edit') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
-                        <i class="fas fa-pen-to-square w-4 text-center shrink-0"></i>
-                        Editar apertura
-                    </a>
-                </li>
-                <li>
-                    <button onclick="abrirModalCierre()"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                                   text-slate-400 hover:bg-emerald-900 hover:text-white text-left">
-                        <i class="fas fa-lock w-4 text-center shrink-0"></i>
-                        Cierre de caja
-                    </button>
-                </li>
-                <li>
-                    <a href="{{ route('company.orders.index') }}"
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('company.orders.index') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
-                        <i class="fas fa-cash-register w-4 text-center shrink-0"></i>
-                        Ventas
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('company.orders.historial') }}"
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('company.orders.historial') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
-                        <i class="fas fa-receipt w-4 text-center shrink-0"></i>
-                        Historial
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('company.clients.index') }}"
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('company.clients.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
-                        <i class="fas fa-users w-4 text-center shrink-0"></i>
-                        Clientes
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        {{-- Inventario --}}
-        <div>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Inventario</p>
-            <ul class="space-y-0.5">
-                <li>
-                    <a href="{{ route('company.products.index') }}"
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('company.products.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
-                        <i class="fas fa-pills w-4 text-center shrink-0"></i>
-                        Productos
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('company.categories.index') }}"
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('company.categories.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
-                        <i class="fas fa-tags w-4 text-center shrink-0"></i>
-                        Categorías
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('company.laboratories.index') }}"
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('company.laboratories.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
-                        <i class="fas fa-flask w-4 text-center shrink-0"></i>
-                        Laboratorios
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('company.purchases.index') }}"
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('company.purchases.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
-                        <i class="fas fa-truck-ramp-box w-4 text-center shrink-0"></i>
-                        Compras
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('company.kardex.index') }}"
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('company.kardex.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
-                        <i class="fas fa-chart-gantt w-4 text-center shrink-0"></i>
-                        Kardex
+                              {{ request()->routeIs('company.employees.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                        <i class="fas fa-user-tie w-4 text-center shrink-0"></i>
+                        Empleados
                     </a>
                 </li>
             </ul>

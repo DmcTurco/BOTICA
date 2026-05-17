@@ -12,7 +12,10 @@ class LaboratoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Laboratory::withCount('productos');
+        $employee = auth()->guard('employee')->user();
+
+        $query = Laboratory::where('company_id', $employee->company_id)
+            ->withCount('productos');
 
         if ($request->filled('buscar')) {
             $query->where(function ($q) use ($request) {
@@ -28,18 +31,21 @@ class LaboratoryController extends Controller
 
         $laboratorios = $query->orderBy('name')->paginate(9)->withQueryString();
 
-        return view('company.pages.laboratories.index', compact('laboratorios'));
+        return view('employee.pages.laboratories.index', compact('laboratorios'));
     }
 
     public function create()
     {
-        return view('company.pages.laboratories.form');
+        return view('employee.pages.laboratories.form');
     }
 
     public function store(LaboratoryRequest $request)
     {
+        $employee = auth()->guard('employee')->user();
+
         try {
             Laboratory::create([
+                'company_id'  => $employee->company_id,
                 'name'        => $request->nombre,
                 'description' => $request->descripcion,
                 'country'     => $request->pais,
@@ -48,7 +54,7 @@ class LaboratoryController extends Controller
                 'status'      => $request->has('activo') ? 1 : 0,
             ]);
 
-            return redirect()->route('company.laboratories.index')
+            return redirect()->route('employee.laboratories.index')
                 ->with('success', 'Laboratorio creado correctamente.');
         } catch (\Exception $e) {
             Log::error('Error al crear laboratorio: ' . $e->getMessage());
@@ -59,15 +65,17 @@ class LaboratoryController extends Controller
 
     public function edit($id)
     {
-        $laboratorio = Laboratory::findOrFail($id);
+        $employee    = auth()->guard('employee')->user();
+        $laboratorio = Laboratory::where('company_id', $employee->company_id)->findOrFail($id);
         $productosCount = $laboratorio->productos()->count();
 
-        return view('company.pages.laboratories.form', compact('laboratorio', 'productosCount'));
+        return view('employee.pages.laboratories.form', compact('laboratorio', 'productosCount'));
     }
 
     public function update(LaboratoryRequest $request, $id)
     {
-        $laboratorio = Laboratory::findOrFail($id);
+        $employee    = auth()->guard('employee')->user();
+        $laboratorio = Laboratory::where('company_id', $employee->company_id)->findOrFail($id);
 
         try {
             $laboratorio->update([
@@ -79,7 +87,7 @@ class LaboratoryController extends Controller
                 'status'      => $request->has('activo') ? 1 : 0,
             ]);
 
-            return redirect()->route('company.laboratories.index')
+            return redirect()->route('employee.laboratories.index')
                 ->with('success', 'Laboratorio actualizado correctamente.');
         } catch (\Exception $e) {
             Log::error('Error al actualizar laboratorio: ' . $e->getMessage());
@@ -90,20 +98,21 @@ class LaboratoryController extends Controller
 
     public function destroy($id)
     {
-        $laboratorio = Laboratory::findOrFail($id);
+        $employee    = auth()->guard('employee')->user();
+        $laboratorio = Laboratory::where('company_id', $employee->company_id)->findOrFail($id);
 
         try {
             if ($laboratorio->productos()->count() > 0) {
-                return redirect()->route('company.laboratories.index')
+                return redirect()->route('employee.laboratories.index')
                     ->with('error', 'No se puede eliminar el laboratorio porque tiene productos asociados.');
             }
 
             $laboratorio->delete();
 
-            return redirect()->route('company.laboratories.index')
+            return redirect()->route('employee.laboratories.index')
                 ->with('success', 'Laboratorio eliminado correctamente.');
         } catch (\Exception $e) {
-            return redirect()->route('company.laboratories.index')
+            return redirect()->route('employee.laboratories.index')
                 ->with('error', 'Error al eliminar el laboratorio: ' . $e->getMessage());
         }
     }

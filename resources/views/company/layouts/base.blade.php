@@ -88,7 +88,7 @@
         @endif
         {{-- ─────────────────────────────────────────────────────────── --}}
 
-        <main class="flex-1 flex flex-col overflow-hidden @yield('main-padding', 'p-4 md:p-6')">
+        <main class="flex-1 min-h-0 flex flex-col @yield('main-padding', 'p-4 md:p-6') @yield('main-class', 'overflow-auto')">
             @yield('content-area')
         </main>
     </div>

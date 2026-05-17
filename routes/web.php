@@ -25,6 +25,10 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
     })->withoutMiddleware('auth:company');
 
     Route::get('/home', [Company\CompanyController::class, 'index'])->name('home');
+
+    // Administración — sedes y empleados
+    Route::resource('branches',  Company\BranchController::class)->except(['show']);
+    Route::resource('employees', Company\EmployeeController::class)->except(['show']);
 });
 
 Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employee.')->group(function () {

@@ -4,7 +4,7 @@
 @section('main-padding', 'p-2 md:p-3')
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
     {{-- Header --}}
     <div class="flex items-center justify-between shrink-0">
@@ -31,7 +31,7 @@
                 <select name="categoria"
                         class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                     <option value="">Todas las categorías</option>
-                    @foreach($categorias as $categoria)
+                    @foreach($categories as $categoria)
                         <option value="{{ $categoria->id }}" {{ request('categoria') == $categoria->id ? 'selected' : '' }}>
                             {{ $categoria->name }}
                         </option>
@@ -40,7 +40,7 @@
                 <select name="laboratorio"
                         class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                     <option value="">Todos los laboratorios</option>
-                    @foreach($laboratorios as $lab)
+                    @foreach($laboratories as $lab)
                         <option value="{{ $lab->id }}" {{ request('laboratorio') == $lab->id ? 'selected' : '' }}>
                             {{ $lab->name }}
                         </option>
@@ -67,7 +67,7 @@
         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 shrink-0">
             <p class="text-sm font-semibold text-slate-800">
                 Lista de productos
-                <span class="ml-2 text-xs font-normal text-slate-400">{{ $productos->total() }} registros</span>
+                <span class="ml-2 text-xs font-normal text-slate-400">{{ $products->total() }} registros</span>
             </p>
             <div class="relative">
                 <button id="exportBtn"
@@ -86,7 +86,7 @@
         </div>
 
         {{-- Área scrollable --}}
-        <div class="flex-1 overflow-auto">
+        <div class="flex-1 min-h-0 overflow-auto">
             <table class="w-full text-sm">
                 <thead class="sticky top-0 z-10">
                     <tr class="bg-slate-50 border-b border-slate-200">
@@ -101,33 +101,33 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    @forelse($productos as $producto)
+                    @forelse($products as $producto)
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-5 py-3 text-slate-500 text-xs font-mono">{{ $producto->code }}</td>
                         <td class="px-5 py-3">
                             <div>
-                                <p class="font-medium text-slate-800">{{ $producto->nombre }}</p>
+                                <p class="font-medium text-slate-800">{{ $producto->name }}</p>
                                 @if($producto->active_ingredient)
                                     <p class="text-xs text-slate-400">{{ $producto->active_ingredient }}</p>
                                 @endif
                             </div>
                         </td>
                         <td class="px-5 py-3 text-slate-600 text-xs hidden md:table-cell">
-                            {{ $producto->categoria->name ?? '—' }}
+                            {{ $producto->category->name ?? '—' }}
                         </td>
                         <td class="px-5 py-3 text-center">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                {{ $producto->stock_minimum && $producto->stock_actual <= $producto->stock_minimum
+                                {{ ($producto->branchStocks->first()?->stock_minimum) && ($producto->branchStocks->first()?->stock_actual ?? 0) <= $producto->branchStocks->first()?->stock_minimum
                                     ? 'bg-amber-50 text-amber-700'
                                     : 'bg-emerald-50 text-emerald-700' }}">
-                                {{ $producto->stock_actual }}
+                                {{ $producto->branchStocks->first()?->stock_actual ?? 0 }}
                             </span>
                         </td>
                         <td class="px-5 py-3 text-center text-slate-600 text-xs hidden lg:table-cell">
                             S/. {{ number_format($producto->unit_sale_price, 2) }}
                         </td>
                         <td class="px-5 py-3 text-center text-slate-500 text-xs hidden xl:table-cell">
-                            {{ $producto->laboratorio->name ?? '—' }}
+                            {{ $producto->laboratory->name ?? '—' }}
                         </td>
                         <td class="px-5 py-3 text-center">
                             @if($producto->status)
@@ -144,7 +144,7 @@
                                 </a>
                                 <button type="button"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors btn-eliminar"
-                                        data-id="{{ $producto->code }}" data-nombre="{{ $producto->nombre }}" title="Eliminar">
+                                        data-id="{{ $producto->code }}" data-nombre="{{ $producto->name }}" title="Eliminar">
                                     <i class="fas fa-trash text-xs"></i>
                                 </button>
                             </div>
@@ -166,9 +166,9 @@
         </div>
 
         {{-- Paginador (footer estático) --}}
-        @if($productos->hasPages())
+        @if($products->hasPages())
         <div class="px-5 py-3 border-t border-slate-200 shrink-0 bg-slate-50">
-            {{ $productos->withQueryString()->links() }}
+            {{ $products->withQueryString()->links() }}
         </div>
         @endif
 

@@ -4,20 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'products';
+    protected $table      = 'products';
     protected $primaryKey = 'code';
-    protected $keyType = 'string';
-    public $incrementing = false;
+    protected $keyType    = 'string';
+    public    $incrementing = false;
 
     protected $fillable = [
         'code',
-        'came',
+        'company_id',
+        'name',
         'description',
         'category_id',
         'laboratory_id',
@@ -28,86 +31,128 @@ class Product extends Model
         'unit_sale_price',
         'package_sale_price',
         'unit_id',
-        'stock_actual',
-        'stock_minimum',
-        'stock_maximum',
         'taxed_product',
         'requires_recipe',
-        'expiration_date',
         'location',
         'status',
+        'employee_id',
     ];
-
-    // Accessor para usar $producto->nombre en vistas y controlador
-    public function getNombreAttribute(): string
-    {
-        return $this->came ?? '';
-    }
 
     protected $casts = [
-        'purchase_price' => 'decimal:2',
+        'purchase_price'         => 'decimal:2',
         'package_purchase_price' => 'decimal:2',
-        'unit_sale_price' => 'decimal:2',
-        'package_sale_price' => 'decimal:2',
-        'stock_actual' => 'decimal:2',
-        'taxed_product' => 'boolean',
-        'requires_recipe' => 'boolean',
-        'expiration_date' => 'date',
+        'unit_sale_price'        => 'decimal:2',
+        'package_sale_price'     => 'decimal:2',
+        'taxed_product'          => 'boolean',
+        'requires_recipe'        => 'boolean',
     ];
 
-    public function categoria()
+    // ── Relaciones ──────────────────────────────────────────────
+
+    /** Compañía dueña del catálogo */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    /** Categoría del producto */
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
-    public function laboratorio()
+    /** Laboratorio fabricante */
+    public function laboratory(): BelongsTo
     {
-        return $this->belongsTo(laboratory::class, 'laboratory_id');
+        return $this->belongsTo(Laboratory::class, 'laboratory_id');
     }
 
-    public function unidadMedida()
+    /** Unidad de medida principal */
+    public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class, 'unit_id');
     }
 
-    public function presentaciones()
+    /** Empleado que registró el producto */
+    public function employee(): BelongsTo
     {
-        return $this->hasMany(Presentation::class, 'product_code');
+        return $this->belongsTo(Employee::class, 'employee_id');
     }
 
-    // Calcular utilidad por unidad
-    public function getUtilidadUnidadAttribute()
+    /** Presentaciones disponibles (tableta, blíster, caja…) */
+    public function presentations(): HasMany
     {
-        return $this->unit_sale_price - $this->purchase_price;
+        return $this->hasMany(Presentation::class, 'product_code', 'code');
     }
 
-    // Calcular utilidad por paquete
-    public function getUtilidadPaqueteAttribute()
+    /** Stock por sede */
+    public function branchStocks(): HasMany
+    {
+        return $this->hasMany(BranchStock::class, 'product_code', 'code');
+    }
+
+    /** Movimientos de stock (kardex) */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class, 'product_code', 'code');
+    }
+
+    // ── Helpers de stock (requieren branch_id) ───────────────────
+
+    /** Stock actual en una sede específica */
+    public function stockEnSede(int $branchId): float
+    {
+        return (float) $this->branchStocks()
+            ->where('branch_id', $branchId)
+            ->value('stock_actual') ?? 0;
+    }
+
+    /** ¿Hay stock disponible en una sede? */
+    public function disponibleEnSede(int $branchId): bool
+    {
+        return $this->stockEnSede($branchId) > 0;
+    }
+
+    // ── Accessors ───────────────────────────────────────────────
+
+    /** Utilidad por unidad vendida */
+    public function getUtilidadUnidadAttribute(): float
+    {
+        return (float) ($this->unit_sale_price - $this->purchase_price);
+    }
+
+    /** Utilidad por paquete vendido */
+    public function getUtilidadPaqueteAttribute(): ?float
     {
         if ($this->package_sale_price && $this->package_purchase_price) {
-            return $this->package_sale_price - $this->package_purchase_price;
+            return (float) ($this->package_sale_price - $this->package_purchase_price);
         }
         return null;
     }
 
-    // Valor de inventario
-    public function getValorInventarioAttribute()
-    {
-        return $this->stock_actual * $this->purchase_price;
-    }
+    // ── Aliases de relaciones (compatibilidad con vistas existentes) ──
 
-    // Calcular si está en stock
-    public function getDisponibleAttribute()
-    {
-        return $this->stock_actual > 0;
-    }
+    // /** @deprecated Usar category() */
+    // public function categoria(): BelongsTo
+    // {
+    //     return $this->category();
+    // }
 
-    // Calcular si está por debajo del stock mínimo
-    public function getBajoStockAttribute()
-    {
-        if ($this->stock_minimum === null) {
-            return false;
-        }
-        return $this->stock_actual <= $this->stock_minimum;
-    }
+    // /** @deprecated Usar laboratory() */
+    // public function laboratorio(): BelongsTo
+    // {
+    //     return $this->laboratory();
+    // }
+
+    // /** @deprecated Usar unit() */
+    // public function unidadMedida(): BelongsTo
+    // {
+    //     return $this->unit();
+    // }
+
+    // /** @deprecated Usar presentations() */
+    // public function presentaciones(): HasMany
+    // {
+    //     return $this->presentations();
+    // }
 }

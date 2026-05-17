@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\BranchStock;
 use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
@@ -10,22 +11,41 @@ use Illuminate\Http\Request;
 class KardexController extends Controller
 {
     /**
-     * Muestra el kardex de un producto seleccionado.
+     * Muestra el kardex de un producto seleccionado, filtrado por sede.
      * Si no se pasa ?producto=CODE, muestra solo el selector.
      */
     public function index(Request $request)
     {
-        // Lista de productos para el selector
-        $productos = Product::orderBy('came')->get(['code', 'came', 'stock_actual']);
+        $employee = auth()->guard('employee')->user();
 
-        $producto   = null;
+        // Lista de productos de la compañía con su stock en la sede del empleado
+        $productos = Product::where('company_id', $employee->company_id)
+            ->orderBy('name')
+            ->get(['code', 'name'])
+            ->map(function ($p) use ($employee) {
+                $p->stock_actual = BranchStock::where('branch_id', $employee->branch_id)
+                    ->where('product_code', $p->code)
+                    ->value('stock_actual') ?? 0;
+                return $p;
+            });
+
+        $producto    = null;
         $movimientos = collect();
 
         if ($request->filled('producto')) {
-            $producto = Product::where('code', $request->producto)->first();
+            $producto = Product::where('code', $request->producto)
+                ->where('company_id', $employee->company_id)
+                ->first();
 
             if ($producto) {
+                // Mapear stock y mínimo desde branch_stock para la vista
+                $branchStock = BranchStock::where('branch_id', $employee->branch_id)
+                    ->where('product_code', $producto->code)
+                    ->first();
+                $producto->stock_actual  = $branchStock?->stock_actual ?? 0;
+                $producto->stock_minimum = $branchStock?->stock_minimum;
                 $query = StockMovement::where('product_code', $producto->code)
+                    ->where('branch_id', $employee->branch_id)
                     ->orderBy('created_at', 'asc');
 
                 // Filtro por rango de fechas
@@ -41,6 +61,6 @@ class KardexController extends Controller
             }
         }
 
-        return view('company.pages.kardex.index', compact('productos', 'producto', 'movimientos'));
+        return view('employee.pages.kardex.index', compact('productos', 'producto', 'movimientos'));
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CashRegister extends Model
 {
@@ -10,6 +12,8 @@ class CashRegister extends Model
 
     protected $fillable = [
         'company_id',
+        'branch_id',
+        'employee_id',
         'opening_amount',
         'opening_denominations',
         'closing_amount',
@@ -33,25 +37,43 @@ class CashRegister extends Model
         'closed_at'             => 'datetime',
     ];
 
-    // Órdenes registradas en esta caja
-    public function orders()
-    {
-        return $this->hasMany(Order::class, 'cash_register_id');
-    }
+    // ── Relaciones ──────────────────────────────────────────────
 
-    // Empresa propietaria de la caja
-    public function company()
+    /** Compañía a la que pertenece */
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
 
-    // Scope para obtener la caja abierta actualmente
+    /** Sede donde está la caja */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    /** Empleado responsable de la caja */
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    /** Órdenes registradas en esta caja */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'cash_register_id');
+    }
+
+    // ── Scopes ──────────────────────────────────────────────────
+
+    /** Solo cajas abiertas */
     public function scopeOpen($query)
     {
         return $query->where('status', 1);
     }
 
-    // Calcula el total facturado sumando las órdenes activas de esta caja
+    // ── Helpers ─────────────────────────────────────────────────
+
+    /** Total facturado en las órdenes activas de esta caja */
     public function calcularTotalOrdenes(): float
     {
         return (float) $this->orders()->where('status', 1)->sum('total');

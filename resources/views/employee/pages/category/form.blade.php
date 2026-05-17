@@ -2,9 +2,10 @@
 
 @section('title', isset($categoria) ? 'Editar Categoría' : 'Nueva Categoría')
 @section('main-padding', 'p-2 md:p-3')
+@section('main-class', 'overflow-hidden')
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
     {{-- Header --}}
     <div class="flex items-center gap-3 shrink-0">

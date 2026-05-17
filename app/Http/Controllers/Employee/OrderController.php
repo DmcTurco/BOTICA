@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\BranchStock;
 use App\Models\DocumentSeries;
 use App\Models\DocumentType;
 use App\Models\Order;
@@ -21,7 +22,11 @@ class OrderController extends Controller
      */
     public function historial(Request $request)
     {
-        $query = Order::orderBy('created_at', 'desc');
+        $employee = auth()->guard('employee')->user();
+
+        $query = Order::where('company_id', $employee->company_id)
+            ->where('branch_id', $employee->branch_id)
+            ->orderBy('created_at', 'desc');
 
         if ($request->filled('buscar')) {
             $search = $request->buscar;
@@ -50,7 +55,7 @@ class OrderController extends Controller
 
         $orders = $query->paginate(15)->withQueryString();
 
-        return view('company.pages.orders.historial', compact('orders'));
+        return view('employee.pages.orders.historial', compact('orders'));
     }
 
     /**
@@ -58,6 +63,9 @@ class OrderController extends Controller
      */
     public function detalle(Order $order)
     {
+        $employee = auth()->guard('employee')->user();
+        abort_if($order->company_id !== $employee->company_id, 403);
+
         $order->load('items');
 
         return response()->json([
@@ -90,15 +98,25 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $products = Product::with(['laboratorio', 'presentaciones.unidadMedida'])
+        $employee = auth()->guard('employee')->user();
+
+        $branchId = $employee->branch_id;
+
+        // Solo mostrar productos con stock disponible en la sede del empleado
+        $products = Product::with([
+                'laboratory',
+                'presentations.unit',
+                'branchStocks' => fn ($q) => $q->where('branch_id', $branchId),
+            ])
+            ->where('company_id', $employee->company_id)
             ->where('status', 1)
-            ->where('stock_actual', '>', 0)
-            ->orderBy('came')
+            ->whereHas('branchStocks', fn ($q) => $q->where('branch_id', $branchId)->where('stock_actual', '>', 0))
+            ->orderBy('name')
             ->get();
 
         $documentTypes = DocumentType::activos()->get();
 
-        return view('company.pages.orders.index', compact('products', 'documentTypes'));
+        return view('employee.pages.orders.index', compact('products', 'documentTypes'));
     }
 
     /**
@@ -181,14 +199,19 @@ class OrderController extends Controller
             ? (int) $request->document_type_id
             : DocumentType::detectarPorLongitud($request->customer_document ?? '');
 
+        $employee = auth()->guard('employee')->user();
+
         DB::beginTransaction();
 
         try {
-            // Verificar stock de todos los productos antes de registrar nada
+            // Verificar stock en branch_stock antes de registrar nada
             foreach ($request->items as $item) {
-                $product = Product::where('code', $item['code'])->lockForUpdate()->first();
+                $stock = BranchStock::where('branch_id', $employee->branch_id)
+                    ->where('product_code', $item['code'])
+                    ->lockForUpdate()
+                    ->first();
 
-                if (!$product || $product->stock_actual < $item['qty']) {
+                if (!$stock || $stock->stock_actual < $item['qty']) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -203,6 +226,9 @@ class OrderController extends Controller
 
             // Crear la orden
             $order = Order::create([
+                'company_id'        => $employee->company_id,
+                'branch_id'         => $employee->branch_id,
+                'employee_id'       => $employee->id,
                 'cash_register_id'  => session('cash_register_id'),
                 'customer_name'     => $request->customer_name ?: null,
                 'document_type_id'  => $documentTypeId,
@@ -217,7 +243,7 @@ class OrderController extends Controller
                 'status'            => 1,
             ]);
 
-            // Registrar ítems y descontar stock
+            // Registrar ítems, descontar stock en branch_stock y registrar kardex
             foreach ($request->items as $item) {
                 OrderItem::create([
                     'order_id'     => $order->id,
@@ -228,19 +254,26 @@ class OrderController extends Controller
                     'subtotal'     => round($item['price'] * $item['qty'], 2),
                 ]);
 
-                // Descontar stock y obtener el saldo resultante para el kardex
-                $prod = Product::where('code', $item['code'])->lockForUpdate()->first();
-                $prod->decrement('stock_actual', $item['qty']);
+                // Descontar stock en branch_stock
+                $branchStock = BranchStock::where('branch_id', $employee->branch_id)
+                    ->where('product_code', $item['code'])
+                    ->lockForUpdate()
+                    ->first();
+
+                $nuevoStock = $branchStock->stock_actual - $item['qty'];
+                $branchStock->update(['stock_actual' => $nuevoStock]);
 
                 // Registrar salida en el kardex
                 StockMovement::create([
+                    'company_id'     => $employee->company_id,
+                    'branch_id'      => $employee->branch_id,
                     'product_code'   => $item['code'],
                     'type'           => 'salida',
                     'reference_type' => 'order',
                     'reference_id'   => $order->id,
                     'quantity'       => (int) $item['qty'],
                     'unit_cost'      => $item['price'],
-                    'balance'        => (int) $prod->stock_actual,
+                    'balance'        => (int) $nuevoStock,
                 ]);
             }
 

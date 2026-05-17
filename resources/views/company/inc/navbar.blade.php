@@ -7,16 +7,16 @@
     @php
         $pageTitle = match(true) {
             request()->routeIs('company.home')                      => 'Dashboard',
-            request()->routeIs('company.cash-register.show-open')   => 'Apertura de Caja',
-            request()->routeIs('company.cash-register.edit')        => 'Editar Apertura de Caja',
-            request()->routeIs('company.orders.historial')           => 'Historial de Ventas',
-            request()->routeIs('company.orders.*')                   => 'Ventas',
-            request()->routeIs('company.products.*')                => 'Productos',
-            request()->routeIs('company.categories.*')              => 'Categorías',
-            request()->routeIs('company.laboratories.*')            => 'Laboratorios',
-            request()->routeIs('company.purchases.*')               => 'Compras',
-            request()->routeIs('company.kardex.*')                  => 'Kardex',
-            request()->routeIs('company.clients.*')                 => 'Clientes',
+            // request()->routeIs('company.cash-register.show-open')   => 'Apertura de Caja',
+            // request()->routeIs('company.cash-register.edit')        => 'Editar Apertura de Caja',
+            // request()->routeIs('company.orders.historial')           => 'Historial de Ventas',
+            // request()->routeIs('company.orders.*')                   => 'Ventas',
+            // request()->routeIs('company.products.*')                => 'Productos',
+            // request()->routeIs('company.categories.*')              => 'Categorías',
+            // request()->routeIs('company.laboratories.*')            => 'Laboratorios',
+            // request()->routeIs('company.purchases.*')               => 'Compras',
+            // request()->routeIs('company.kardex.*')                  => 'Kardex',
+            // request()->routeIs('company.clients.*')                 => 'Clientes',
             default                                                  => 'Dashboard',
         };
     @endphp
@@ -66,7 +66,7 @@
 </header>
 
 {{-- Modal cierre de caja --}}
-<div id="modalCierreCaja"
+{{-- <div id="modalCierreCaja"
      class="fixed inset-0 bg-black/60 z-50 items-center justify-center p-4"
      style="display:none!important">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
@@ -84,7 +84,6 @@
         <form action="{{ route('company.cash-register.close') }}" method="POST" class="p-6 space-y-4">
             @csrf
 
-            {{-- Resumen de la caja actual --}}
             <div class="bg-slate-50 rounded-xl p-4 space-y-2 text-sm">
                 <div class="flex justify-between text-slate-600">
                     <span>Apertura</span>
@@ -131,10 +130,10 @@
             </div>
         </form>
     </div>
-</div>
+</div> --}}
 
-<script>
-// Consulta el estado de la caja al cargar y actualiza el badge del navbar
+{{-- <script>
+
 async function actualizarEstadoCaja() {
     try {
         const res  = await fetch('{{ route("company.cash-register.status") }}');
@@ -176,4 +175,4 @@ function cerrarModalCierre() {
 // Actualizar al cargar y cada 60 segundos
 document.addEventListener('DOMContentLoaded', actualizarEstadoCaja);
 setInterval(actualizarEstadoCaja, 60000);
-</script>
+</script> --}}

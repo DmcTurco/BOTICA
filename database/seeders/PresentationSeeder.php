@@ -11,8 +11,8 @@ class PresentationSeeder extends Seeder
     {
         $now = now();
 
-        // Resuelve el code del producto buscando por nombre (came)
-        $prod = fn(string $came) => DB::table('products')->where('came', $came)->value('code');
+        // Resuelve el code del producto buscando por nombre
+        $prod = fn(string $name) => DB::table('products')->where('name', $name)->value('code');
         $unit = fn(string $n)    => DB::table('units')->where('name', $n)->value('id');
 
         $presentations = [

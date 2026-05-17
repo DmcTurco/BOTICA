@@ -9,7 +9,7 @@ https://github.com/DmcTurco/BOTICA
 ## Stack Tecnológico
 - **Framework:** Laravel 12
 - **Autenticación:** Laravel Fortify + Sanctum (multi-guard: admin, company, employee)
-- **Base de datos:** SQLite (`database/database.sqlite`)
+- **Base de datos:** PostgreSQL
 - **Frontend:** Vite + Blade templates
 - **Testing:** PestPHP
 

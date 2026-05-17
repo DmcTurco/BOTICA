@@ -88,6 +88,8 @@ class CashRegisterController extends Controller
         try {
             $caja = CashRegister::create([
                 'company_id'            => $employee->company_id,
+                'branch_id'             => $employee->branch_id,
+                'employee_id'           => $employee->id,
                 'opening_amount'        => $total,
                 'opening_denominations' => $denominaciones,
                 'notes'                 => $request->notes,
@@ -97,7 +99,7 @@ class CashRegisterController extends Controller
 
             session(['cash_register_id' => $caja->id]);
 
-            return redirect()->route('company.orders.index')
+            return redirect()->route('employee.orders.index')
                 ->with('success', 'Caja abierta con S/ ' . number_format($total, 2) . '. ¡Listo para vender!');
 
         } catch (\Exception $e) {

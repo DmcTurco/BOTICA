@@ -15,11 +15,12 @@ class EnsureCashRegisterIsOpen
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $company = auth()->guard('company')->user();
+        $employee = auth()->guard('employee')->user();
 
-        // Busca una caja abierta para esta empresa
+        // Busca una caja abierta en la sede del empleado
         $caja = CashRegister::open()
-            ->where('company_id', $company->id)
+            ->where('company_id', $employee->company_id)
+            ->where('branch_id', $employee->branch_id)
             ->latest('opened_at')
             ->first();
 
@@ -29,12 +30,12 @@ class EnsureCashRegisterIsOpen
                 return response()->json([
                     'success' => false,
                     'message' => 'No hay una caja abierta. Abre la caja antes de registrar una orden.',
-                    'redirect' => route('company.cash-register.show-open'),
+                    'redirect' => route('employee.cash-register.show-open'),
                 ], 403);
             }
 
             // Redirige a la página dedicada de apertura de caja
-            return redirect()->route('company.cash-register.show-open');
+            return redirect()->route('employee.cash-register.show-open');
         }
 
         // Inyecta el ID de la caja en la sesión para usarlo al crear órdenes

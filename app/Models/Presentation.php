@@ -28,12 +28,12 @@ class Presentation extends Model
         'main_presentation' => 'boolean',
     ];
 
-    public function producto()
+    public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
 
-    public function unidadMedida()
+    public function Unit()
     {
         return $this->belongsTo(Unit::class, 'unit_id');
     }

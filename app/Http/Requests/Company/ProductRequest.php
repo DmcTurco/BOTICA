@@ -37,18 +37,16 @@ class ProductRequest extends FormRequest
             'precio_compra_paquete'               => 'nullable|numeric|min:0',
             'precio_venta_paquete'                => 'nullable|numeric|min:0',
             'unidades_por_paquete'                => 'nullable|numeric|min:0',
-            'stock_minimo'                        => 'nullable|numeric|min:0',
-            'stock_maximo'                        => 'nullable|numeric|min:0',
-            'fecha_vencimiento'                   => 'nullable|date',
+            'stock_minimo'                        => 'nullable|integer|min:0',
+            'stock_maximo'                        => 'nullable|integer|min:0',
             'presentaciones.*.unidad_medida_id'   => 'required|exists:units,id',
             'presentaciones.*.cantidad_equivalente' => 'required|numeric|min:0.01',
             'presentaciones.*.precio_venta'       => 'required|numeric|min:0',
         ];
 
-        // El código y stock inicial solo se validan en store
+        // El código solo se valida en store (en update no se puede cambiar)
         if (!$product) {
-            $rules['codigo']       = 'required|max:20|unique:products,code';
-            $rules['stock_actual'] = 'required|numeric|min:0';
+            $rules['codigo'] = 'required|max:20|unique:products,code';
         }
 
         return $rules;
@@ -70,7 +68,6 @@ class ProductRequest extends FormRequest
             'unidad_medida_id.required'    => 'Debe seleccionar una unidad de medida.',
             'precio_compra.required'       => 'El precio de compra es obligatorio.',
             'precio_venta_unidad.required' => 'El precio de venta por unidad es obligatorio.',
-            'stock_actual.required'        => 'El stock actual es obligatorio.',
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 @section('title', 'Punto de Venta')
 @section('main-padding', 'p-2 md:p-3')
+@section('main-class', 'overflow-hidden')
 
 @section('content-area')
 <div class="flex-1 flex flex-col overflow-hidden">
@@ -71,7 +72,7 @@
                 </div>
 
                 {{-- Tabla de productos --}}
-                <div class="flex-1 overflow-auto">
+                <div class="flex-1 min-h-0 overflow-auto">
                     <table class="w-full text-xs">
                         <thead class="sticky top-0 z-10">
                             <tr class="bg-slate-50 border-b border-slate-200">
@@ -85,15 +86,15 @@
                             @forelse($products as $product)
                             <tr class="hover:bg-emerald-50/40 transition-colors cursor-default producto-row"
                                 data-code="{{ $product->code }}"
-                                data-search="{{ strtolower($product->came . ' ' . $product->code . ' ' . $product->active_ingredient) }}"
-                                data-stock="{{ $product->stock_actual }}"
-                                data-name="{{ $product->nombre }}"
+                                data-search="{{ strtolower($product->name . ' ' . $product->code . ' ' . $product->active_ingredient) }}"
+                                data-stock="{{ $product->branchStocks->first()?->stock_actual ?? 0 }}"
+                                data-name="{{ $product->name }}"
                                 data-price="{{ $product->unit_sale_price }}">
                                 <td class="px-4 py-2.5">
-                                    <p class="font-medium text-slate-800 leading-tight">{{ $product->nombre }}</p>
+                                    <p class="font-medium text-slate-800 leading-tight">{{ $product->name }}</p>
                                     <p class="text-slate-400 mt-0.5 font-mono">{{ $product->code }}
-                                        @if($product->laboratorio)
-                                            · <span class="font-sans">{{ $product->laboratorio->name }}</span>
+                                        @if($product->laboratory)
+                                            · <span class="font-sans">{{ $product->laboratory->name }}</span>
                                         @endif
                                     </p>
                                 </td>
@@ -102,18 +103,18 @@
                                 </td>
                                 <td class="px-3 py-2.5 text-center">
                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold
-                                        {{ $product->stock_actual <= ($product->stock_minimum ?? 0)
+                                        {{ ($product->branchStocks->first()?->stock_actual ?? 0) <= ($product->branchStocks->first()?->stock_minimum ?? 0)
                                             ? 'bg-amber-100 text-amber-700'
                                             : 'bg-emerald-100 text-emerald-700' }}">
-                                        {{ (int)$product->stock_actual }}
+                                        {{ (int)($product->branchStocks->first()?->stock_actual ?? 0) }}
                                     </span>
                                 </td>
                                 <td class="px-2 py-2.5">
                                     @php
-                                        $presData = $product->presentaciones->where('status', 1)->map(function($p) {
+                                        $presData = $product->presentations->where('status', 1)->map(function($p) {
                                             return [
                                                 'id'     => $p->id,
-                                                'label'  => optional($p->unidadMedida)->name ?? 'Presentación',
+                                                'label'  => optional($p->unit)->name ?? 'Presentación',
                                                 'amount' => (float) $p->equivalent_amount,
                                                 'price'  => (float) $p->sale_price,
                                             ];
@@ -121,9 +122,9 @@
                                     @endphp
                                     <button class="btn-agregar w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all"
                                             data-code="{{ $product->code }}"
-                                            data-name="{{ $product->nombre }}"
+                                            data-name="{{ $product->name }}"
                                             data-price="{{ $product->unit_sale_price }}"
-                                            data-stock="{{ (int)$product->stock_actual }}"
+                                            data-stock="{{ (int)($product->branchStocks->first()?->stock_actual ?? 0) }}"
                                             data-presentations='@json($presData)'
                                             title="Agregar al carrito">
                                         <i class="fas fa-plus text-[10px]"></i>
@@ -173,7 +174,7 @@
                 </div>
 
                 {{-- Tabla carrito (scrollable) --}}
-                <div class="flex-1 overflow-auto">
+                <div class="flex-1 min-h-0 overflow-auto">
                     <table class="w-full text-sm">
                         <thead class="sticky top-0 z-10">
                             <tr class="bg-white border-b border-slate-100">
