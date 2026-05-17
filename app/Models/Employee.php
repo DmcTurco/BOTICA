@@ -13,6 +13,22 @@ class Employee extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    // ── Constantes de privilegios (solo aplican a role_id = 3) ──
+    const PRIV_VER_VENTAS      = 'ver_ventas';
+    const PRIV_VER_HISTORIAL   = 'ver_historial';
+    const PRIV_ABRIR_CAJA      = 'abrir_caja';
+    const PRIV_CERRAR_CAJA     = 'cerrar_caja';
+    const PRIV_EDITAR_APERTURA = 'editar_apertura';
+
+    /** Lista completa de privilegios disponibles con sus etiquetas */
+    const PRIVILEGES_LIST = [
+        self::PRIV_VER_VENTAS      => 'Ver Punto de Venta',
+        self::PRIV_VER_HISTORIAL   => 'Ver Historial de Ventas',
+        self::PRIV_ABRIR_CAJA      => 'Abrir Caja',
+        self::PRIV_CERRAR_CAJA     => 'Cerrar Caja',
+        self::PRIV_EDITAR_APERTURA => 'Editar Apertura de Caja',
+    ];
+
     protected $fillable = [
         'company_id',
         'branch_id',
@@ -20,6 +36,7 @@ class Employee extends Authenticatable
         'name',
         'email',
         'password',
+        'privileges',
     ];
 
     protected $hidden = [
@@ -30,6 +47,7 @@ class Employee extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password'          => 'hashed',
+        'privileges'        => 'array',
     ];
 
     // ── Relaciones ──────────────────────────────────────────────
@@ -106,5 +124,34 @@ class Employee extends Authenticatable
     public function isEmployee(): bool
     {
         return $this->role_id === Role::EMPLOYEE;
+    }
+
+    /**
+     * Verifica si el empleado tiene un privilegio específico.
+     * Los branch_admin (role_id=2) siempre tienen acceso total.
+     * Los empleados regulares (role_id=3) solo tienen acceso a los privilegios asignados.
+     */
+    public function hasPrivilege(string $privilege): bool
+    {
+        // branch_admin tiene acceso a todo sin restricción
+        if ($this->isBranchAdmin()) {
+            return true;
+        }
+
+        return in_array($privilege, $this->privileges ?? [], true);
+    }
+
+    /**
+     * Verifica si el empleado tiene al menos un privilegio asignado.
+     * Los branch_admin siempre retornan true.
+     * Empleados sin ningún privilegio solo pueden ver el dashboard.
+     */
+    public function hasAnyPrivilege(): bool
+    {
+        if ($this->isBranchAdmin()) {
+            return true;
+        }
+
+        return !empty($this->privileges);
     }
 }

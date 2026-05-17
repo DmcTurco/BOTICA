@@ -26,10 +26,12 @@
             </ul>
         </div>
 
-        {{-- Ventas --}}
+        {{-- Ventas — ítems controlados por privilegios --}}
+        @php $emp = auth()->guard('employee')->user(); @endphp
         <div>
             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Ventas</p>
             <ul class="space-y-0.5">
+                @if($emp->hasPrivilege(\App\Models\Employee::PRIV_ABRIR_CAJA))
                 <li>
                     <a href="{{ route('employee.cash-register.show-open') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -38,6 +40,8 @@
                         Apertura de caja
                     </a>
                 </li>
+                @endif
+                @if($emp->hasPrivilege(\App\Models\Employee::PRIV_EDITAR_APERTURA))
                 <li>
                     <a href="{{ route('employee.cash-register.edit') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -46,6 +50,8 @@
                         Editar apertura
                     </a>
                 </li>
+                @endif
+                @if($emp->hasPrivilege(\App\Models\Employee::PRIV_CERRAR_CAJA))
                 <li>
                     <button onclick="abrirModalCierre()"
                             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -54,6 +60,8 @@
                         Cierre de caja
                     </button>
                 </li>
+                @endif
+                @if($emp->hasPrivilege(\App\Models\Employee::PRIV_VER_VENTAS))
                 <li>
                     <a href="{{ route('employee.orders.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -62,6 +70,8 @@
                         Ventas
                     </a>
                 </li>
+                @endif
+                @if($emp->hasPrivilege(\App\Models\Employee::PRIV_VER_HISTORIAL))
                 <li>
                     <a href="{{ route('employee.orders.historial') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -70,6 +80,8 @@
                         Historial
                     </a>
                 </li>
+                @endif
+                @if($emp->hasAnyPrivilege())
                 <li>
                     <a href="{{ route('employee.clients.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -78,10 +90,12 @@
                         Clientes
                     </a>
                 </li>
+                @endif
             </ul>
         </div>
 
-        {{-- Inventario --}}
+        {{-- Inventario — oculto si no tiene ningún privilegio --}}
+        @if($emp->hasAnyPrivilege())
         <div>
             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Inventario</p>
             <ul class="space-y-0.5">
@@ -127,6 +141,24 @@
                 </li>
             </ul>
         </div>
+        @endif {{-- hasAnyPrivilege --}}
+
+        {{-- Administración — solo visible para branch_admin (role_id = 2) --}}
+        @if(auth()->guard('employee')->user()?->isBranchAdmin())
+        <div>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Administración</p>
+            <ul class="space-y-0.5">
+                <li>
+                    <a href="{{ route('employee.employees.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.employees.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-user-gear w-4 text-center shrink-0"></i>
+                        Empleados
+                    </a>
+                </li>
+            </ul>
+        </div>
+        @endif
 
     </nav>
 

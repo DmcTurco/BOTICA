@@ -7,7 +7,6 @@ use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\Role;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
@@ -75,7 +74,7 @@ class EmployeeController extends Controller
         $request->validate([
             'name'      => 'required|string|max:255',
             'email'     => 'required|email|max:255|unique:employees,email',
-            'password'  => 'required|string|min:6|confirmed',
+            'password'  => 'required|string|min:8|confirmed',
             'branch_id' => ['required', Rule::exists('branches', 'id')->where('company_id', $company->id)],
             'role_id'   => ['required', Rule::in([Role::BRANCH_ADMIN, Role::EMPLOYEE])],
         ]);
@@ -86,7 +85,7 @@ class EmployeeController extends Controller
             'role_id'    => $request->role_id,
             'name'       => $request->name,
             'email'      => $request->email,
-            'password'   => Hash::make($request->password),
+            'password'   => $request->password,
         ]);
 
         return redirect()->route('company.employees.index')
@@ -120,7 +119,7 @@ class EmployeeController extends Controller
         $request->validate([
             'name'      => 'required|string|max:255',
             'email'     => ['required', 'email', 'max:255', Rule::unique('employees', 'email')->ignore($employee->id)],
-            'password'  => 'nullable|string|min:6|confirmed',
+            'password'  => 'nullable|string|min:8|confirmed',
             'branch_id' => ['required', Rule::exists('branches', 'id')->where('company_id', $company->id)],
             'role_id'   => ['required', Rule::in([Role::BRANCH_ADMIN, Role::EMPLOYEE])],
         ]);
@@ -133,7 +132,7 @@ class EmployeeController extends Controller
         ];
 
         if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
+            $data['password'] = $request->password;
         }
 
         $employee->update($data);

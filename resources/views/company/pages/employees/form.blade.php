@@ -43,7 +43,7 @@
                     <input type="text" name="name"
                            value="{{ old('name', $employee->name ?? '') }}"
                            placeholder="Juan Pérez López"
-                           class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('name') border-red-400 @enderror">
+                           class="w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('name') border-red-400 @else border-slate-200 @enderror">
                     @error('name')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -57,7 +57,7 @@
                     <input type="email" name="email"
                            value="{{ old('email', $employee->email ?? '') }}"
                            placeholder="empleado@farmacia.com"
-                           class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('email') border-red-400 @enderror">
+                           class="w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('email') border-red-400 @else border-slate-200 @enderror">
                     @error('email')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -112,9 +112,15 @@
                             <span class="text-xs font-normal text-slate-400">(dejar en blanco para no cambiar)</span>
                             @endisset
                         </label>
-                        <input type="password" name="password"
-                               placeholder="{{ isset($employee) ? '••••••' : 'Mínimo 6 caracteres' }}"
-                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('password') border-red-400 @enderror">
+                        <div class="relative">
+                            <input type="password" name="password" id="password"
+                                   placeholder="{{ isset($employee) ? '••••••' : 'Mínimo 8 caracteres' }}"
+                                   class="w-full px-3 py-2.5 pr-10 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('password') border-red-400 @else border-slate-200 @enderror">
+                            <button type="button" onclick="togglePassword('password', 'eye-password')"
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600">
+                                <i id="eye-password" class="fas fa-eye text-sm"></i>
+                            </button>
+                        </div>
                         @error('password')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -123,9 +129,15 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-1.5">
                             Confirmar contraseña
                         </label>
-                        <input type="password" name="password_confirmation"
-                               placeholder="Repite la contraseña"
-                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        <div class="relative">
+                            <input type="password" name="password_confirmation" id="password_confirmation"
+                                   placeholder="Repite la contraseña"
+                                   class="w-full px-3 py-2.5 pr-10 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            <button type="button" onclick="togglePassword('password_confirmation', 'eye-confirm')"
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600">
+                                <i id="eye-confirm" class="fas fa-eye text-sm"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -147,4 +159,17 @@
     </form>
 
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    function togglePassword(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon  = document.getElementById(iconId);
+        const isHidden = input.type === 'password';
+        input.type    = isHidden ? 'text' : 'password';
+        icon.classList.toggle('fa-eye',        !isHidden);
+        icon.classList.toggle('fa-eye-slash',   isHidden);
+    }
+</script>
 @endsection

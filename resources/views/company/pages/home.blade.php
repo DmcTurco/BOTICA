@@ -196,4 +196,17 @@
                             <td class="px-4 py-3 text-right font-semibold text-slate-800 text-xs">
                                 S/ {{ number_format($order->total, 2) }}
                             </td>
-   
+                            <td class="px-5 py-3 text-right text-xs text-slate-400">
+                                {{ $order->created_at->format('d/m/Y H:i') }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+@endsection

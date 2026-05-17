@@ -14,7 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Alias para verificar que hay una caja abierta antes de acceder a órdenes
         $middleware->alias([
-            'cash.open' => \App\Http\Middleware\EnsureCashRegisterIsOpen::class,
+            'cash.open'    => \App\Http\Middleware\EnsureCashRegisterIsOpen::class,
+            'branch.admin' => \App\Http\Middleware\EnsureEmployeeIsBranchAdmin::class,
+            'privilege'    => \App\Http\Middleware\EnsureEmployeeHasPrivilege::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

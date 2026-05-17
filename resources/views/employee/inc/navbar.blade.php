@@ -13,15 +13,24 @@
             <i class="fas fa-bell text-sm"></i>
         </button>
 
-        <div class="flex items-center gap-2 pl-3 border-l border-slate-200">
-            <div class="w-8 h-8 bg-sky-600 rounded-full flex items-center justify-center shrink-0">
-                <span class="text-white text-xs font-semibold">
-                    {{ strtoupper(substr(auth()->guard('employee')->user()?->name ?? 'E', 0, 1)) }}
-                </span>
-            </div>
-            <p class="hidden sm:block text-xs font-medium text-slate-700 max-w-[100px] truncate">
+    <div class="flex items-center gap-2 pl-3 border-l border-slate-200">
+
+        <div class="w-8 h-8 bg-sky-600 rounded-full flex items-center justify-center shrink-0">
+            <span class="text-white text-xs font-semibold">
+                {{ strtoupper(substr(auth()->guard('employee')->user()?->name ?? 'E', 0, 1)) }}
+            </span>
+        </div>
+
+        <div class="hidden sm:flex flex-col leading-tight">
+            <p class="text-xs font-medium text-slate-700 max-w-[100px] truncate">
                 {{ auth()->guard('employee')->user()?->name ?? 'Empleado' }}
             </p>
+
+            <p class="text-[11px] text-slate-500 max-w-[100px] truncate">
+                {{ auth()->guard('employee')->user()?->branch?->name ?? 'Sin sede' }}
+            </p>
         </div>
+
+    </div>
     </div>
 </header>
