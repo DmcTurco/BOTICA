@@ -88,11 +88,36 @@
 
             </div>{{-- /denominaciones --}}
 
-            {{-- ── PANEL DERECHO: total + acción ───────────────── --}}
+            {{-- ── PANEL DERECHO: fecha + total + acción ──────── --}}
             <div class="xl:w-72 shrink-0 flex flex-col gap-4">
 
+                {{-- Fecha de apertura --}}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-2">
+                    <label for="register_date" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Fecha de la caja
+                    </label>
+                    <input type="date" id="register_date" name="register_date"
+                           value="{{ old('register_date', $today) }}"
+                           max="{{ $today }}"
+                           class="w-full text-sm text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5
+                                  focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                    <p class="text-xs text-slate-400">No puedes abrir una caja para una fecha futura.</p>
+                </div>
+
+                {{-- Aviso caja histórica (oculto por defecto) --}}
+                <div id="aviso-historica" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800 space-y-1.5">
+                    <p class="font-bold flex items-center gap-1.5">
+                        <i class="fas fa-clock-rotate-left text-amber-600"></i>
+                        Caja histórica
+                    </p>
+                    <p class="text-xs leading-relaxed">
+                        Estás abriendo una caja de una fecha pasada. Las ventas que registres quedarán
+                        <strong>pendientes de validación</strong> por el administrador antes de afectar el stock.
+                    </p>
+                </div>
+
                 {{-- Total --}}
-                <div class="bg-emerald-600 rounded-2xl p-5 text-white">
+                <div id="panel-total" class="bg-emerald-600 rounded-2xl p-5 text-white">
                     <p class="text-xs font-semibold text-emerald-300 uppercase tracking-widest mb-2">Total en caja</p>
                     <p id="total-display" class="text-5xl font-black tracking-tight">S/ 0.00</p>
                     <div class="mt-4 pt-4 border-t border-emerald-500 space-y-1.5 text-xs text-emerald-200">
@@ -112,18 +137,18 @@
                     <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         Observación <span class="font-normal normal-case">(opcional)</span>
                     </label>
-                    <textarea name="notes" rows="4"
+                    <textarea name="notes" rows="3"
                               class="w-full text-sm text-slate-700 border border-slate-200 rounded-xl px-3 py-2.5 resize-none
                                      focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                               placeholder="Ej: efectivo del turno anterior..."></textarea>
                 </div>
 
                 {{-- Botón --}}
-                <button type="submit"
+                <button type="submit" id="btn-abrir"
                         class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[.98] text-white font-bold rounded-2xl
                                transition-all flex items-center justify-center gap-2 shadow-md text-sm tracking-wide">
                     <i class="fas fa-lock-open"></i>
-                    Abrir Caja y Comenzar
+                    <span id="btn-label">Abrir Caja y Comenzar</span>
                 </button>
 
                 <a href="{{ route('employee.home') }}"
@@ -145,6 +170,37 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('formApertura').addEventListener('keydown', function (e) {
         if (e.key === 'Enter') e.preventDefault();
     });
+
+    // ── Lógica de fecha (histórica vs. hoy) ──────────────────────
+    const today          = '{{ $today }}';
+    const dateInput      = document.getElementById('register_date');
+    const avisoHistorica = document.getElementById('aviso-historica');
+    const panelTotal     = document.getElementById('panel-total');
+    const btnLabel       = document.getElementById('btn-label');
+    const btnAbrir       = document.getElementById('btn-abrir');
+
+    function actualizarModoFecha() {
+        const esHistorica = dateInput.value && dateInput.value < today;
+
+        avisoHistorica.classList.toggle('hidden', !esHistorica);
+
+        if (esHistorica) {
+            panelTotal.classList.remove('bg-emerald-600');
+            panelTotal.classList.add('bg-amber-500');
+            btnAbrir.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+            btnAbrir.classList.add('bg-amber-500', 'hover:bg-amber-600');
+            btnLabel.textContent = 'Abrir Caja Histórica';
+        } else {
+            panelTotal.classList.remove('bg-amber-500');
+            panelTotal.classList.add('bg-emerald-600');
+            btnAbrir.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+            btnAbrir.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+            btnLabel.textContent = 'Abrir Caja y Comenzar';
+        }
+    }
+
+    dateInput.addEventListener('change', actualizarModoFecha);
+    actualizarModoFecha(); // ejecutar al cargar (por si hay old value)
 
     function recalcular() {
         let totalBilletes = 0;

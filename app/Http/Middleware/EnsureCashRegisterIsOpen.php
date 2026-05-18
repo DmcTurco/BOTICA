@@ -10,35 +10,33 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureCashRegisterIsOpen
 {
     /**
-     * Verifica que exista una caja abierta antes de acceder al punto de venta.
-     * Si no hay caja, redirige al dashboard con una señal para abrir el modal.
+     * Verifica que el empleado tenga una caja abierta para HOY antes de acceder al POS.
+     * Las cajas históricas no habilitan el POS del día actual.
      */
     public function handle(Request $request, Closure $next): Response
     {
         $employee = auth()->guard('employee')->user();
 
-        // Busca una caja abierta en la sede del empleado
-        $caja = CashRegister::open()
+        // Busca la caja del día del propio empleado (no de otros ni históricas)
+        $caja = CashRegister::todayOpen($employee->id)
             ->where('company_id', $employee->company_id)
             ->where('branch_id', $employee->branch_id)
             ->latest('opened_at')
             ->first();
 
         if (!$caja) {
-            // Si es una petición AJAX (ej. store de orden), devuelve JSON
             if ($request->expectsJson()) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'No hay una caja abierta. Abre la caja antes de registrar una orden.',
+                    'success'  => false,
+                    'message'  => 'No tienes una caja abierta para hoy. Abre la caja antes de registrar una orden.',
                     'redirect' => route('employee.cash-register.show-open'),
                 ], 403);
             }
 
-            // Redirige a la página dedicada de apertura de caja
             return redirect()->route('employee.cash-register.show-open');
         }
 
-        // Inyecta el ID de la caja en la sesión para usarlo al crear órdenes
+        // Inyectar el ID de la caja en sesión para usarlo al crear órdenes
         session(['cash_register_id' => $caja->id]);
 
         return $next($request);

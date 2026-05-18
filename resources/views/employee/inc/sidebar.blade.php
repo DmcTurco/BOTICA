@@ -81,7 +81,7 @@
                     </a>
                 </li>
                 @endif
-                @if($emp->hasAnyPrivilege())
+                @if($emp->hasPrivilege(\App\Models\Employee::PRIV_GESTIONAR_CLIENTES))
                 <li>
                     <a href="{{ route('employee.clients.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -156,9 +156,30 @@
 
         {{-- Administración — solo visible para branch_admin (role_id = 2) --}}
         @if(auth()->guard('employee')->user()?->isBranchAdmin())
+        @php
+            $pendingCount = \App\Models\CashRegister::where('company_id', $emp->company_id)
+                ->where('branch_id', $emp->branch_id)
+                ->where('approval_status', \App\Models\CashRegister::APPROVAL_PENDING)
+                ->where('status', 0)
+                ->count();
+        @endphp
         <div>
             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Administración</p>
             <ul class="space-y-0.5">
+                <li>
+                    <a href="{{ route('employee.approvals.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.approvals.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-vault w-4 text-center shrink-0"></i>
+                        Aprobaciones
+                        @if($pendingCount > 0)
+                        <span class="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black
+                                     {{ request()->routeIs('employee.approvals.*') ? 'bg-white text-sky-600' : 'bg-amber-500 text-white' }}">
+                            {{ $pendingCount > 9 ? '9+' : $pendingCount }}
+                        </span>
+                        @endif
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('employee.employees.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors

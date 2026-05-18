@@ -320,4 +320,169 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Muestra el formulario de edición de una orden histórica.
+     * Solo se puede editar si la caja asociada está pendiente y abierta.
+     */
+    public function edit(Order $order)
+    {
+        $employee = auth()->guard('employee')->user();
+
+        abort_if($order->company_id !== $employee->company_id, 403);
+
+        $cashRegister = $order->cashRegister;
+
+        abort_if(!$cashRegister || !$cashRegister->isEditable(), 403,
+            'Esta orden no se puede editar. La caja ya fue cerrada o validada.');
+
+        abort_if($cashRegister->employee_id !== $employee->id, 403);
+
+        $order->load('items');
+
+        // Productos disponibles en la sede (para agregar nuevos ítems)
+        $branchId = $employee->branch_id;
+        $products = Product::with([
+                'laboratory',
+                'presentations.unit',
+                'branchStocks' => fn ($q) => $q->where('branch_id', $branchId),
+            ])
+            ->where('company_id', $employee->company_id)
+            ->where('status', 1)
+            ->whereHas('branchStocks', fn ($q) => $q->where('branch_id', $branchId)->where('stock_actual', '>', 0))
+            ->orderBy('name')
+            ->get();
+
+        $documentTypes = DocumentType::activos()->get();
+
+        return view('employee.pages.orders.edit', compact('order', 'cashRegister', 'products', 'documentTypes'));
+    }
+
+    /**
+     * Actualiza una orden histórica pendiente.
+     * Ajusta stock: devuelve el stock de los ítems anteriores y descuenta los nuevos.
+     */
+    public function updateHistorical(Request $request, Order $order)
+    {
+        $request->validate([
+            'items'             => 'required|array|min:1',
+            'items.*.code'      => 'required|exists:products,code',
+            'items.*.qty'       => 'required|numeric|min:1',
+            'items.*.price'     => 'required|numeric|min:0',
+            'items.*.name'      => 'required|string',
+            'payment_type'      => 'required|in:1,2,3,4',
+            'subtotal'          => 'required|numeric|min:0',
+            'igv'               => 'required|numeric|min:0',
+            'total'             => 'required|numeric|min:0',
+        ]);
+
+        $employee     = auth()->guard('employee')->user();
+        $cashRegister = $order->cashRegister;
+
+        abort_if($order->company_id !== $employee->company_id, 403);
+        abort_if(!$cashRegister || !$cashRegister->isEditable(), 403);
+        abort_if($cashRegister->employee_id !== $employee->id, 403);
+
+        DB::beginTransaction();
+        try {
+            // 1. Devolver stock de los ítems actuales de la orden
+            foreach ($order->items as $oldItem) {
+                $branchStock = BranchStock::where('branch_id', $employee->branch_id)
+                    ->where('product_code', $oldItem->product_code)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($branchStock) {
+                    $stockRestored = $branchStock->stock_actual + $oldItem->quantity;
+                    $branchStock->update(['stock_actual' => $stockRestored]);
+
+                    StockMovement::create([
+                        'company_id'     => $employee->company_id,
+                        'branch_id'      => $employee->branch_id,
+                        'product_code'   => $oldItem->product_code,
+                        'type'           => 'entrada',
+                        'reference_type' => 'order_edit_reversal',
+                        'reference_id'   => $order->id,
+                        'quantity'       => (int) $oldItem->quantity,
+                        'unit_cost'      => $oldItem->unit_price,
+                        'balance'        => (int) $stockRestored,
+                    ]);
+                }
+            }
+
+            // 2. Verificar stock suficiente para los nuevos ítems
+            foreach ($request->items as $item) {
+                $stock = BranchStock::where('branch_id', $employee->branch_id)
+                    ->where('product_code', $item['code'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$stock || $stock->stock_actual < $item['qty']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Stock insuficiente para: ' . ($item['name'] ?? $item['code']),
+                    ], 422);
+                }
+            }
+
+            // 3. Eliminar ítems anteriores y crear los nuevos
+            $order->items()->delete();
+
+            foreach ($request->items as $item) {
+                OrderItem::create([
+                    'order_id'     => $order->id,
+                    'product_code' => $item['code'],
+                    'product_name' => $item['name'],
+                    'unit_price'   => $item['price'],
+                    'quantity'     => $item['qty'],
+                    'subtotal'     => round($item['price'] * $item['qty'], 2),
+                ]);
+
+                $branchStock  = BranchStock::where('branch_id', $employee->branch_id)
+                    ->where('product_code', $item['code'])
+                    ->lockForUpdate()
+                    ->first();
+
+                $nuevoStock = $branchStock->stock_actual - $item['qty'];
+                $branchStock->update(['stock_actual' => $nuevoStock]);
+
+                StockMovement::create([
+                    'company_id'     => $employee->company_id,
+                    'branch_id'      => $employee->branch_id,
+                    'product_code'   => $item['code'],
+                    'type'           => 'salida',
+                    'reference_type' => 'order_edit',
+                    'reference_id'   => $order->id,
+                    'quantity'       => (int) $item['qty'],
+                    'unit_cost'      => $item['price'],
+                    'balance'        => (int) $nuevoStock,
+                ]);
+            }
+
+            // 4. Actualizar totales de la orden
+            $order->update([
+                'payment_type'      => $request->payment_type,
+                'operation_number'  => $request->operation_number ?: null,
+                'subtotal'          => $request->subtotal,
+                'igv'               => $request->igv,
+                'total'             => $request->total,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Orden actualizada correctamente.',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al editar orden histórica: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno al actualizar la orden.',
+            ], 500);
+        }
+    }
 }

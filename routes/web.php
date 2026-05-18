@@ -42,6 +42,9 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
     Route::middleware('privilege:abrir_caja')->group(function () {
         Route::get('cash-register/open',  [Employee\CashRegisterController::class, 'showOpen'])->name('cash-register.show-open');
         Route::post('cash-register/open', [Employee\CashRegisterController::class, 'open'])->name('cash-register.open');
+        // Cajas históricas
+        Route::get('cash-register/historical/{cashRegister}',       [Employee\CashRegisterController::class, 'historical'])->name('cash-register.historical');
+        Route::post('cash-register/historical/{cashRegister}/close', [Employee\CashRegisterController::class, 'closeHistorical'])->name('cash-register.close-historical');
     });
     Route::middleware('privilege:editar_apertura')->group(function () {
         Route::get('cash-register/edit', [Employee\CashRegisterController::class, 'edit'])->name('cash-register.edit');
@@ -66,10 +69,24 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
         Route::post('orders', [Employee\OrderController::class, 'store'])->name('orders.store');
     });
 
-    // Clientes — accesibles con cualquier privilegio asignado
+    // Edición de órdenes históricas — requiere privilegio ver_ventas (sin middleware cash.open)
+    Route::middleware('privilege:ver_ventas')->group(function () {
+        Route::get('orders/{order}/edit',       [Employee\OrderController::class, 'edit'])->name('orders.edit');
+        Route::put('orders/{order}/historical', [Employee\OrderController::class, 'updateHistorical'])->name('orders.update-historical');
+    });
+
+    // Búsqueda y listado de clientes — accesible con cualquier privilegio (usada en el POS)
     Route::middleware('privilege:any')->group(function () {
         Route::get('clients/search', [Employee\ClientController::class, 'search'])->name('clients.search');
-        Route::resource('clients', Employee\ClientController::class)->except(['show', 'destroy']);
+        Route::get('clients',        [Employee\ClientController::class, 'index'])->name('clients.index');
+    });
+
+    // CRUD de clientes — requiere privilegio gestionar_clientes
+    Route::middleware('privilege:gestionar_clientes')->group(function () {
+        Route::get('clients/create',        [Employee\ClientController::class, 'create'])->name('clients.create');
+        Route::post('clients',              [Employee\ClientController::class, 'store'])->name('clients.store');
+        Route::get('clients/{client}/edit', [Employee\ClientController::class, 'edit'])->name('clients.edit');
+        Route::put('clients/{client}',      [Employee\ClientController::class, 'update'])->name('clients.update');
     });
 
     // Inventario — productos, categorías y laboratorios
@@ -103,5 +120,10 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
         Route::resource('employees', Employee\EmployeeManagementController::class)->except(['show']);
         Route::get('settings',  [Employee\SettingsController::class, 'index'])->name('settings.index');
         Route::post('settings', [Employee\SettingsController::class, 'update'])->name('settings.update');
+
+        // Aprobación de cajas históricas
+        Route::get('approvals',                                              [Employee\ApprovalController::class, 'index'])->name('approvals.index');
+        Route::post('approvals/cash-register/{cashRegister}/approve',        [Employee\ApprovalController::class, 'approveCashRegister'])->name('approvals.approve');
+        Route::post('approvals/cash-register/{cashRegister}/reject',         [Employee\ApprovalController::class, 'rejectCashRegister'])->name('approvals.reject');
     });
 });

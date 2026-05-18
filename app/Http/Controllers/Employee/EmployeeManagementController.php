@@ -34,10 +34,10 @@ class EmployeeManagementController extends Controller
      */
     public function create()
     {
-        $roles      = Role::whereIn('id', [Role::BRANCH_ADMIN, Role::EMPLOYEE])->get();
-        $privileges = Employee::PRIVILEGES_LIST;
+        $roles            = Role::whereIn('id', [Role::BRANCH_ADMIN, Role::EMPLOYEE])->get();
+        $privilegesGroups = Employee::PRIVILEGES_GROUPS;
 
-        return view('employee.pages.employees.form', compact('roles', 'privileges'));
+        return view('employee.pages.employees.form', compact('roles', 'privilegesGroups'));
     }
 
     /**
@@ -80,10 +80,10 @@ class EmployeeManagementController extends Controller
             403
         );
 
-        $roles      = Role::whereIn('id', [Role::BRANCH_ADMIN, Role::EMPLOYEE])->get();
-        $privileges = Employee::PRIVILEGES_LIST;
+        $roles            = Role::whereIn('id', [Role::BRANCH_ADMIN, Role::EMPLOYEE])->get();
+        $privilegesGroups = Employee::PRIVILEGES_GROUPS;
 
-        return view('employee.pages.employees.form', compact('employee', 'roles', 'privileges'));
+        return view('employee.pages.employees.form', compact('employee', 'roles', 'privilegesGroups'));
     }
 
     /**
