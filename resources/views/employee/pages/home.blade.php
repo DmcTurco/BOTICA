@@ -4,23 +4,26 @@
 @section('main-padding', 'p-0')
 
 @section('content-area')
+@php $emp = auth()->guard('employee')->user(); @endphp
 <div class="flex-1 overflow-auto p-4 md:p-6 space-y-6">
 
     {{-- ── Bienvenida ──────────────────────────────────────────── --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
             <h1 class="text-lg font-bold text-slate-800">
-                Bienvenido, {{ auth()->guard('employee')->user()?->name ?? 'Usuario' }}
+                Bienvenido, {{ $emp?->name ?? 'Usuario' }}
             </h1>
             <p class="text-sm text-slate-400 mt-0.5">
                 {{ now()->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}
             </p>
         </div>
+        @if($emp->hasPrivilege(\App\Models\Employee::PRIV_VER_VENTAS))
         <a href="{{ route('employee.orders.index') }}"
            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
             <i class="fas fa-cash-register text-xs"></i>
             Nueva Venta
         </a>
+        @endif
     </div>
 
     {{-- ── Tarjetas de estadísticas ────────────────────────────── --}}
@@ -79,11 +82,20 @@
     {{-- ── Acceso rápido + Ventas recientes ────────────────────── --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-        {{-- Acceso rápido --}}
+        {{-- Acceso rápido — cada ítem se muestra según privilegios --}}
+        @php
+            $hasSales     = $emp->hasPrivilege(\App\Models\Employee::PRIV_VER_VENTAS);
+            $hasInventory = $emp->hasPrivilege(\App\Models\Employee::PRIV_VER_INVENTARIO);
+            $hasPurchases    = $emp->hasPrivilege(\App\Models\Employee::PRIV_VER_COMPRAS);
+            $hasKardex     = $emp->hasPrivilege(\App\Models\Employee::PRIV_VER_KARDEX);
+            $hasQuickAccess      = $hasSales || $hasInventory || $hasPurchases || $hasKardex;
+        @endphp
+        @if($hasQuickAccess)
         <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
             <h2 class="text-sm font-semibold text-slate-800 mb-4">Acceso Rápido</h2>
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
 
+                @if($hasSales)
                 <a href="{{ route('employee.orders.index') }}"
                    class="flex flex-col items-center gap-2 p-3.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors group">
                     <div class="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
@@ -91,7 +103,9 @@
                     </div>
                     <span class="text-xs font-medium text-slate-600 group-hover:text-emerald-700 text-center leading-tight">Nueva Venta</span>
                 </a>
+                @endif
 
+                @if($hasInventory)
                 <a href="{{ route('employee.products.create') }}"
                    class="flex flex-col items-center gap-2 p-3.5 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50 transition-colors group">
                     <div class="w-9 h-9 bg-sky-100 rounded-lg flex items-center justify-center group-hover:bg-sky-200 transition-colors">
@@ -123,9 +137,31 @@
                     </div>
                     <span class="text-xs font-medium text-slate-600 group-hover:text-cyan-700 text-center leading-tight">Laboratorios</span>
                 </a>
+                @endif
+
+                @if($hasPurchases)
+                <a href="{{ route('employee.purchases.index') }}"
+                   class="flex flex-col items-center gap-2 p-3.5 rounded-xl border border-slate-200 hover:border-violet-300 hover:bg-violet-50 transition-colors group">
+                    <div class="w-9 h-9 bg-violet-100 rounded-lg flex items-center justify-center group-hover:bg-violet-200 transition-colors">
+                        <i class="fas fa-truck-ramp-box text-violet-600 text-sm"></i>
+                    </div>
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-violet-700 text-center leading-tight">Compras</span>
+                </a>
+                @endif
+
+                @if($hasKardex)
+                <a href="{{ route('employee.kardex.index') }}"
+                   class="flex flex-col items-center gap-2 p-3.5 rounded-xl border border-slate-200 hover:border-teal-300 hover:bg-teal-50 transition-colors group">
+                    <div class="w-9 h-9 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                        <i class="fas fa-chart-gantt text-teal-600 text-sm"></i>
+                    </div>
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-teal-700 text-center leading-tight">Kardex</span>
+                </a>
+                @endif
 
             </div>
         </div>
+        @endif {{-- hayAccesos --}}
 
         {{-- Ventas recientes --}}
         <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">

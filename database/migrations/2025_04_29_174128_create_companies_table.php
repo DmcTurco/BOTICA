@@ -16,6 +16,9 @@ return new class extends Migration
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('ruc', 11)->nullable()->unique();       // RUC del emisor (11 dígitos SUNAT)
+            $table->string('address', 200)->nullable();            // dirección fiscal
+            $table->string('phone', 30)->nullable();               // teléfono de contacto
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
@@ -24,9 +27,9 @@ return new class extends Migration
         });
 
         DB::table('companies')->insert([
-            'name' => 'Company Name',
-            'email' => 'company@example.com',
-            'password' => Hash::make('0000'),
+            'name'       => 'Company Name',
+            'email'      => 'company@example.com',
+            'password'   => Hash::make('0000'),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

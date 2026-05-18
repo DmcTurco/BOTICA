@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasConfig;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -10,10 +11,13 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Company extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasConfig, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
+        'ruc',
+        'address',
+        'phone',
         'email',
         'password',
     ];

@@ -94,11 +94,17 @@
             </ul>
         </div>
 
-        {{-- Inventario — oculto si no tiene ningún privilegio --}}
-        @if($emp->hasAnyPrivilege())
+        {{-- Inventario — cada ítem se muestra según su privilegio específico --}}
+        @php
+            $hasInventory = $emp->hasPrivilege(\App\Models\Employee::PRIV_VER_INVENTARIO);
+            $hasPurchases = $emp->hasPrivilege(\App\Models\Employee::PRIV_VER_COMPRAS);
+            $hasKardex    = $emp->hasPrivilege(\App\Models\Employee::PRIV_VER_KARDEX);
+        @endphp
+        @if($hasInventory || $hasPurchases || $hasKardex)
         <div>
             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Inventario</p>
             <ul class="space-y-0.5">
+                @if($hasInventory)
                 <li>
                     <a href="{{ route('employee.products.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -123,6 +129,8 @@
                         Laboratorios
                     </a>
                 </li>
+                @endif
+                @if($hasPurchases)
                 <li>
                     <a href="{{ route('employee.purchases.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -131,6 +139,8 @@
                         Compras
                     </a>
                 </li>
+                @endif
+                @if($hasKardex)
                 <li>
                     <a href="{{ route('employee.kardex.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -139,9 +149,10 @@
                         Kardex
                     </a>
                 </li>
+                @endif
             </ul>
         </div>
-        @endif {{-- hasAnyPrivilege --}}
+        @endif {{-- inventario --}}
 
         {{-- Administración — solo visible para branch_admin (role_id = 2) --}}
         @if(auth()->guard('employee')->user()?->isBranchAdmin())
@@ -154,6 +165,14 @@
                               {{ request()->routeIs('employee.employees.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
                         <i class="fas fa-user-gear w-4 text-center shrink-0"></i>
                         Empleados
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('employee.settings.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.settings.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-sliders w-4 text-center shrink-0"></i>
+                        Configuración
                     </a>
                 </li>
             </ul>

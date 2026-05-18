@@ -116,7 +116,14 @@ class OrderController extends Controller
 
         $documentTypes = DocumentType::activos()->get();
 
-        return view('employee.pages.orders.index', compact('products', 'documentTypes'));
+        // Configuración de impresión de la sede (para el modal post-venta)
+        $branch      = $employee->branch()->with('config')->first();
+        $printConfig = array_merge([
+            'default_template' => 'ticket_80mm',
+            'auto_print'       => false,
+        ], $branch->getSettingGroup('printing'));
+
+        return view('employee.pages.orders.index', compact('products', 'documentTypes', 'printConfig'));
     }
 
     /**

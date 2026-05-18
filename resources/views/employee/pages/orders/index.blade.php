@@ -420,6 +420,44 @@
         </div>
     </div>
 </div>
+{{-- ── Modal de venta exitosa ─────────────────────────────────── --}}
+<div id="modalSaleSuccess"
+     class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4"
+     style="display:none!important">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm text-center overflow-hidden">
+
+        {{-- Icono de éxito --}}
+        <div class="bg-emerald-50 px-6 pt-8 pb-6">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-circle-check text-emerald-600 text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">¡Venta registrada!</h3>
+            <p class="text-sm text-slate-500 mt-1">Comprobante generado correctamente</p>
+        </div>
+
+        {{-- Número de comprobante --}}
+        <div class="px-6 py-5 border-b border-slate-100">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">N° Comprobante</p>
+            <p id="saleVoucherNumber" class="text-xl font-bold text-emerald-700 font-mono"></p>
+        </div>
+
+        {{-- Acciones --}}
+        <div class="px-6 py-5 flex flex-col gap-3">
+            <button type="button" id="btnPrintSale"
+                    class="w-full flex items-center justify-center gap-2 px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors">
+                <i class="fas fa-print text-xs"></i>
+                Imprimir comprobante
+            </button>
+            <button type="button" id="btnNewSale"
+                    class="w-full flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-medium rounded-xl transition-colors">
+                <i class="fas fa-rotate-left text-xs"></i>
+                Nueva venta
+            </button>
+        </div>
+
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
@@ -765,15 +803,16 @@ $('#btnTerminarVenta').on('click', function() {
         headers:     { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         data:        JSON.stringify(payload),
         success: function(res) {
-            // Mostrar número de comprobante generado
             const numComp = res.voucher_number ?? '';
-            mostrarToast('success', res.message, numComp);
 
-            // Mostrar el número en el campo del topbar brevemente
+            // Mostrar el número en el topbar
             $('#nroComprobante').text(numComp).removeClass('text-slate-400 italic').addClass('text-emerald-700 font-semibold');
             setTimeout(function() {
                 $('#nroComprobante').text('— automático —').removeClass('text-emerald-700 font-semibold').addClass('text-slate-400 italic');
-            }, 5000);
+            }, 6000);
+
+            // Abrir modal de éxito con opción de imprimir
+            openSaleSuccessModal(res.order_id, numComp);
 
             carrito = {};
             renderCarrito();
@@ -803,6 +842,48 @@ $('#btnTerminarVenta').on('click', function() {
                 .html('<i class="fas fa-circle-check text-sm"></i> Confirmar Venta <kbd class="text-emerald-200 text-xs font-normal bg-white/10 px-1.5 py-0.5 rounded ml-1">F5</kbd>');
         }
     });
+});
+
+// ── Config de impresión de la sede (inyectada desde PHP) ─────
+const PRINT_CONFIG   = @json($printConfig);
+const PRINT_BASE_URL = '{{ url("employee/orders") }}';
+
+// ── Modal de venta exitosa ────────────────────────────────────
+function openSaleSuccessModal(orderId, voucherNumber) {
+    $('#saleVoucherNumber').text(voucherNumber || '#' + String(orderId).padStart(5, '0'));
+
+    // Botón imprimir
+    $('#btnPrintSale').off('click').on('click', function() {
+        printSale(orderId);
+    });
+
+    // Botón nueva venta
+    $('#btnNewSale').off('click').on('click', function() {
+        closeSaleSuccessModal();
+    });
+
+    $('#modalSaleSuccess').css('display', 'flex');
+
+    // Auto-imprimir si la sede lo tiene configurado
+    if (PRINT_CONFIG.auto_print) {
+        printSale(orderId);
+    }
+}
+
+function closeSaleSuccessModal() {
+    $('#modalSaleSuccess').css('display', 'none');
+}
+
+function printSale(orderId, template = null) {
+    const url = template
+        ? `${PRINT_BASE_URL}/${orderId}/print/${template}`
+        : `${PRINT_BASE_URL}/${orderId}/print`;
+    window.open(url, `print_${orderId}`, 'width=620,height=780,scrollbars=yes,resizable=yes');
+}
+
+// Cerrar modal al hacer click en el fondo
+$('#modalSaleSuccess').on('click', function(e) {
+    if (e.target === this) closeSaleSuccessModal();
 });
 
 // ── Toast de notificación ─────────────────────────────────────

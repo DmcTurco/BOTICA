@@ -141,11 +141,18 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <button type="button"
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors btn-detalle"
-                                    data-id="{{ $order->id }}" title="Ver detalle">
-                                <i class="fas fa-eye text-xs"></i>
-                            </button>
+                            <div class="flex items-center justify-end gap-1">
+                                <button type="button"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors btn-detalle"
+                                        data-id="{{ $order->id }}" title="Ver detalle">
+                                    <i class="fas fa-eye text-xs"></i>
+                                </button>
+                                <button type="button"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                        onclick="printSale({{ $order->id }})" title="Imprimir comprobante">
+                                    <i class="fas fa-print text-xs"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -187,7 +194,7 @@
                     <p class="text-xs text-slate-400" id="modal-fecha"></p>
                 </div>
             </div>
-            <button onclick="cerrarModalDetalle()"
+            <button onclick="closeDetailModal()"
                     class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
                 <i class="fas fa-xmark text-sm"></i>
             </button>
@@ -270,8 +277,13 @@
         </div>
 
         {{-- Footer modal --}}
-        <div class="px-6 py-4 border-t border-slate-200 shrink-0 flex justify-end">
-            <button onclick="cerrarModalDetalle()"
+        <div class="px-6 py-4 border-t border-slate-200 shrink-0 flex items-center justify-between">
+            <button type="button" id="btn-imprimir-modal"
+                    onclick="printCurrentSale()"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors">
+                <i class="fas fa-print text-xs"></i> Imprimir
+            </button>
+            <button onclick="closeDetailModal()"
                     class="px-5 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
                 Cerrar
             </button>
@@ -291,42 +303,63 @@
 
 @section('scripts')
 <script>
-const COMPROBANTES = { 1: 'Boleta', 2: 'Factura', 3: 'Nota de Venta' };
-const PAGOS        = { 1: 'Efectivo', 2: 'Tarjeta', 3: 'Transferencia', 4: 'Yape' };
+const VOUCHER_TYPES   = { 1: 'Boleta', 2: 'Factura', 3: 'Nota de Venta' };
+const PAYMENT_TYPES          = { 1: 'Efectivo', 2: 'Tarjeta', 3: 'Transferencia', 4: 'Yape' };
+const PRINT_BASE_URL = '{{ url("employee/orders") }}';
 
-function cerrarModalDetalle() {
+let currentOrderId = null; // ID de la orden activa en el modal
+
+/**
+ * Abre el popup de impresión para una orden.
+ * template: clave de plantilla (opcional). Si no se pasa,
+ * el servidor usa la config de la sede.
+ */
+function printSale(id, template = null) {
+    const url = template
+        ? `${PRINT_BASE_URL}/${id}/print/${template}`
+        : `${PRINT_BASE_URL}/${id}/print`;
+    window.open(url, `print_${id}`, 'width=600,height=750,scrollbars=yes,resizable=yes');
+}
+
+/** Imprime la orden que está abierta en el modal */
+function printCurrentSale() {
+    if (currentOrderId) printSale(currentOrderId);
+}
+
+function closeDetailModal() {
     document.getElementById('modalDetalle').style.setProperty('display', 'none', 'important');
 }
 
-function mostrarLoader(show) {
+function showLoader(show) {
     document.getElementById('modalLoader').style.setProperty('display', show ? 'flex' : 'none', 'important');
 }
 
-function fmt(num) {
+function formatCurrency(num) {
     return 'S/ ' + parseFloat(num).toFixed(2);
 }
 
-function abrirDetalle(id) {
-    mostrarLoader(true);
+function openDetail(id) {
+    currentOrderId = id;
+    showLoader(true);
 
     fetch(`{{ url('employee/orders') }}/${id}/detalle`, {
         headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
     })
     .then(r => r.json())
     .then(v => {
-        mostrarLoader(false);
+        showLoader(false);
 
         document.getElementById('modal-titulo').textContent    = `Venta #${String(v.id).padStart(5, '0')}`;
         document.getElementById('modal-fecha').textContent     = v.created_at;
-        document.getElementById('modal-comprobante').textContent = COMPROBANTES[v.voucher_type] ?? '—';
+        document.getElementById('modal-comprobante').textContent = VOUCHER_TYPES[v.voucher_type] ?? '—';
         document.getElementById('modal-nrocomprobante').textContent = v.voucher_number ?? '—';
-        document.getElementById('modal-pago').textContent      = PAGOS[v.payment_type] ?? '—';
+        document.getElementById('modal-pago').textContent      = PAYMENT_TYPES[v.payment_type] ?? '—';
         document.getElementById('modal-operacion').textContent = v.operation_number ?? '—';
         document.getElementById('modal-cliente-nombre').textContent   = v.customer_name ?? 'Sin nombre';
         document.getElementById('modal-cliente-documento').textContent = v.customer_document ?? 'Sin documento';
-        document.getElementById('modal-subtotal').textContent  = fmt(v.subtotal);
-        document.getElementById('modal-igv').textContent       = fmt(v.igv);
-        document.getElementById('modal-total').textContent     = fmt(v.total);
+        document.getElementById('modal-subtotal').textContent  = formatCurrency(v.subtotal);
+        document.getElementById('modal-igv').textContent       = formatCurrency(v.igv);
+        document.getElementById('modal-total').textContent     = formatCurrency(v.total);
 
         const tbody = document.getElementById('modal-items');
         tbody.innerHTML = '';
@@ -337,9 +370,9 @@ function abrirDetalle(id) {
                         <div class="font-medium text-slate-700 text-xs">${d.product_name}</div>
                         <div class="text-slate-400 text-xs">${d.product_code}</div>
                     </td>
-                    <td class="px-4 py-2.5 text-right text-xs text-slate-600">${fmt(d.unit_price)}</td>
+                    <td class="px-4 py-2.5 text-right text-xs text-slate-600">${formatCurrency(d.unit_price)}</td>
                     <td class="px-4 py-2.5 text-right text-xs text-slate-600">${parseFloat(d.quantity)}</td>
-                    <td class="px-4 py-2.5 text-right text-xs font-semibold text-slate-700">${fmt(d.subtotal)}</td>
+                    <td class="px-4 py-2.5 text-right text-xs font-semibold text-slate-700">${formatCurrency(d.subtotal)}</td>
                 </tr>
             `);
         });
@@ -347,7 +380,7 @@ function abrirDetalle(id) {
         document.getElementById('modalDetalle').style.setProperty('display', 'flex', 'important');
     })
     .catch(() => {
-        mostrarLoader(false);
+        showLoader(false);
         alert('Error al cargar el detalle de la venta.');
     });
 }
@@ -355,7 +388,7 @@ function abrirDetalle(id) {
 $(document).ready(function () {
     $(document).on('click', '.btn-detalle, .fila-venta td:not(:last-child)', function () {
         const id = $(this).closest('tr').data('id');
-        if (id) abrirDetalle(id);
+        if (id) openDetail(id);
     });
 
     $(document).on('keydown', function (e) {
@@ -363,7 +396,7 @@ $(document).ready(function () {
     });
 
     document.getElementById('modalDetalle').addEventListener('click', function (e) {
-        if (e.target === this) cerrarModalDetalle();
+        if (e.target === this) closeDetailModal();
     });
 });
 </script>

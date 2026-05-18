@@ -66,30 +66,42 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
         Route::post('orders', [Employee\OrderController::class, 'store'])->name('orders.store');
     });
 
-    // Clientes, catálogos y compras — requieren al menos un privilegio asignado
-    // (empleados sin ningún privilegio solo pueden ver el dashboard)
+    // Clientes — accesibles con cualquier privilegio asignado
     Route::middleware('privilege:any')->group(function () {
-        // Rutas de clientes
         Route::get('clients/search', [Employee\ClientController::class, 'search'])->name('clients.search');
         Route::resource('clients', Employee\ClientController::class)->except(['show', 'destroy']);
+    });
 
-        // Rutas de catálogos
+    // Inventario — productos, categorías y laboratorios
+    Route::middleware('privilege:ver_inventario')->group(function () {
         Route::resource('products', Employee\ProductController::class);
         Route::resource('laboratories', Employee\LaboratoryController::class);
         Route::resource('categories', Employee\CategoryController::class);
+    });
 
-        // Kardex de inventario
-        Route::get('kardex', [Employee\KardexController::class, 'index'])->name('kardex.index');
-
-        // Rutas de compras (ingreso de stock)
+    // Compras (ingreso de stock)
+    Route::middleware('privilege:ver_compras')->group(function () {
         Route::get('purchases', [Employee\PurchaseController::class, 'index'])->name('purchases.index');
         Route::get('purchases/create', [Employee\PurchaseController::class, 'create'])->name('purchases.create');
         Route::post('purchases', [Employee\PurchaseController::class, 'store'])->name('purchases.store');
         Route::get('purchases/{purchase}', [Employee\PurchaseController::class, 'show'])->name('purchases.show');
     });
 
-    // Gestión de empleados — solo branch_admin (role_id = 2)
+    // Kardex de inventario
+    Route::middleware('privilege:ver_kardex')->group(function () {
+        Route::get('kardex', [Employee\KardexController::class, 'index'])->name('kardex.index');
+    });
+
+    // Impresión de comprobantes — accesible con historial o ventas
+    Route::middleware('privilege:ver_historial')->group(function () {
+        Route::get('orders/{order}/print/{template?}', [Employee\PrintController::class, 'show'])
+            ->name('orders.print');
+    });
+
+    // Gestión de empleados y configuración — solo branch_admin (role_id = 2)
     Route::middleware('branch.admin')->group(function () {
         Route::resource('employees', Employee\EmployeeManagementController::class)->except(['show']);
+        Route::get('settings',  [Employee\SettingsController::class, 'index'])->name('settings.index');
+        Route::post('settings', [Employee\SettingsController::class, 'update'])->name('settings.update');
     });
 });

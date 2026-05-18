@@ -14,19 +14,31 @@ class Employee extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     // ── Constantes de privilegios (solo aplican a role_id = 3) ──
+
+    // Ventas / Caja
     const PRIV_VER_VENTAS      = 'ver_ventas';
     const PRIV_VER_HISTORIAL   = 'ver_historial';
     const PRIV_ABRIR_CAJA      = 'abrir_caja';
     const PRIV_CERRAR_CAJA     = 'cerrar_caja';
     const PRIV_EDITAR_APERTURA = 'editar_apertura';
 
+    // Inventario
+    const PRIV_VER_INVENTARIO  = 'ver_inventario';
+    const PRIV_VER_COMPRAS     = 'ver_compras';
+    const PRIV_VER_KARDEX      = 'ver_kardex';
+
     /** Lista completa de privilegios disponibles con sus etiquetas */
     const PRIVILEGES_LIST = [
+        // — Ventas —
         self::PRIV_VER_VENTAS      => 'Ver Punto de Venta',
         self::PRIV_VER_HISTORIAL   => 'Ver Historial de Ventas',
         self::PRIV_ABRIR_CAJA      => 'Abrir Caja',
         self::PRIV_CERRAR_CAJA     => 'Cerrar Caja',
         self::PRIV_EDITAR_APERTURA => 'Editar Apertura de Caja',
+        // — Inventario —
+        self::PRIV_VER_INVENTARIO  => 'Ver Inventario (Productos / Categorías / Laboratorios)',
+        self::PRIV_VER_COMPRAS     => 'Ver Compras',
+        self::PRIV_VER_KARDEX      => 'Ver Kardex',
     ];
 
     protected $fillable = [
