@@ -125,7 +125,7 @@ class OrderController extends Controller
     private function pricing(array $items, int $companyId, mixed $clientTotal): array
     {
         $codes    = array_unique(array_column($items, 'code'));
-        $products = Product::with('unit:id,sunat_code')
+        $products = Product::with(['unit:id,sunat_code', 'presentations'])
             ->where('company_id', $companyId)
             ->whereIn('code', $codes)
             ->get()
@@ -133,6 +133,21 @@ class OrderController extends Controller
 
         if ($products->count() !== count($codes)) {
             return ['error' => 'Hay productos que no pertenecen a tu compañía.'];
+        }
+
+        // El precio de cada línea debe ser uno que el producto realmente tiene en la base de datos
+        // (unidad, paquete o una presentación activa); el navegador nunca fija el precio.
+        foreach ($items as $item) {
+            $product = $products[$item['code']];
+
+            $allowed = collect([$product->unit_sale_price, $product->package_sale_price])
+                ->merge($product->presentations->where('status', 1)->pluck('sale_price'))
+                ->filter(fn ($price) => $price !== null)
+                ->map(fn ($price) => (float) $price);
+
+            if (!$allowed->contains(fn ($price) => abs($price - (float) $item['price']) < 0.005)) {
+                return ['error' => "El precio de «{$product->name}» no coincide con el precio actual. Actualiza la página e inténtalo de nuevo."];
+            }
         }
 
         $tax = app(TaxCalculator::class)->calculate(
