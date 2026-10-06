@@ -160,6 +160,12 @@
                                       } }}">
                                     <i class="fas fa-file-shield text-[10px]"></i> SUNAT: {{ $order->sunatLabel() }}
                                 </span>
+                                @if(($daysLeft = $order->sunatDaysLeft()) !== null)
+                                <span class="ml-1 text-[11px] font-medium {{ $daysLeft < 0 ? 'text-red-600' : ($daysLeft <= 1 ? 'text-amber-600' : 'text-slate-400') }}"
+                                      title="Plazo para informar a SUNAT: boleta 7 días, factura 3">
+                                    {{ $daysLeft < 0 ? 'Plazo vencido' : ($daysLeft === 0 ? 'Vence hoy' : "Vence en {$daysLeft} d") }}
+                                </span>
+                                @endif
                             </div>
                             @endif
 

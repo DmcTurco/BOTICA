@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -89,6 +90,34 @@ class Order extends Model
     public function canResendToSunat(): bool
     {
         return in_array($this->sunat_status, [self::SUNAT_PENDING, self::SUNAT_ERROR], true);
+    }
+
+    /**
+     * Fecha límite para informar este comprobante a SUNAT: la factura hasta 3 días calendario
+     * después del día de emisión; la boleta (individual o en resumen diario) hasta 7.
+     */
+    public function sunatDeadline(): ?Carbon
+    {
+        if (!$this->isSunatVoucher() || !$this->created_at) {
+            return null;
+        }
+
+        return $this->created_at->copy()->startOfDay()->addDays($this->isBoleta() ? 7 : 3)->endOfDay();
+    }
+
+    /**
+     * Días que quedan para informarlo a SUNAT (0 = vence hoy, negativo = plazo vencido).
+     * Solo tiene sentido mientras el comprobante está pendiente o con error de envío.
+     */
+    public function sunatDaysLeft(): ?int
+    {
+        $deadline = $this->sunatDeadline();
+
+        if (!$deadline || !$this->canResendToSunat()) {
+            return null;
+        }
+
+        return (int) now()->startOfDay()->diffInDays($deadline->copy()->startOfDay(), false);
     }
 
     /** ¿Se puede anular con una nota de crédito? (boleta o factura aceptada, activa y sin nota) */

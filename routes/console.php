@@ -13,3 +13,6 @@ Artisan::command('inspire', function () {
 // Requiere el cron de Laravel en el servidor: * * * * * php artisan schedule:run
 Schedule::command('sunat:send-summaries')->dailyAt('23:30');
 Schedule::command('sunat:send-summaries')->dailyAt('06:00');
+
+// Reintenta cada hora las facturas y boletas individuales que quedaron pendientes o con error de envío
+Schedule::command('sunat:retry-pending')->hourly();
