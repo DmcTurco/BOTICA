@@ -28,6 +28,9 @@ class DatabaseSeeder extends Seeder
             // ── Stock inicial por sede ────────────────────────────────────
             BranchStockSeeder::class,    // Requiere: products, branches (id=1)
 
+            // ── Clientes ──────────────────────────────────────────────────
+            ClientSeeder::class,         // Requiere: companies (id=1), document_series (CLIENTE)
+
             // ── Facturación electrónica (ambiente de pruebas de SUNAT) ─────
             CompanySunatSettingSeeder::class, // Requiere: companies (id=1)
         ]);

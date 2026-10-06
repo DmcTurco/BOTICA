@@ -71,3 +71,24 @@ it('exige cliente identificado cuando excede S/ 700', function () {
         ->and(callOrderController('boletaIdentificationError', 800.0, '', DocumentType::DNI, '12345678'))->toBeString()
         ->and(callOrderController('boletaIdentificationError', 800.0, 'JUAN PEREZ', DocumentType::DNI, '12345678'))->toBeNull();
 });
+
+// ── Cliente público (predeterminado) ──────────────────────────
+
+it('crea el cliente público una sola vez por compañía', function () {
+    $this->seed(Database\Seeders\DocumentSeriesSeeder::class);
+
+    $first  = App\Models\Client::publicFor(1);
+    $second = App\Models\Client::publicFor(1);
+
+    expect($first->id)->toBe($second->id)
+        ->and($first->document_number)->toBe('00000000')
+        ->and($first->name)->toBe('CLIENTE PÚBLICO')
+        ->and($first->isPublic())->toBeTrue()
+        ->and(App\Models\Client::count())->toBe(1);
+});
+
+it('no cuenta el DNI 00000000 como cliente identificado en boletas de más de S/ 700', function () {
+    $this->seed(DocumentTypeSeeder::class);
+
+    expect(callOrderController('boletaIdentificationError', 800.0, 'CLIENTE PÚBLICO', DocumentType::DNI, '00000000'))->toBeString();
+});

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\BranchStock;
+use App\Models\Client;
 use App\Models\DocumentSeries;
 use App\Models\DocumentType;
 use App\Models\Order;
@@ -118,7 +119,9 @@ class OrderController extends Controller
 
         $message = 'Las boletas de más de S/ ' . Order::BOLETA_ID_THRESHOLD . ' requieren identificar al cliente: nombres y apellidos, tipo y número de documento.';
 
-        if (blank($name) || blank($document) || !$documentTypeId || $documentTypeId === DocumentType::SIN_DOCUMENTO) {
+        // El cliente público (DNI 00000000) no cuenta como identificado
+        if (blank($name) || blank($document) || $document === Client::PUBLIC_DOCUMENT
+            || !$documentTypeId || $documentTypeId === DocumentType::SIN_DOCUMENTO) {
             return $message;
         }
 
@@ -303,7 +306,10 @@ class OrderController extends Controller
             'auto_print'       => false,
         ], $branch->getSettingGroup('printing'));
 
-        return view('employee.pages.orders.index', compact('products', 'documentTypes', 'printConfig', 'historicalCaja'));
+        // Cliente predeterminado del POS (ventas al público general)
+        $publicClient = Client::publicFor($employee->company_id);
+
+        return view('employee.pages.orders.index', compact('products', 'documentTypes', 'printConfig', 'historicalCaja', 'publicClient'));
     }
 
     /**
@@ -379,6 +385,19 @@ class OrderController extends Controller
                     'message' => 'La factura requiere ingresar el número de RUC.',
                 ], 422);
             }
+        }
+
+        // Una venta no se cierra sin cliente: si no se eligió ninguno (y no es factura) se usa el cliente público
+        if ((int) $request->voucher_type !== 2
+            && blank($request->client_id) && blank($request->customer_name) && blank($request->customer_document)) {
+            $public = Client::publicFor(auth()->guard('employee')->user()->company_id);
+
+            $request->merge([
+                'client_id'         => $public->id,
+                'customer_name'     => $public->name,
+                'document_type_id'  => $public->document_type_id,
+                'customer_document' => $public->document_number,
+            ]);
         }
 
         // Auto-detectar tipo de documento por longitud si no se envió
@@ -625,6 +644,7 @@ class OrderController extends Controller
             'historicalCaja' => $cashRegister,
             'editOrder'      => $order,
             'editItems'      => $editItems,
+            'publicClient'   => Client::publicFor($employee->company_id),
         ]);
     }
 

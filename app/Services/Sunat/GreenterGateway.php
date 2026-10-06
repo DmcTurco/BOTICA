@@ -183,7 +183,7 @@ class GreenterGateway implements SunatGateway
         $orders->each(fn (Order $order) => $order->loadMissing(['documentType', 'branch']));
 
         $details = $orders->map(function (Order $order) {
-            $hasDocument = filled($order->customer_document) && $order->documentType;
+            $hasDocument = $this->hasRealDocument($order);
 
             [$series, $number] = explode('-', $order->voucher_number);
 
@@ -407,12 +407,23 @@ class GreenterGateway implements SunatGateway
 
     private function client(Order $order): Client
     {
-        $hasDocument = filled($order->customer_document) && $order->documentType;
+        $hasDocument = $this->hasRealDocument($order);
 
         return (new Client())
             ->setTipoDoc($hasDocument ? $order->documentType->code : '0')
             ->setNumDoc($hasDocument ? $order->customer_document : '0')
             ->setRznSocial($order->customer_name ?: 'CLIENTES VARIOS');
+    }
+
+    /**
+     * ¿La orden tiene un documento de cliente real? El cliente público (DNI 00000000)
+     * se informa a SUNAT como "sin documento".
+     */
+    private function hasRealDocument(Order $order): bool
+    {
+        return filled($order->customer_document)
+            && $order->customer_document !== \App\Models\Client::PUBLIC_DOCUMENT
+            && $order->documentType;
     }
 
     private function detail($item): SaleDetail

@@ -564,6 +564,9 @@ let carrito = {};
 // ── Modo edición de una venta de caja histórica ───────────────
 const EDIT_ORDER = @json($editConfig);
 
+// Cliente predeterminado: ventas al público general (DNI 00000000)
+const PUBLIC_CLIENT = @json(['id' => $publicClient->id, 'name' => $publicClient->name, 'document' => $publicClient->document_number, 'doc_type_id' => $publicClient->document_type_id]);
+
 const BTN_LABEL = EDIT_ORDER ? 'Guardar Cambios' : 'Confirmar Venta';
 
 // ── Filtrado en tiempo real ───────────────────────────────────
@@ -899,6 +902,7 @@ $('#btnTerminarVenta').on('click', function() {
             $('#clienteDropdown').addClass('hidden').empty();
             $('#tipoDocumentoId').val('');
             $('.btn-tipo-doc').removeClass(DOC_ACTIVO.join(' ')).addClass(DOC_INACTIVO.join(' '));
+            aplicarClientePublico();
             $('#dniEstado').addClass('hidden').html('');
             $('#dniMensaje').addClass('hidden').text('').removeClass('text-emerald-600 text-slate-400 text-red-400');
             $.get(window.location.href, function(html) {
@@ -945,6 +949,9 @@ if (EDIT_ORDER) {
     // No tiene sentido "Nueva venta" mientras se edita
     $('#btnNuevaVenta').addClass('hidden');
 }
+
+// Al abrir el POS (venta nueva) el cliente predeterminado ya viene elegido
+if (!EDIT_ORDER) aplicarClientePublico();
 
 // ── Config de impresión de la sede (inyectada desde PHP) ─────
 const PRINT_CONFIG   = @json($printConfig);
@@ -1014,8 +1021,12 @@ $('#cliente').on('input', function() {
     const term = $(this).val().trim();
     clearTimeout(clienteTimer);
 
+    // Escribir otro nombre cuando estaba el cliente público: ya no es ese cliente
+    if (term && term !== PUBLIC_CLIENT.name) quitarClientePublico();
+
     // Si limpiaron el campo, resetear selección
     if (!term) {
+        quitarClientePublico();
         limpiarClienteSeleccionado(false);
         $('#clienteDropdown').addClass('hidden').empty();
         return;
@@ -1059,12 +1070,29 @@ $('#cliente').on('input', function() {
     }, 280);
 });
 
-$(document).on('click', '.cliente-opcion', function() {
-    const id        = $(this).data('id');
-    const name      = $(this).data('name');
-    const docTypeId = $(this).data('doc-type-id');
-    const docNumber = $(this).data('doc-number');
+/** Deja el cliente público como cliente de la venta (predeterminado del POS) */
+function aplicarClientePublico() {
+    aplicarCliente(PUBLIC_CLIENT.id, PUBLIC_CLIENT.name, PUBLIC_CLIENT.doc_type_id, PUBLIC_CLIENT.document);
+}
 
+/** Si el cajero cambia el cliente a mano, deja de ser el cliente público (y sus datos fijos) */
+function quitarClientePublico() {
+    if ($('#clienteId').val() != PUBLIC_CLIENT.id) return;
+
+    limpiarClienteSeleccionado(false);
+
+    if ($('#documento').val() === PUBLIC_CLIENT.document) {
+        $('#documento').val('');
+        $('#tipoDocumentoId').val('');
+        $('.btn-tipo-doc').removeClass(DOC_ACTIVO.join(' ')).addClass(DOC_INACTIVO.join(' '));
+    }
+}
+
+$(document).on('click', '.cliente-opcion', function() {
+    aplicarCliente($(this).data('id'), $(this).data('name'), $(this).data('doc-type-id'), $(this).data('doc-number'));
+});
+
+function aplicarCliente(id, name, docTypeId, docNumber) {
     // Llenar campos
     $('#cliente').val(name);
     $('#clienteId').val(id);
@@ -1084,7 +1112,7 @@ $(document).on('click', '.cliente-opcion', function() {
         $('#dniEstado').addClass('hidden').html('');
         $('#dniMensaje').addClass('hidden').text('').removeClass('text-emerald-600 text-slate-400 text-red-400');
     }
-});
+}
 
 $('#btnLimpiarCliente').on('click', function() {
     limpiarClienteSeleccionado(true);

@@ -105,6 +105,11 @@ class ClientController extends Controller
         $employee = auth()->guard('employee')->user();
         abort_if($client->company_id !== $employee->company_id, 403);
 
+        if ($client->isPublic()) {
+            return redirect()->route('employee.clients.index')
+                ->with('error', 'El cliente público es predeterminado del sistema y no se puede editar.');
+        }
+
         $documentTypes = DocumentType::activos()->get();
         return view('employee.pages.clients.form', compact('client', 'documentTypes'));
     }
@@ -115,7 +120,7 @@ class ClientController extends Controller
     public function update(Request $request, Client $client)
     {
         $employee = auth()->guard('employee')->user();
-        abort_if($client->company_id !== $employee->company_id, 403);
+        abort_if($client->company_id !== $employee->company_id || $client->isPublic(), 403);
         $request->validate([
             'name'             => 'required|string|max:150',
             'document_type_id' => 'nullable|exists:document_types,id',

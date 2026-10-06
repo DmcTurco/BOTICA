@@ -26,6 +26,10 @@ class Client extends Model
         'status' => 'integer',
     ];
 
+    /** Cliente predeterminado de las ventas al público general (sin identificar) */
+    const PUBLIC_NAME     = 'CLIENTE PÚBLICO';
+    const PUBLIC_DOCUMENT = '00000000';
+
     // ── Relaciones ──────────────────────────────────────────────
 
     /** Compañía a la que pertenece el cliente */
@@ -47,6 +51,29 @@ class Client extends Model
     }
 
     // ── Scopes ──────────────────────────────────────────────────
+
+    /**
+     * Cliente público de la compañía (DNI 00000000). Si aún no existe se crea, así toda
+     * compañía lo tiene sin depender del seeder.
+     */
+    public static function publicFor(int $companyId): self
+    {
+        return static::firstOrCreate(
+            ['company_id' => $companyId, 'document_number' => self::PUBLIC_DOCUMENT],
+            [
+                'code'             => DocumentSeries::siguiente(DocumentSeries::CLIENTE),
+                'name'             => self::PUBLIC_NAME,
+                'document_type_id' => DocumentType::DNI,
+                'status'           => 1,
+            ]
+        );
+    }
+
+    /** ¿Es el cliente público (venta sin identificar)? */
+    public function isPublic(): bool
+    {
+        return $this->document_number === self::PUBLIC_DOCUMENT;
+    }
 
     /** Solo clientes activos */
     public function scopeActivos($query)
