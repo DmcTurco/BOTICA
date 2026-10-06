@@ -212,6 +212,21 @@
                         </label>
                     </div>
 
+                    <div class="flex flex-col gap-2">
+                        <p class="text-sm font-semibold text-slate-700">Envío de boletas a SUNAT</p>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="boleta_mode" value="individual" class="accent-emerald-600"
+                                   {{ old('boleta_mode', $setting->boleta_mode ?? 'individual') === 'individual' ? 'checked' : '' }}>
+                            <span class="text-sm text-slate-700"><strong>Individual</strong> — cada boleta se envía al momento de la venta</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="boleta_mode" value="summary" class="accent-emerald-600"
+                                   {{ old('boleta_mode', $setting->boleta_mode ?? 'individual') === 'summary' ? 'checked' : '' }}>
+                            <span class="text-sm text-slate-700"><strong>Resumen diario</strong> — las boletas del día se envían juntas (al cierre o desde el historial)</span>
+                        </label>
+                        <p class="text-xs text-slate-400">Las facturas siempre se envían una por una.</p>
+                    </div>
+
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="enabled" value="1" class="accent-emerald-600"
                                {{ old('enabled', $setting->enabled) ? 'checked' : '' }}>

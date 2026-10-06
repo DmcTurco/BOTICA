@@ -69,6 +69,10 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
         Route::post('orders/{order}/sunat', [Employee\OrderController::class, 'resendSunat'])
             ->middleware('privilege:enviar_fe_sunat')->name('orders.sunat-resend');
 
+        // Resumen diario de boletas: envía las pendientes y consulta los resúmenes en proceso
+        Route::post('sunat/summary', [Employee\SunatSummaryController::class, 'store'])
+            ->middleware('privilege:enviar_resumen_boletas')->name('sunat.summary');
+
         // Nota de crédito: anula una boleta o factura aceptada por SUNAT
         Route::post('orders/{order}/credit-note', [Employee\CreditNoteController::class, 'store'])
             ->middleware('privilege:crear_nota_credito')->name('orders.credit-note');

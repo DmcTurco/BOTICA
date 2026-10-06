@@ -54,6 +54,7 @@ class Order extends Model
         'sunat_environment',
         'sunat_attempts',
         'sunat_sent_at',
+        'sunat_summary_id',
     ];
 
     protected $casts = [
@@ -73,6 +74,12 @@ class Order extends Model
     public function isSunatVoucher(): bool
     {
         return in_array((int) $this->voucher_type, [1, 2], true);
+    }
+
+    /** ¿Es una boleta de venta? (la factura va siempre individual) */
+    public function isBoleta(): bool
+    {
+        return (int) $this->voucher_type === 1;
     }
 
     /** ¿Se puede reenviar a SUNAT? (pendiente o con error de envío) */

@@ -36,6 +36,8 @@ return new class extends Migration
             $table->string('certificate_subject')->nullable();                // titular (para mostrar)
             $table->date('certificate_expires_at')->nullable();
 
+            $table->string('boleta_mode', 10)->default('individual');         // individual | summary (resumen diario)
+
             $table->boolean('enabled')->default(false);                       // emisión electrónica activa
             $table->timestamps();
         });

@@ -22,6 +22,8 @@ class SunatResult
         public readonly ?string $xml = null,
         /** Constancia de recepción (CDR) en formato ZIP */
         public readonly ?string $cdrZip = null,
+        /** Ticket que SUNAT entrega al recibir un resumen diario (se consulta después) */
+        public readonly ?string $ticket = null,
     ) {
     }
 

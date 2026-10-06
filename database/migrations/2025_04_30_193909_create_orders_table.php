@@ -73,6 +73,7 @@ return new class extends Migration
             $table->string('sunat_environment', 10)->nullable();        // beta | production con que se emitió
             $table->unsignedSmallInteger('sunat_attempts')->default(0); // intentos de envío
             $table->timestamp('sunat_sent_at')->nullable();             // último envío
+            $table->unsignedBigInteger('sunat_summary_id')->nullable()->index(); // resumen diario en que se informó la boleta
 
             $table->timestamps();
 

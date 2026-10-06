@@ -35,7 +35,7 @@ class SunatSettingController extends Controller
 
         $data = $request->safe()->only([
             'legal_name', 'trade_name', 'fiscal_address', 'ubigeo',
-            'department', 'province', 'district', 'environment', 'sol_user',
+            'department', 'province', 'district', 'environment', 'boleta_mode', 'sol_user',
         ]);
         $data['enabled'] = $request->boolean('enabled');
 

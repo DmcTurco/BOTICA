@@ -12,8 +12,13 @@ class CompanySunatSetting extends Model
     const ENV_BETA       = 'beta';
     const ENV_PRODUCTION = 'production';
 
+    /** Cómo se informan las boletas: una por una o agrupadas en un resumen diario */
+    const BOLETA_INDIVIDUAL = 'individual';
+    const BOLETA_SUMMARY    = 'summary';
+
     protected $fillable = [
         'company_id',
+        'boleta_mode',
         'legal_name',
         'trade_name',
         'fiscal_address',
@@ -78,6 +83,12 @@ class CompanySunatSetting extends Model
         return $this->certificate_expires_at !== null
             && !$this->certificateExpired()
             && $this->certificate_expires_at->lte(now()->addDays($days));
+    }
+
+    /** ¿Las boletas se informan en un resumen diario? (si no, una por una) */
+    public function usesBoletaSummary(): bool
+    {
+        return $this->boleta_mode === self::BOLETA_SUMMARY;
     }
 
     /** ¿Está en el ambiente de pruebas (beta) de SUNAT? */

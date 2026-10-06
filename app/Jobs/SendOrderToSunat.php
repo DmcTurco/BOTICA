@@ -41,6 +41,11 @@ class SendOrderToSunat
                 return $order;
             }
 
+            // Con resumen diario las boletas no se envían solas: las recoge DailySummaryService
+            if ($order->isBoleta() && CompanySunatSetting::where('company_id', $order->company_id)->first()?->usesBoletaSummary()) {
+                return $order;
+            }
+
             $result = $gateway->send($order);
 
             // SUNAT a veces corta envíos muy seguidos con un error HTTP (p. ej. "Unauthorized"):

@@ -12,10 +12,18 @@
             <h1 class="text-xl font-bold text-slate-800">Historial de Ventas</h1>
             <p class="text-sm text-slate-500 mt-0.5">Consulta y filtra todas las ventas registradas</p>
         </div>
-        <a href="{{ route('employee.orders.index') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
-            <i class="fas fa-cash-register text-xs"></i> Punto de Venta
-        </a>
+        <div class="flex items-center gap-2">
+            @if($boletaSummary && auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_ENVIAR_RESUMEN_BOLETAS))
+            <button type="button" onclick="enviarResumenBoletas()"
+                    class="inline-flex items-center gap-2 px-4 py-2 border border-amber-300 text-amber-700 hover:bg-amber-50 text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-paper-plane text-xs"></i> Enviar resumen de boletas
+            </button>
+            @endif
+            <a href="{{ route('employee.orders.index') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+                <i class="fas fa-cash-register text-xs"></i> Punto de Venta
+            </a>
+        </div>
     </div>
 
     {{-- Filtros --}}
@@ -185,7 +193,7 @@
                                 </button>
                                 @php $emp = auth()->guard('employee')->user(); @endphp
 
-                                @if($order->canResendToSunat() && $emp->hasPrivilege(\App\Models\Employee::PRIV_ENVIAR_FE_SUNAT))
+                                @if($order->canResendToSunat() && !($boletaSummary && $order->isBoleta()) && $emp->hasPrivilege(\App\Models\Employee::PRIV_ENVIAR_FE_SUNAT))
                                 <button type="button"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
                                         onclick="reenviarSunat({{ $order->id }})" title="Reenviar a SUNAT">
@@ -424,6 +432,23 @@ function reenviarSunat(id) {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
     })
+    .finally(() => window.location.reload());
+}
+
+/**
+ * Envía a SUNAT el resumen diario de las boletas pendientes, muestra el resultado
+ * y recarga la lista para ver el nuevo estado de cada boleta.
+ */
+function enviarResumenBoletas() {
+    showLoader(true);
+
+    fetch('{{ route('employee.sunat.summary') }}', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(data => alert(data.message || 'No se pudo enviar el resumen.'))
+    .catch(() => alert('No se pudo enviar el resumen.'))
     .finally(() => window.location.reload());
 }
 

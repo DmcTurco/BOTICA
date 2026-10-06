@@ -5,6 +5,7 @@ namespace App\Services\Sunat;
 use App\Models\CompanySunatSetting;
 use App\Models\CreditNote;
 use App\Models\Order;
+use App\Models\SunatSummary;
 use App\Services\Sunat\Contracts\SunatGateway;
 use App\Support\NumberToWords;
 use Closure;
@@ -18,8 +19,11 @@ use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
 use Greenter\Model\Sale\Note;
 use Greenter\Model\Sale\SaleDetail;
+use Greenter\Model\Summary\Summary;
+use Greenter\Model\Summary\SummaryDetail;
 use Greenter\See;
 use Greenter\Ws\Services\SunatEndpoints;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
@@ -55,6 +59,156 @@ class GreenterGateway implements SunatGateway
             fn (CompanySunatSetting $setting) => $this->buildNote($note, $setting),
             "la nota de crédito {$note->id}"
         );
+    }
+
+    public function sendSummary(SunatSummary $summary, Collection $orders): SunatResult
+    {
+        try {
+            $setting = CompanySunatSetting::with('company')->where('company_id', $summary->company_id)->first();
+
+            if (!$setting || !$setting->isReady()) {
+                return new SunatResult(Order::SUNAT_ERROR, 'CONFIG', 'La facturación electrónica de la compañía no está configurada completa.');
+            }
+
+            $see    = $this->buildSee($setting);
+            $result = $see->send($this->buildSummary($summary, $orders, $setting));
+            $xml    = $see->getFactory()->getLastXml();
+            $hash   = $this->digest($xml);
+
+            if ($result->isSuccess()) {
+                // SUNAT recibió el resumen: el veredicto llega después, consultando el ticket
+                return new SunatResult(Order::SUNAT_PENDING, null, 'Resumen recibido por SUNAT.', $hash, $xml, null, $result->getTicket());
+            }
+
+            $error = $result->getError();
+            $code  = (string) $error?->getCode();
+
+            // 2000-3999: SUNAT rechazó el resumen (hay que corregirlo); otro código: falla reintentable
+            $rejected = ctype_digit($code) && (int) $code >= 2000 && (int) $code <= 3999;
+
+            return new SunatResult(
+                $rejected ? Order::SUNAT_REJECTED : Order::SUNAT_ERROR,
+                $code ?: null,
+                $error?->getMessage() ?? 'SUNAT no respondió.',
+                $hash,
+                $xml
+            );
+        } catch (\Throwable $e) {
+            Log::error("Error al enviar el resumen {$summary->identifier} a SUNAT: " . $e->getMessage());
+
+            return new SunatResult(Order::SUNAT_ERROR, 'EXCEPTION', $e->getMessage());
+        }
+    }
+
+    public function digestOrders(Collection $orders): array
+    {
+        $hashes = [];
+
+        try {
+            $first   = $orders->first();
+            $setting = $first ? CompanySunatSetting::with('company')->where('company_id', $first->company_id)->first() : null;
+
+            if (!$setting || !$setting->isReady()) {
+                return [];
+            }
+
+            $see = $this->buildSee($setting);
+
+            foreach ($orders as $order) {
+                try {
+                    $hash = $this->digest($see->getXmlSigned($this->buildInvoice($order, $setting)));
+
+                    if ($hash) {
+                        $hashes[$order->id] = $hash;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("No se pudo calcular el hash de la boleta {$order->id}: " . $e->getMessage());
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Error al calcular los hashes de las boletas: ' . $e->getMessage());
+        }
+
+        return $hashes;
+    }
+
+    public function summaryStatus(SunatSummary $summary): SunatResult
+    {
+        try {
+            $setting = CompanySunatSetting::with('company')->where('company_id', $summary->company_id)->first();
+
+            if (!$setting || !$setting->isReady()) {
+                return new SunatResult(Order::SUNAT_ERROR, 'CONFIG', 'La facturación electrónica de la compañía no está configurada completa.');
+            }
+
+            $result = $this->buildSee($setting)->getStatus($summary->ticket);
+            $cdr    = $result->getCdrResponse();
+
+            if ($result->isSuccess() && $cdr) {
+                return $cdr->isAccepted()
+                    ? new SunatResult(Order::SUNAT_ACCEPTED, $cdr->getCode(), $cdr->getDescription(), null, null, $result->getCdrZip())
+                    : new SunatResult(Order::SUNAT_REJECTED, $cdr->getCode(), $cdr->getDescription(), null, null, $result->getCdrZip());
+            }
+
+            // 98 = SUNAT todavía lo está procesando
+            if ((string) $result->getCode() === '98') {
+                return new SunatResult(Order::SUNAT_PENDING, '98', 'SUNAT aún está procesando el resumen.');
+            }
+
+            $error = $result->getError();
+            $code  = (string) $error?->getCode();
+
+            $rejected = ctype_digit($code) && (int) $code >= 2000 && (int) $code <= 3999;
+
+            return new SunatResult(
+                $rejected ? Order::SUNAT_REJECTED : Order::SUNAT_ERROR,
+                $code ?: null,
+                $error?->getMessage() ?? 'SUNAT no respondió.',
+                null,
+                null,
+                $result->getCdrZip()
+            );
+        } catch (\Throwable $e) {
+            Log::error("Error al consultar el resumen {$summary->identifier} en SUNAT: " . $e->getMessage());
+
+            return new SunatResult(Order::SUNAT_ERROR, 'EXCEPTION', $e->getMessage());
+        }
+    }
+
+    /**
+     * Arma el resumen diario: una línea por boleta con su estado "1" (adicionar) y sus importes.
+     */
+    private function buildSummary(SunatSummary $summary, Collection $orders, CompanySunatSetting $setting): Summary
+    {
+        $orders->each(fn (Order $order) => $order->loadMissing(['documentType', 'branch']));
+
+        $details = $orders->map(function (Order $order) {
+            $hasDocument = filled($order->customer_document) && $order->documentType;
+
+            [$series, $number] = explode('-', $order->voucher_number);
+
+            return (new SummaryDetail())
+                ->setTipoDoc('03')
+                ->setSerieNro($series . '-' . (int) $number)
+                ->setEstado('1')                                           // 1 adicionar · 2 modificar · 3 anular
+                ->setClienteTipo($hasDocument ? $order->documentType->code : '0')
+                ->setClienteNro($hasDocument ? $order->customer_document : '-')
+                ->setTotal((float) $order->total)
+                ->setMtoOperGravadas((float) $order->taxable_amount)
+                ->setMtoOperExoneradas((float) $order->exonerated_amount)
+                ->setMtoOperInafectas((float) $order->unaffected_amount)
+                ->setMtoIGV((float) $order->igv);
+        })->all();
+
+        return (new Summary())
+            // En Greenter, fecGeneracion es la fecha de emisión de las boletas y fecResumen la fecha
+            // en que se genera el resumen (esta última forma el identificador RC-AAAAMMDD-n)
+            ->setFecGeneracion(new DateTime($summary->reference_date->format('Y-m-d')))
+            ->setFecResumen(new DateTime($summary->generation_date->format('Y-m-d')))
+            ->setCorrelativo((string) $summary->correlative)
+            ->setMoneda('PEN')
+            ->setCompany($this->company($orders->first(), $setting))
+            ->setDetails($details);
     }
 
     /**

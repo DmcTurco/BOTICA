@@ -60,7 +60,11 @@ class OrderController extends Controller
 
         $orders = $query->paginate(15)->withQueryString();
 
-        return view('employee.pages.orders.historial', compact('orders', 'fechaDesde', 'fechaHasta'));
+        // Con resumen diario las boletas no se reenvían una por una: se muestra el botón del resumen
+        $boletaSummary = (bool) CompanySunatSetting::where('company_id', $employee->company_id)
+            ->first()?->usesBoletaSummary();
+
+        return view('employee.pages.orders.historial', compact('orders', 'fechaDesde', 'fechaHasta', 'boletaSummary'));
     }
 
     /**
@@ -81,6 +85,14 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Este comprobante no se puede reenviar a SUNAT.',
+            ], 422);
+        }
+
+        // Con resumen diario las boletas se informan juntas, no una por una
+        if ($order->isBoleta() && CompanySunatSetting::where('company_id', $order->company_id)->first()?->usesBoletaSummary()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Las boletas se envían a SUNAT en el resumen diario. Usa "Enviar resumen de boletas".',
             ], 422);
         }
 

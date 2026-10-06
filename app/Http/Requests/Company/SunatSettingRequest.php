@@ -43,6 +43,7 @@ class SunatSettingRequest extends FormRequest
             'district'       => 'required|string|max:60',
 
             'environment'    => ['required', Rule::in([CompanySunatSetting::ENV_BETA, CompanySunatSetting::ENV_PRODUCTION])],
+            'boleta_mode'    => ['required', Rule::in([CompanySunatSetting::BOLETA_INDIVIDUAL, CompanySunatSetting::BOLETA_SUMMARY])],
             'enabled'        => 'nullable|boolean',
 
             // Vacío = conservar lo que ya está guardado

@@ -180,7 +180,7 @@ class Employee extends Authenticatable
             'color' => 'orange',
             'items' => [
                 self::PRIV_ENVIAR_FE_SUNAT        => ['label' => 'Enviar FE a SUNAT',                     'ready' => true],
-                self::PRIV_ENVIAR_RESUMEN_BOLETAS => ['label' => 'Enviar Resumen de Boletas',             'ready' => false],
+                self::PRIV_ENVIAR_RESUMEN_BOLETAS => ['label' => 'Enviar Resumen de Boletas',             'ready' => true],
                 self::PRIV_CREAR_BAJA_FE          => ['label' => 'Crear Baja de FE',                      'ready' => false],
                 self::PRIV_ENVIAR_NCE_SUNAT       => ['label' => 'Enviar NCE a SUNAT',                    'ready' => true],
                 self::PRIV_CREAR_NOTA_CREDITO     => ['label' => 'Crear Nota de Crédito',                 'ready' => true],
