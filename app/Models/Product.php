@@ -32,10 +32,22 @@ class Product extends Model
         'package_sale_price',
         'unit_id',
         'taxed_product',
+        'igv_affectation',
         'requires_recipe',
         'location',
         'status',
         'employee_id',
+    ];
+
+    // Afectación del IGV (catálogo SUNAT 07)
+    const IGV_GRAVADO   = '10';
+    const IGV_EXONERADO = '20';
+    const IGV_INAFECTO  = '30';
+
+    const IGV_LABELS = [
+        self::IGV_GRAVADO   => 'Gravado (IGV 18%)',
+        self::IGV_EXONERADO => 'Exonerado',
+        self::IGV_INAFECTO  => 'Inafecto',
     ];
 
     protected $casts = [

@@ -25,5 +25,10 @@ class UnitSeeder extends Seeder
             ['name' => 'Mililitro', 'abbreviation' => 'ML',   'status' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Gramo',     'abbreviation' => 'GR',   'status' => 1, 'created_at' => $now, 'updated_at' => $now],
         ]);
+
+        // Código SUNAT de la unidad de medida (catálogo 03); el resto usa NIU (unidad)
+        foreach (['CJA' => 'BX', 'FRC' => 'BO', 'TUB' => 'TU', 'ML' => 'MLT', 'GR' => 'GRM'] as $abbreviation => $code) {
+            DB::table('units')->where('abbreviation', $abbreviation)->update(['sunat_code' => $code]);
+        }
     }
 }

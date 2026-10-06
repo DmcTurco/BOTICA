@@ -15,12 +15,16 @@ class OrderItem extends Model
         'unit_price',
         'quantity',
         'subtotal',
+        'igv_affectation',
+        'igv_amount',
+        'unit_code',
     ];
 
     protected $casts = [
         'unit_price' => 'decimal:2',
         'quantity'   => 'decimal:2',
         'subtotal'   => 'decimal:2',
+        'igv_amount' => 'decimal:2',
     ];
 
     // Relación con el pedido al que pertenece este ítem

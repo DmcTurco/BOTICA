@@ -47,6 +47,7 @@
                     <tr>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Nombre</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Dirección</th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Series</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Teléfono</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Email</th>
                         <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Estado</th>
@@ -65,6 +66,9 @@
                             </div>
                         </td>
                         <td class="px-4 py-3 text-slate-500">{{ $branch->address ?: '—' }}</td>
+                        <td class="px-4 py-3 text-slate-500 font-mono text-xs">
+                            {{ $branch->documentSeries->where('active', true)->pluck('series')->implode(' · ') ?: '—' }}
+                        </td>
                         <td class="px-4 py-3 text-slate-500 font-mono text-xs">{{ $branch->phone ?: '—' }}</td>
                         <td class="px-4 py-3 text-slate-500 text-xs">{{ $branch->email ?: '—' }}</td>
                         <td class="px-4 py-3 text-center">

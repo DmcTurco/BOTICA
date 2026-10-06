@@ -231,6 +231,7 @@ class ProductSeeder extends Seeder
             foreach ($products as $product) {
                 DB::table('products')->insert(array_merge($product, [
                     'code'       => DocumentSeries::siguiente(DocumentSeries::PRODUCTO),
+                    'igv_affectation' => ($product['taxed_product'] ?? false) ? '10' : '20',
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]));

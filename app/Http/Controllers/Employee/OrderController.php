@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\StockMovement;
+use App\Services\Sunat\TaxCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -56,6 +57,41 @@ class OrderController extends Controller
         $orders = $query->paginate(15)->withQueryString();
 
         return view('employee.pages.orders.historial', compact('orders', 'fechaDesde', 'fechaHasta'));
+    }
+
+    /**
+     * Calcula el IGV y los totales de una venta con la afectación de cada producto
+     * leída de la base de datos (nunca del navegador).
+     * Devuelve ['tax' => cálculo, 'units' => código SUNAT de unidad por producto]
+     * o ['error' => mensaje] si algún producto no es de la compañía o los totales no coinciden.
+     */
+    private function pricing(array $items, int $companyId, mixed $clientTotal): array
+    {
+        $codes    = array_unique(array_column($items, 'code'));
+        $products = Product::with('unit:id,sunat_code')
+            ->where('company_id', $companyId)
+            ->whereIn('code', $codes)
+            ->get()
+            ->keyBy('code');
+
+        if ($products->count() !== count($codes)) {
+            return ['error' => 'Hay productos que no pertenecen a tu compañía.'];
+        }
+
+        $tax = app(TaxCalculator::class)->calculate(
+            $items,
+            $products->map(fn ($p) => $p->igv_affectation)->all()
+        );
+
+        // El total que vio el cajero debe coincidir con el del servidor (tolerancia por redondeo)
+        if ($clientTotal !== null && abs($tax['total'] - (float) $clientTotal) > 0.01 * (count($items) + 1)) {
+            return ['error' => 'Los totales no coinciden con los precios actuales. Actualiza la página e inténtalo de nuevo.'];
+        }
+
+        return [
+            'tax'   => $tax,
+            'units' => $products->map(fn ($p) => $p->unit?->sunat_code ?? 'NIU')->all(),
+        ];
     }
 
     /**
@@ -225,9 +261,9 @@ class OrderController extends Controller
             'payment_type'      => 'required|in:1,2,3,4',
             'voucher_type'      => 'required|in:1,2,3',
             'document_type_id'  => 'nullable|exists:document_types,id',
-            'subtotal'          => 'required|numeric|min:0',
-            'igv'               => 'required|numeric|min:0',
-            'total'             => 'required|numeric|min:0',
+            'subtotal'          => 'nullable|numeric|min:0',
+            'igv'               => 'nullable|numeric|min:0',
+            'total'             => 'nullable|numeric|min:0',
         ]);
 
         // Factura requiere RUC (document_type_id = 3)
@@ -254,6 +290,15 @@ class OrderController extends Controller
 
         $employee = auth()->guard('employee')->user();
 
+        // IGV y totales: se calculan aquí con la afectación real de cada producto
+        $pricing = $this->pricing($request->items, $employee->company_id, $request->total);
+
+        if (isset($pricing['error'])) {
+            return response()->json(['success' => false, 'message' => $pricing['error']], 422);
+        }
+
+        ['tax' => $tax, 'units' => $units] = $pricing;
+
         // Caja histórica (si la venta se registra sobre una fecha pasada) o caja normal de la sesión.
         // En una caja histórica la venta y su kardex quedan con la fecha de esa caja.
         $historicalCaja = $request->attributes->get('cash_register');
@@ -279,7 +324,7 @@ class OrderController extends Controller
 
             // Generar número de comprobante automáticamente (atómico, dentro de la transacción)
             $typeCode      = DocumentSeries::typeCodeDesdeVoucher((int) $request->voucher_type);
-            $voucherNumber = DocumentSeries::siguiente($typeCode);
+            $voucherNumber = DocumentSeries::siguiente($typeCode, $employee->branch_id);
 
             // Crear la orden
             $order = new Order([
@@ -294,9 +339,12 @@ class OrderController extends Controller
                 'voucher_number'    => $voucherNumber,
                 'payment_type'      => $request->payment_type,
                 'operation_number'  => $request->operation_number ?: null,
-                'subtotal'          => $request->subtotal,
-                'igv'               => $request->igv,
-                'total'             => $request->total,
+                'subtotal'          => $tax['subtotal'],
+                'taxable_amount'    => $tax['taxable'],
+                'exonerated_amount' => $tax['exonerated'],
+                'unaffected_amount' => $tax['unaffected'],
+                'igv'               => $tax['igv'],
+                'total'             => $tax['total'],
                 'status'            => 1,
             ]);
 
@@ -308,14 +356,17 @@ class OrderController extends Controller
             $order->save();
 
             // Registrar ítems, descontar stock en branch_stock y registrar kardex
-            foreach ($request->items as $item) {
+            foreach ($request->items as $i => $item) {
                 OrderItem::create([
-                    'order_id'     => $order->id,
-                    'product_code' => $item['code'],
-                    'product_name' => $item['name'],
-                    'unit_price'   => $item['price'],
-                    'quantity'     => $item['qty'],
-                    'subtotal'     => round($item['price'] * $item['qty'], 2),
+                    'order_id'        => $order->id,
+                    'product_code'    => $item['code'],
+                    'product_name'    => $item['name'],
+                    'unit_price'      => $item['price'],
+                    'quantity'        => $item['qty'],
+                    'subtotal'        => $tax['lines'][$i]['base'],
+                    'igv_affectation' => $tax['lines'][$i]['affectation'],
+                    'igv_amount'      => $tax['lines'][$i]['igv'],
+                    'unit_code'       => $units[$item['code']],
                 ]);
 
                 // Descontar stock en branch_stock
@@ -432,12 +483,17 @@ class OrderController extends Controller
             ->whereIn('product_code', $order->items->pluck('product_code'))
             ->pluck('stock_actual', 'product_code');
 
+        // Afectación actual de cada producto (el total se recalcula al guardar)
+        $affectations = Product::whereIn('code', $order->items->pluck('product_code'))
+            ->pluck('igv_affectation', 'code');
+
         $editItems = $order->items->map(fn ($item) => [
-            'code'  => $item->product_code,
-            'name'  => $item->product_name,
-            'price' => (float) $item->unit_price,
-            'qty'   => (int) $item->quantity,
-            'stock' => (int) (($stocks[$item->product_code] ?? 0) + $item->quantity),
+            'code'       => $item->product_code,
+            'name'       => $item->product_name,
+            'price'      => (float) $item->unit_price,
+            'qty'        => (int) $item->quantity,
+            'stock'      => (int) (($stocks[$item->product_code] ?? 0) + $item->quantity),
+            'afectacion' => $affectations[$item->product_code] ?? '20',
         ])->values();
 
         return view('employee.pages.orders.index', [
@@ -463,9 +519,9 @@ class OrderController extends Controller
             'items.*.price'     => 'required|numeric|min:0',
             'items.*.name'      => 'required|string',
             'payment_type'      => 'required|in:1,2,3,4',
-            'subtotal'          => 'required|numeric|min:0',
-            'igv'               => 'required|numeric|min:0',
-            'total'             => 'required|numeric|min:0',
+            'subtotal'          => 'nullable|numeric|min:0',
+            'igv'               => 'nullable|numeric|min:0',
+            'total'             => 'nullable|numeric|min:0',
         ]);
 
         $employee     = auth()->guard('employee')->user();
@@ -474,6 +530,15 @@ class OrderController extends Controller
         abort_if($order->company_id !== $employee->company_id, 403);
         abort_if(!$cashRegister || !$cashRegister->isEditable(), 403);
         abort_if($cashRegister->employee_id !== $employee->id, 403);
+
+        // IGV y totales: se recalculan con la afectación real de cada producto
+        $pricing = $this->pricing($request->items, $employee->company_id, $request->total);
+
+        if (isset($pricing['error'])) {
+            return response()->json(['success' => false, 'message' => $pricing['error']], 422);
+        }
+
+        ['tax' => $tax, 'units' => $units] = $pricing;
 
         DB::beginTransaction();
         try {
@@ -525,14 +590,17 @@ class OrderController extends Controller
             // 3. Eliminar ítems anteriores y crear los nuevos
             $order->items()->delete();
 
-            foreach ($request->items as $item) {
+            foreach ($request->items as $i => $item) {
                 OrderItem::create([
-                    'order_id'     => $order->id,
-                    'product_code' => $item['code'],
-                    'product_name' => $item['name'],
-                    'unit_price'   => $item['price'],
-                    'quantity'     => $item['qty'],
-                    'subtotal'     => round($item['price'] * $item['qty'], 2),
+                    'order_id'        => $order->id,
+                    'product_code'    => $item['code'],
+                    'product_name'    => $item['name'],
+                    'unit_price'      => $item['price'],
+                    'quantity'        => $item['qty'],
+                    'subtotal'        => $tax['lines'][$i]['base'],
+                    'igv_affectation' => $tax['lines'][$i]['affectation'],
+                    'igv_amount'      => $tax['lines'][$i]['igv'],
+                    'unit_code'       => $units[$item['code']],
                 ]);
 
                 $branchStock  = BranchStock::where('branch_id', $employee->branch_id)
@@ -560,9 +628,12 @@ class OrderController extends Controller
             $order->update([
                 'payment_type'      => $request->payment_type,
                 'operation_number'  => $request->operation_number ?: null,
-                'subtotal'          => $request->subtotal,
-                'igv'               => $request->igv,
-                'total'             => $request->total,
+                'subtotal'          => $tax['subtotal'],
+                'taxable_amount'    => $tax['taxable'],
+                'exonerated_amount' => $tax['exonerated'],
+                'unaffected_amount' => $tax['unaffected'],
+                'igv'               => $tax['igv'],
+                'total'             => $tax['total'],
             ]);
 
             DB::commit();

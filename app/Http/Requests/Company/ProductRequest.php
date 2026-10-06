@@ -32,6 +32,7 @@ class ProductRequest extends FormRequest
             'laboratorio_id'      => 'nullable|exists:laboratories,id',
             'principio_activo'    => 'nullable|max:100',
             'unidad_medida_id'    => 'required|exists:units,id',
+            'afectacion_igv'      => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Models\Product::IGV_LABELS))],
             'precio_compra'       => 'required|numeric|min:0',
             'precio_venta_unidad' => 'required|numeric|min:0',
             'precio_compra_paquete'               => 'nullable|numeric|min:0',
@@ -66,6 +67,8 @@ class ProductRequest extends FormRequest
             'categoria_id.required'        => 'Debe seleccionar una categoría.',
             'categoria_id.exists'          => 'La categoría seleccionada no existe.',
             'unidad_medida_id.required'    => 'Debe seleccionar una unidad de medida.',
+            'afectacion_igv.required'      => 'Debe seleccionar la afectación del IGV.',
+            'afectacion_igv.in'            => 'La afectación del IGV no es válida.',
             'precio_compra.required'       => 'El precio de compra es obligatorio.',
             'precio_venta_unidad.required' => 'El precio de venta por unidad es obligatorio.',
         ];

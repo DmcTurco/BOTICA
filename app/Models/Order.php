@@ -24,15 +24,21 @@ class Order extends Model
         'payment_type',
         'operation_number',
         'subtotal',
+        'taxable_amount',
+        'exonerated_amount',
+        'unaffected_amount',
         'igv',
         'total',
         'status',
     ];
 
     protected $casts = [
-        'subtotal' => 'decimal:2',
-        'igv'      => 'decimal:2',
-        'total'    => 'decimal:2',
+        'subtotal'          => 'decimal:2',
+        'taxable_amount'    => 'decimal:2',
+        'exonerated_amount' => 'decimal:2',
+        'unaffected_amount' => 'decimal:2',
+        'igv'               => 'decimal:2',
+        'total'             => 'decimal:2',
     ];
 
     // ── Relaciones ──────────────────────────────────────────────

@@ -85,6 +85,55 @@
                     </div>
                 </div>
 
+                {{-- Código de establecimiento SUNAT --}}
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Código de establecimiento SUNAT <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="sunat_establishment_code" maxlength="4" inputmode="numeric"
+                           value="{{ old('sunat_establishment_code', $branch->sunat_establishment_code ?? '0000') }}"
+                           placeholder="0000"
+                           class="w-full sm:w-40 px-3 py-2.5 text-sm font-mono border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('sunat_establishment_code') border-red-400 @enderror">
+                    <p class="text-xs text-slate-400 mt-1">
+                        4 dígitos. <strong>0000</strong> es el domicilio fiscal; las demás sedes usan el código del anexo registrado en SUNAT (0001, 0002...).
+                    </p>
+                    @error('sunat_establishment_code')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Series de comprobantes (solo al editar; al crear se generan solas) --}}
+                @isset($branch)
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Series de comprobantes</label>
+                    <p class="text-xs text-slate-400 mb-3">
+                        Cada sede numera sus comprobantes con sus propias series. Puedes cambiar una serie solo mientras no haya emitido comprobantes.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        @foreach($series as $serie)
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">{{ $serie->name }}</label>
+                            @if($serie->current_number > 0)
+                                <input type="text" value="{{ $serie->series }}" readonly
+                                       class="w-full px-3 py-2.5 text-sm font-mono border border-slate-200 rounded-lg bg-slate-50 text-slate-500">
+                                <p class="text-[11px] text-slate-400 mt-1">
+                                    En uso · último: {{ $serie->series }}-{{ str_pad($serie->current_number, $serie->digits, '0', STR_PAD_LEFT) }}
+                                </p>
+                            @else
+                                <input type="text" name="series[{{ $serie->id }}]" maxlength="4"
+                                       value="{{ old('series.' . $serie->id, $serie->series) }}"
+                                       class="w-full px-3 py-2.5 text-sm font-mono uppercase border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('series.' . $serie->id) border-red-400 @enderror">
+                                <p class="text-[11px] text-slate-400 mt-1">Sin usar todavía</p>
+                            @endif
+                            @error('series.' . $serie->id)
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endisset
+
                 {{-- Estado --}}
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Estado</label>

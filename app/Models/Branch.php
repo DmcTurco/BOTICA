@@ -18,6 +18,7 @@ class Branch extends Model
         'address',
         'phone',
         'email',
+        'sunat_establishment_code',
         'status',
     ];
 
@@ -31,6 +32,12 @@ class Branch extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    /** Series de comprobantes de la sede (boleta, factura, nota de venta) */
+    public function documentSeries(): HasMany
+    {
+        return $this->hasMany(DocumentSeries::class, 'branch_id');
     }
 
     /** Empleados cuya sede principal es esta */

@@ -9,6 +9,8 @@ class DocumentSeries extends Model
     protected $table = 'document_series';
 
     protected $fillable = [
+        'company_id',
+        'branch_id',
         'type_code',
         'name',
         'series',
@@ -35,6 +37,17 @@ class DocumentSeries extends Model
     const CREDITO_FIADO = 'CREDITO_FIADO';
     const CIERRE_CAJA   = 'CIERRE_CAJA';
 
+    /**
+     * Comprobantes cuya serie y correlativo son propios de cada sede
+     * (SUNAT exige series por RUC y por establecimiento).
+     * prefix = letras iniciales de la serie · width = dígitos del sufijo (B001, NV01).
+     */
+    const PER_BRANCH = [
+        self::BOLETA     => ['prefix' => 'B',  'width' => 3, 'name' => 'Boleta de Venta'],
+        self::FACTURA    => ['prefix' => 'F',  'width' => 3, 'name' => 'Factura'],
+        self::NOTA_VENTA => ['prefix' => 'NV', 'width' => 2, 'name' => 'Nota de Venta'],
+    ];
+
     // Límite de correlativo según SUNAT (8 dígitos)
     const LIMITE_CORRELATIVO = 99_999_999;
 
@@ -56,19 +69,32 @@ class DocumentSeries extends Model
      *   DocumentSeries::siguiente('PRODUCTO') → "P-000001"
      *   DocumentSeries::siguiente('COMPRA')   → "CMP-000001"
      *
+     * Los comprobantes de venta (BOLETA, FACTURA, NOTA_VENTA) llevan serie y correlativo
+     * propios de cada sede: hay que pasar el $branchId de la sede que vende.
+     * Los demás correlativos (PRODUCTO, CLIENTE...) son globales y no llevan sede.
+     *
      * Si la serie activa alcanzó su límite, la cierra automáticamente
      * y activa la siguiente (B001 → B002, CMP → no rota — solo SUNAT rota).
      */
-    public static function siguiente(string $typeCode): string
+    public static function siguiente(string $typeCode, ?int $branchId = null): string
     {
+        if (isset(self::PER_BRANCH[$typeCode]) && $branchId === null) {
+            throw new \RuntimeException("El comprobante {$typeCode} requiere la sede que lo emite.");
+        }
+
         $serie = self::where('type_code', $typeCode)
             ->where('active', true)
+            ->when(
+                isset(self::PER_BRANCH[$typeCode]),
+                fn ($q) => $q->where('branch_id', $branchId),
+                fn ($q) => $q->whereNull('branch_id')
+            )
             ->lockForUpdate()
             ->first();
 
         if (!$serie) {
             throw new \RuntimeException(
-                "No hay serie activa para el tipo de documento: {$typeCode}."
+                "No hay serie activa para este comprobante en la sede ({$typeCode}). Pide a la empresa que configure las series de la sede."
             );
         }
 
@@ -79,9 +105,18 @@ class DocumentSeries extends Model
         if ($nuevoNumero > $limite) {
             $serie->update(['active' => false]);
 
+            // La nueva serie no puede repetir una ya usada por otra sede de la misma compañía
             $siguienteSerie = self::calcularSiguienteSerie($serie->series);
+            while (self::where('company_id', $serie->company_id)
+                ->where('type_code', $typeCode)
+                ->where('series', $siguienteSerie)
+                ->exists()) {
+                $siguienteSerie = self::calcularSiguienteSerie($siguienteSerie);
+            }
 
             $serie = self::create([
+                'company_id'     => $serie->company_id,
+                'branch_id'      => $serie->branch_id,
                 'type_code'      => $typeCode,
                 'name'           => $serie->name,
                 'series'         => $siguienteSerie,
@@ -97,6 +132,40 @@ class DocumentSeries extends Model
 
         // Formato: SERIE-CORRELATIVO con ceros a la izquierda
         return $serie->series . '-' . str_pad($nuevoNumero, $serie->digits, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Crea las series de comprobantes de una sede (boleta, factura y nota de venta).
+     * Cada serie toma el siguiente número libre de la compañía (B001, B002...).
+     * Es idempotente: si la sede ya tiene serie de un tipo, no crea otra.
+     */
+    public static function crearSeriesParaSede(Branch $branch): void
+    {
+        foreach (self::PER_BRANCH as $typeCode => $format) {
+            $exists = self::where('branch_id', $branch->id)->where('type_code', $typeCode)->exists();
+
+            if ($exists) {
+                continue;
+            }
+
+            $max = 0;
+            foreach (self::where('company_id', $branch->company_id)->where('type_code', $typeCode)->pluck('series') as $series) {
+                if (preg_match('/^' . $format['prefix'] . '(\d+)$/', $series, $m)) {
+                    $max = max($max, (int) $m[1]);
+                }
+            }
+
+            self::create([
+                'company_id'     => $branch->company_id,
+                'branch_id'      => $branch->id,
+                'type_code'      => $typeCode,
+                'name'           => $format['name'],
+                'series'         => $format['prefix'] . str_pad($max + 1, $format['width'], '0', STR_PAD_LEFT),
+                'current_number' => 0,
+                'digits'         => 8,
+                'active'         => true,
+            ]);
+        }
     }
 
     /**

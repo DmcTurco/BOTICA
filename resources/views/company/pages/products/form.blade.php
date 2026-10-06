@@ -157,12 +157,15 @@
                     </div>
 
                     <div class="flex items-center gap-6 pt-1">
-                        <label class="flex items-center gap-2.5 cursor-pointer">
-                            <input type="checkbox" name="producto_gravado" value="1"
-                                   {{ old('producto_gravado', $producto->taxed_product ?? 0) ? 'checked' : '' }}
-                                   class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                            <span class="text-sm text-slate-700">Producto gravado (IGV)</span>
-                        </label>
+                        <div class="flex items-center gap-2.5">
+                            <label for="afectacion_igv" class="text-sm text-slate-700">Afectación IGV</label>
+                            <select name="afectacion_igv" id="afectacion_igv"
+                                    class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                @foreach(\App\Models\Product::IGV_LABELS as $code => $label)
+                                <option value="{{ $code }}" {{ old('afectacion_igv', $producto->igv_affectation ?? '20') == $code ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <label class="flex items-center gap-2.5 cursor-pointer">
                             <input type="checkbox" name="requiere_receta" value="1"
                                    {{ old('requiere_receta', $producto->requires_recipe ?? 0) ? 'checked' : '' }}

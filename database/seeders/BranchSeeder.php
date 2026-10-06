@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Branch;
+use App\Models\DocumentSeries;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -61,5 +63,10 @@ class BranchSeeder extends Seeder
                 'updated_at' => $now,
             ],
         ]);
+
+        // Series de comprobantes de cada sede (B001, F001, NV01 / B002, F002, NV02...)
+        foreach (Branch::orderBy('id')->get() as $branch) {
+            DocumentSeries::crearSeriesParaSede($branch);
+        }
     }
 }

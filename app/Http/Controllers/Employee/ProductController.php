@@ -88,7 +88,8 @@ class ProductController extends Controller
             $producto->package_purchase_price = $request->precio_compra_paquete;
             $producto->package_sale_price     = $request->precio_venta_paquete;
             $producto->units_per_package      = $request->unidades_por_paquete;
-            $producto->taxed_product          = $request->has('producto_gravado') ? 1 : 0;
+            $producto->igv_affectation        = $request->afectacion_igv;
+            $producto->taxed_product          = $request->afectacion_igv === Product::IGV_GRAVADO;
             $producto->requires_recipe        = $request->has('requiere_receta') ? 1 : 0;
             $producto->save();
 
@@ -168,7 +169,8 @@ class ProductController extends Controller
             $product->package_purchase_price = $request->precio_compra_paquete;
             $product->package_sale_price     = $request->precio_venta_paquete;
             $product->units_per_package      = $request->unidades_por_paquete;
-            $product->taxed_product          = $request->has('producto_gravado') ? 1 : 0;
+            $product->igv_affectation        = $request->afectacion_igv;
+            $product->taxed_product          = $request->afectacion_igv === Product::IGV_GRAVADO;
             $product->requires_recipe        = $request->has('requiere_receta') ? 1 : 0;
             $product->save();
 

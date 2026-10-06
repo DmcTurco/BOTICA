@@ -124,6 +124,7 @@
                                 data-search="{{ strtolower($product->name . ' ' . $product->code . ' ' . $product->active_ingredient) }}"
                                 data-stock="{{ $product->branchStocks->first()?->stock_actual ?? 0 }}"
                                 data-name="{{ $product->name }}"
+                                data-afectacion="{{ $product->igv_affectation }}"
                                 data-price="{{ $product->unit_sale_price }}">
                                 <td class="px-4 py-2.5">
                                     <p class="font-medium text-slate-800 leading-tight">{{ $product->name }}</p>
@@ -159,6 +160,7 @@
                                             data-code="{{ $product->code }}"
                                             data-name="{{ $product->name }}"
                                             data-price="{{ $product->unit_sale_price }}"
+                                            data-afectacion="{{ $product->igv_affectation }}"
                                             data-stock="{{ (int)($product->branchStocks->first()?->stock_actual ?? 0) }}"
                                             data-presentations='@json($presData)'
                                             title="Agregar al carrito">
@@ -381,14 +383,16 @@
 
             <div class="flex items-center gap-8 ml-auto">
                 <div class="text-right space-y-0.5">
-                    <p class="text-xs text-slate-400">Sub Total</p>
+                    <p class="text-xs text-slate-400">Op. Gravada</p>
+                    <p class="text-xs text-slate-400">Op. Exonerada</p>
                     <p class="text-xs text-slate-400">IGV (18%)</p>
                     <p class="text-sm font-bold text-emerald-600">Total</p>
                 </div>
                 <div class="text-right min-w-20 space-y-0.5">
-                    <p id="subTotal" class="text-xs text-slate-600">S/ 0.00</p>
-                    <p id="igv"      class="text-xs text-slate-600">S/ 0.00</p>
-                    <p id="total"    class="text-xl font-bold text-slate-800">S/ 0.00</p>
+                    <p id="opGravada"   class="text-xs text-slate-600">S/ 0.00</p>
+                    <p id="opExonerada" class="text-xs text-slate-600">S/ 0.00</p>
+                    <p id="igv"         class="text-xs text-slate-600">S/ 0.00</p>
+                    <p id="total"       class="text-xl font-bold text-slate-800">S/ 0.00</p>
                 </div>
             </div>
         </div>
@@ -601,9 +605,10 @@ $(document).on('click', '.btn-agregar', function() {
     const name          = $(this).data('name');
     const price         = parseFloat($(this).data('price'));
     const stock         = parseInt($(this).data('stock'));
+    const afectacion    = String($(this).data('afectacion') || '20');
     const presentations = $(this).data('presentations') || [];
 
-    modalProducto = { code, name, stock };
+    modalProducto = { code, name, stock, afectacion };
     modalPrecio   = price;
 
     $('#modalNombre').text(name);
@@ -668,7 +673,7 @@ $('#modalCantidad').on('keydown', function(e) {
 
 $('#modalBtnAgregar').on('click', function() {
     if (!modalProducto) return;
-    const { code, name, stock } = modalProducto;
+    const { code, name, stock, afectacion } = modalProducto;
     const price = modalPrecio;
     const qty   = Math.min(Math.max(parseInt($('#modalCantidad').val()) || 1, 1), stock);
 
@@ -676,7 +681,7 @@ $('#modalBtnAgregar').on('click', function() {
         carrito[code].qty   = Math.min(carrito[code].qty + qty, stock);
         carrito[code].price = price;
     } else {
-        carrito[code] = { name, price, stock, qty };
+        carrito[code] = { name, price, stock, qty, afectacion };
     }
 
     cerrarModalAgregar();
@@ -771,13 +776,37 @@ function renderCarrito() {
     actualizarContadorCarrito();
 }
 
+// Redondeo a 2 decimales (igual que el servidor)
+function redondear(n) {
+    return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+
+// Totales de la última actualización (se envían al servidor, que los vuelve a calcular)
+let totalesVenta = { sub: 0, igv: 0, total: 0 };
+
+// 10 = gravado (IGV 18%) · 20 = exonerado · 30 = inafecto
 function actualizarTotales() {
-    let sub = 0;
-    Object.values(carrito).forEach(i => sub += i.price * i.qty);
-    const igv   = sub * 0.18;
-    const total = sub + igv;
-    $('#subTotal').text('S/ ' + sub.toFixed(2));
-    $('#igv').text('S/ ' + igv.toFixed(2));
+    let gravada = 0, exonerada = 0, igv = 0;
+
+    Object.values(carrito).forEach(i => {
+        const base = redondear(i.price * i.qty);
+
+        if (i.afectacion === '10') {
+            gravada += base;
+            igv     += redondear(base * 0.18);
+        } else {
+            exonerada += base;   // exonerado e inafecto no pagan IGV
+        }
+    });
+
+    const sub   = redondear(gravada + exonerada);
+    const total = redondear(sub + igv);
+
+    totalesVenta = { sub, igv: redondear(igv), total };
+
+    $('#opGravada').text('S/ ' + redondear(gravada).toFixed(2));
+    $('#opExonerada').text('S/ ' + redondear(exonerada).toFixed(2));
+    $('#igv').text('S/ ' + redondear(igv).toFixed(2));
     $('#total').text('S/ ' + total.toFixed(2));
 }
 
@@ -815,9 +844,7 @@ $('#btnTerminarVenta').on('click', function() {
         qty:   item.qty,
     }));
 
-    const sub   = parseFloat($('#subTotal').text().replace('S/ ', '')) || 0;
-    const igv   = parseFloat($('#igv').text().replace('S/ ', ''))      || 0;
-    const total = parseFloat($('#total').text().replace('S/ ', ''))    || 0;
+    const { sub, igv, total } = totalesVenta;
 
     const payload = {
         items,
@@ -895,7 +922,7 @@ $('#btnTerminarVenta').on('click', function() {
 // ── Precargar la venta que se está editando ───────────────────
 if (EDIT_ORDER) {
     EDIT_ORDER.items.forEach(function(i) {
-        carrito[i.code] = { name: i.name, price: i.price, stock: i.stock, qty: i.qty };
+        carrito[i.code] = { name: i.name, price: i.price, stock: i.stock, qty: i.qty, afectacion: String(i.afectacion) };
     });
     renderCarrito();
 

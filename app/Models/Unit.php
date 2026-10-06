@@ -17,6 +17,7 @@ class Unit extends Model
     protected $fillable = [
         'name',
         'abbreviation',
+        'sunat_code',
         'status'
     ];
 

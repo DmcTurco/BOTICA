@@ -10,10 +10,7 @@ class DocumentSeriesSeeder extends Seeder
     /**
      * Siembra las series iniciales para todos los tipos de documento del sistema.
      *
-     * Documentos SUNAT (8 dígitos según reglamento):
-     *   BOLETA     → B001-00000001
-     *   FACTURA    → F001-00000001
-     *   NOTA_VENTA → NV01-00000001
+     * Comprobantes de venta (BOLETA, FACTURA, NOTA_VENTA): se crean por sede en BranchSeeder.
      *
      * Documentos internos (6 dígitos):
      *   PRODUCTO       → P-000001
@@ -29,37 +26,8 @@ class DocumentSeriesSeeder extends Seeder
 
         DB::table('document_series')->insert([
 
-            // ── Comprobantes de venta (SUNAT — 8 dígitos) ────────────
-            [
-                'type_code'      => 'BOLETA',
-                'name'           => 'Boleta de Venta',
-                'series'         => 'B001',
-                'current_number' => 0,
-                'digits'         => 8,
-                'active'         => true,
-                'created_at'     => $now,
-                'updated_at'     => $now,
-            ],
-            [
-                'type_code'      => 'FACTURA',
-                'name'           => 'Factura',
-                'series'         => 'F001',
-                'current_number' => 0,
-                'digits'         => 8,
-                'active'         => true,
-                'created_at'     => $now,
-                'updated_at'     => $now,
-            ],
-            [
-                'type_code'      => 'NOTA_VENTA',
-                'name'           => 'Nota de Venta',
-                'series'         => 'NV01',
-                'current_number' => 0,
-                'digits'         => 8,
-                'active'         => true,
-                'created_at'     => $now,
-                'updated_at'     => $now,
-            ],
+            // Los comprobantes de venta (BOLETA, FACTURA, NOTA_VENTA) se crean por sede
+            // en BranchSeeder con DocumentSeries::crearSeriesParaSede().
 
             // ── Documentos internos (6 dígitos) ───────────────────────
             [

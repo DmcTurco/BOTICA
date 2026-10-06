@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Company\BranchRequest;
 use App\Models\Branch;
-use Illuminate\Http\Request;
+use App\Models\DocumentSeries;
+use Illuminate\Support\Facades\DB;
 
 class BranchController extends Controller
 {
@@ -15,7 +17,8 @@ class BranchController extends Controller
     {
         $company = auth()->guard('company')->user();
 
-        $branches = Branch::where('company_id', $company->id)
+        $branches = Branch::with('documentSeries')
+            ->where('company_id', $company->id)
             ->orderBy('name')
             ->get();
 
@@ -33,24 +36,21 @@ class BranchController extends Controller
     /**
      * Guarda una nueva sede.
      */
-    public function store(Request $request)
+    public function store(BranchRequest $request)
     {
         $company = auth()->guard('company')->user();
 
-        $data = $request->validate([
-            'name'    => 'required|string|max:100',
-            'address' => 'nullable|string|max:200',
-            'phone'   => 'nullable|string|max:30',
-            'email'   => 'nullable|email|max:100',
-            'status'  => 'required|in:0,1',
-        ]);
-
+        $data = $request->safe()->except('series');
         $data['company_id'] = $company->id;
 
-        Branch::create($data);
+        // La sede nace con sus series de comprobantes (B00X, F00X, NV0X)
+        DB::transaction(function () use ($data) {
+            $branch = Branch::create($data);
+            DocumentSeries::crearSeriesParaSede($branch);
+        });
 
         return redirect()->route('company.branches.index')
-            ->with('success', 'Sede creada correctamente.');
+            ->with('success', 'Sede creada correctamente con sus series de comprobantes.');
     }
 
     /**
@@ -61,26 +61,39 @@ class BranchController extends Controller
         $company = auth()->guard('company')->user();
         abort_if($branch->company_id !== $company->id, 403);
 
-        return view('company.pages.branches.form', compact('branch'));
+        $series = $branch->documentSeries()
+            ->whereIn('type_code', array_keys(DocumentSeries::PER_BRANCH))
+            ->where('active', true)
+            ->orderByRaw("CASE type_code WHEN 'BOLETA' THEN 1 WHEN 'FACTURA' THEN 2 ELSE 3 END")
+            ->get();
+
+        return view('company.pages.branches.form', compact('branch', 'series'));
     }
 
     /**
      * Actualiza una sede existente.
      */
-    public function update(Request $request, Branch $branch)
+    public function update(BranchRequest $request, Branch $branch)
     {
         $company = auth()->guard('company')->user();
         abort_if($branch->company_id !== $company->id, 403);
 
-        $data = $request->validate([
-            'name'    => 'required|string|max:100',
-            'address' => 'nullable|string|max:200',
-            'phone'   => 'nullable|string|max:30',
-            'email'   => 'nullable|email|max:100',
-            'status'  => 'required|in:0,1',
-        ]);
+        DB::transaction(function () use ($request, $branch) {
+            $branch->update($request->safe()->except('series'));
 
-        $branch->update($data);
+            // Solo cambian las series editadas que aún no emitieron comprobantes (ya validadas)
+            foreach ($request->input('series', []) as $id => $value) {
+                if ($value === '') {
+                    continue;
+                }
+
+                DocumentSeries::where('id', (int) $id)
+                    ->where('branch_id', $branch->id)
+                    ->where('current_number', 0)
+                    ->whereIn('type_code', array_keys(DocumentSeries::PER_BRANCH))
+                    ->update(['series' => $value]);
+            }
+        });
 
         return redirect()->route('company.branches.index')
             ->with('success', 'Sede actualizada correctamente.');
