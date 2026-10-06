@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\MyApp;
+use App\Services\Sunat\Contracts\SunatGateway;
+use App\Services\Sunat\GreenterGateway;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Request;
@@ -14,6 +16,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Canal de envío a SUNAT: hoy Greenter directo; cambiar aquí si se contrata un proveedor
+        $this->app->bind(SunatGateway::class, GreenterGateway::class);
+
         $requestUri = $this->app->request->getRequestUri();
         Request::macro('routeType', function () use ($requestUri) {
             if (preg_match("#^/" . MyApp::ADMINS_SUBDIR . "/#", $requestUri)) {

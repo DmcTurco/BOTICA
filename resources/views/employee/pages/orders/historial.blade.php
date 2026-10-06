@@ -139,6 +139,21 @@
                             @else
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600">Anulada</span>
                             @endif
+
+                            {{-- Estado del envío a SUNAT (solo boletas y facturas) --}}
+                            @if($order->sunat_status !== \App\Models\Order::SUNAT_NOT_APPLICABLE)
+                            <div class="mt-1">
+                                <span title="{{ $order->sunat_message ?: 'Aún no se ha enviado a SUNAT' }}"
+                                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium
+                                      {{ match($order->sunat_status) {
+                                          \App\Models\Order::SUNAT_ACCEPTED => 'bg-emerald-50 text-emerald-700',
+                                          \App\Models\Order::SUNAT_REJECTED => 'bg-red-50 text-red-600',
+                                          default                              => 'bg-amber-50 text-amber-700',
+                                      } }}">
+                                    <i class="fas fa-file-shield text-[10px]"></i> SUNAT: {{ $order->sunatLabel() }}
+                                </span>
+                            </div>
+                            @endif
                         </td>
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1">
@@ -152,6 +167,13 @@
                                         onclick="printSale({{ $order->id }})" title="Imprimir comprobante">
                                     <i class="fas fa-print text-xs"></i>
                                 </button>
+                                @if($order->canResendToSunat())
+                                <button type="button"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                                        onclick="reenviarSunat({{ $order->id }})" title="Reenviar a SUNAT">
+                                    <i class="fas fa-paper-plane text-xs"></i>
+                                </button>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -308,6 +330,20 @@ const PAYMENT_TYPES          = { 1: 'Efectivo', 2: 'Tarjeta', 3: 'Transferencia'
 const PRINT_BASE_URL = '{{ url("employee/orders") }}';
 
 let currentOrderId = null; // ID de la orden activa en el modal
+
+/**
+ * Reenvía a SUNAT una boleta o factura pendiente o con error y recarga la lista
+ * para mostrar el nuevo estado (el mensaje de SUNAT queda en la insignia).
+ */
+function reenviarSunat(id) {
+    showLoader(true);
+
+    fetch(`{{ url('employee/orders') }}/${id}/sunat`, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+    })
+    .finally(() => window.location.reload());
+}
 
 /**
  * Abre el popup de impresión para una orden.

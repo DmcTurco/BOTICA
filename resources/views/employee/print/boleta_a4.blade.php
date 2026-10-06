@@ -213,14 +213,12 @@
 
     {{-- Datos del emisor --}}
     <div class="empresa-info">
-        <h1>{{ $order->company->name }}</h1>
+        <h1>{{ $issuerName }}</h1>
         @if($order->company->ruc)
         <div class="ruc-line">RUC: {{ $order->company->ruc }}</div>
         @endif
-        @if($order->company->address)
-        <p>📍 {{ $order->company->address }}</p>
-        @elseif($order->branch->address)
-        <p>📍 {{ $order->branch->address }}</p>
+        @if($issuerAddress)
+        <p>📍 {{ $issuerAddress }}</p>
         @endif
         @if($order->branch->phone)
         <p>📞 {{ $order->branch->phone }}</p>
@@ -298,25 +296,43 @@
 
     {{-- QR SUNAT --}}
     <div class="qr-section">
-        <canvas id="qrCanvas"></canvas>
+        @if($qrSvg)
+        <div style="width:100px; border:1px solid #dbeafe; border-radius:4px;">{!! $qrSvg !!}</div>
+        <style>.qr-section svg { width: 100%; height: auto; display: block; }</style>
         <div class="qr-label">Representación impresa del comprobante electrónico</div>
+        @if($order->sunat_hash)
+        <div class="qr-label" style="word-break:break-all; max-width:150px;">Hash: {{ $order->sunat_hash }}</div>
+        @endif
+        @if($order->sunat_status !== \App\Models\Order::SUNAT_ACCEPTED)
+        <div class="qr-label">Pendiente de envío a SUNAT</div>
+        @endif
+        @endif
     </div>
 
     {{-- Totales --}}
     <div class="totals-box">
-        @if($order->igv > 0)
+        @if($order->taxable_amount > 0)
         <div class="totals-row">
             <span class="lbl">Op. Gravadas</span>
-            <span>S/ {{ number_format($order->subtotal, 2) }}</span>
+            <span>S/ {{ number_format($order->taxable_amount, 2) }}</span>
         </div>
+        @endif
+        @if($order->exonerated_amount > 0)
+        <div class="totals-row">
+            <span class="lbl">Op. Exoneradas</span>
+            <span>S/ {{ number_format($order->exonerated_amount, 2) }}</span>
+        </div>
+        @endif
+        @if($order->unaffected_amount > 0)
+        <div class="totals-row">
+            <span class="lbl">Op. Inafectas</span>
+            <span>S/ {{ number_format($order->unaffected_amount, 2) }}</span>
+        </div>
+        @endif
+        @if($order->igv > 0)
         <div class="totals-row">
             <span class="lbl">IGV (18%)</span>
             <span>S/ {{ number_format($order->igv, 2) }}</span>
-        </div>
-        @else
-        <div class="totals-row">
-            <span class="lbl">Op. Exoneradas</span>
-            <span>S/ {{ number_format($order->total, 2) }}</span>
         </div>
         @endif
         <div class="totals-row gran-total">
@@ -350,38 +366,11 @@
         @if($order->company->ruc)
         <div>RUC: {{ $order->company->ruc }}</div>
         @endif
-        <div>{{ $order->company->name }}</div>
+        <div>{{ $issuerName }}</div>
         <div>{{ $order->branch->name }}</div>
     </div>
 </div>
 
-{{-- ── QR Code (generado en cliente, no requiere red externa) ── --}}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-    /**
-     * Contenido del QR según estructura recomendada SUNAT:
-     * RUC|TIPO|SERIE-CORRELATIVO|IGV|TOTAL|FECHA|TIPO_DOC_ADQUIRENTE|NRO_DOC_ADQUIRENTE|
-     */
-    var qrData = [
-        "{{ $order->company->ruc ?? '' }}",
-        "{{ $order->voucher_type }}",
-        "{{ $order->voucher_number ?? $order->id }}",
-        "{{ number_format($order->igv, 2) }}",
-        "{{ number_format($order->total, 2) }}",
-        "{{ $order->created_at->format('Y-m-d') }}",
-        "{{ $order->documentType?->code ?? '0' }}",
-        "{{ $order->customer_document ?? '' }}"
-    ].join('|') + '|';
-
-    new QRCode(document.getElementById('qrCanvas'), {
-        text: qrData,
-        width: 100,
-        height: 100,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.M
-    });
-</script>
 
 </body>
 </html>

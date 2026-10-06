@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\CompanySunatSetting;
 use App\Models\Order;
+use App\Services\Sunat\VoucherQr;
 
 class PrintController extends Controller
 {
@@ -47,10 +49,18 @@ class PrintController extends Controller
         $paymentLabels  = [1 => 'Efectivo', 2 => 'Tarjeta', 3 => 'Transferencia', 4 => 'Yape'];
         $voucherLabels  = [1 => 'Boleta de Venta', 2 => 'Factura', 3 => 'Nota de Venta'];
 
+        // Boleta o factura electrónica: razón social y dirección fiscal + QR de SUNAT.
+        // La nota de venta (y las empresas sin facturación electrónica) usan los datos de siempre.
+        $isSunat = $order->sunat_status !== Order::SUNAT_NOT_APPLICABLE;
+        $setting = $isSunat ? CompanySunatSetting::where('company_id', $order->company_id)->first() : null;
+
         return view(self::TEMPLATES[$template], [
             'order'         => $order,
             'paymentLabel'  => $paymentLabels[$order->payment_type] ?? 'Otro',
             'voucherLabel'  => $voucherLabels[$order->voucher_type] ?? 'Comprobante',
+            'issuerName'    => $setting?->legal_name ?: $order->company->name,
+            'issuerAddress' => $setting?->fiscal_address ?: ($order->company->address ?: $order->branch->address),
+            'qrSvg'         => $isSunat ? app(VoucherQr::class)->svg($order) : null,
         ]);
     }
 

@@ -10,6 +10,9 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\StockMovement;
+use App\Jobs\SendOrderToSunat;
+use App\Models\CompanySunatSetting;
+use App\Services\Sunat\Contracts\SunatGateway;
 use App\Services\Sunat\TaxCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -57,6 +60,47 @@ class OrderController extends Controller
         $orders = $query->paginate(15)->withQueryString();
 
         return view('employee.pages.orders.historial', compact('orders', 'fechaDesde', 'fechaHasta'));
+    }
+
+    /**
+     * Reenvía a SUNAT una boleta o factura pendiente o con error de envío.
+     * Se ejecuta en el momento para mostrar el resultado al usuario.
+     */
+    public function resendSunat(Order $order, SunatGateway $gateway)
+    {
+        $employee = auth()->guard('employee')->user();
+
+        abort_if(
+            $order->company_id !== $employee->company_id ||
+            $order->branch_id  !== $employee->branch_id,
+            403
+        );
+
+        if (!$order->canResendToSunat()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este comprobante no se puede reenviar a SUNAT.',
+            ], 422);
+        }
+
+        $updated = (new SendOrderToSunat($order->id))->handle($gateway);
+
+        return response()->json([
+            'success' => $updated?->sunat_status === Order::SUNAT_ACCEPTED,
+            'status'  => $updated?->sunat_status,
+            'label'   => $updated?->sunatLabel(),
+            'message' => $updated?->sunat_message ?? 'El comprobante ya se está enviando.',
+        ]);
+    }
+
+    /**
+     * ¿La compañía tiene la facturación electrónica activa y completa?
+     */
+    private function sunatEnabled(int $companyId): bool
+    {
+        $setting = CompanySunatSetting::where('company_id', $companyId)->first();
+
+        return $setting && $setting->enabled && $setting->isReady();
     }
 
     /**
@@ -299,6 +343,11 @@ class OrderController extends Controller
 
         ['tax' => $tax, 'units' => $units] = $pricing;
 
+        // Boleta o factura con facturación electrónica activa: queda pendiente de informar a SUNAT
+        $sunatStatus = in_array((int) $request->voucher_type, [1, 2], true) && $this->sunatEnabled($employee->company_id)
+            ? Order::SUNAT_PENDING
+            : Order::SUNAT_NOT_APPLICABLE;
+
         // Caja histórica (si la venta se registra sobre una fecha pasada) o caja normal de la sesión.
         // En una caja histórica la venta y su kardex quedan con la fecha de esa caja.
         $historicalCaja = $request->attributes->get('cash_register');
@@ -346,6 +395,7 @@ class OrderController extends Controller
                 'igv'               => $tax['igv'],
                 'total'             => $tax['total'],
                 'status'            => 1,
+                'sunat_status'      => $sunatStatus,
             ]);
 
             if ($movedAt) {
@@ -401,6 +451,11 @@ class OrderController extends Controller
 
             DB::commit();
 
+            // Se informa a SUNAT después de responder al cajero (no lo hace esperar)
+            if ($sunatStatus === Order::SUNAT_PENDING) {
+                SendOrderToSunat::dispatchAfterResponse($order->id);
+            }
+
             return response()->json([
                 'success'        => true,
                 'message'        => 'Venta registrada correctamente.',
@@ -452,6 +507,8 @@ class OrderController extends Controller
             'Esta orden no se puede editar. La caja ya fue cerrada o validada.');
 
         abort_if($cashRegister->employee_id !== $employee->id, 403);
+        abort_if($order->sunat_status === Order::SUNAT_ACCEPTED, 403,
+            'Este comprobante ya fue aceptado por SUNAT y no se puede editar. Emite una nota de crédito.');
 
         $order->load('items');
 
@@ -530,6 +587,8 @@ class OrderController extends Controller
         abort_if($order->company_id !== $employee->company_id, 403);
         abort_if(!$cashRegister || !$cashRegister->isEditable(), 403);
         abort_if($cashRegister->employee_id !== $employee->id, 403);
+        abort_if($order->sunat_status === Order::SUNAT_ACCEPTED, 403,
+            'Este comprobante ya fue aceptado por SUNAT y no se puede editar. Emite una nota de crédito.');
 
         // IGV y totales: se recalculan con la afectación real de cada producto
         $pricing = $this->pricing($request->items, $employee->company_id, $request->total);
@@ -539,6 +598,9 @@ class OrderController extends Controller
         }
 
         ['tax' => $tax, 'units' => $units] = $pricing;
+
+        // Boleta o factura aún no aceptada por SUNAT: tras editarla vuelve a quedar pendiente
+        $resendSunat = $order->isSunatVoucher() && $this->sunatEnabled($employee->company_id);
 
         DB::beginTransaction();
         try {
@@ -634,9 +696,17 @@ class OrderController extends Controller
                 'unaffected_amount' => $tax['unaffected'],
                 'igv'               => $tax['igv'],
                 'total'             => $tax['total'],
-            ]);
+            ] + ($resendSunat ? [
+                'sunat_status'  => Order::SUNAT_PENDING,
+                'sunat_code'    => null,
+                'sunat_message' => null,
+            ] : []));
 
             DB::commit();
+
+            if ($resendSunat) {
+                SendOrderToSunat::dispatchAfterResponse($order->id);
+            }
 
             return response()->json([
                 'success' => true,

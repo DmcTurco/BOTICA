@@ -62,12 +62,12 @@
 
 {{-- Encabezado empresa --}}
 <div class="center">
-    <div class="empresa-nombre">{{ $order->company->name }}</div>
+    <div class="empresa-nombre">{{ $issuerName }}</div>
     @if($order->company->ruc)
     <div class="small bold">RUC: {{ $order->company->ruc }}</div>
     @endif
-    @if($order->branch->address)
-    <div class="small">{{ $order->branch->address }}</div>
+    @if($issuerAddress)
+    <div class="small">{{ $issuerAddress }}</div>
     @endif
     @if($order->branch->phone)
     <div class="small">Tel: {{ $order->branch->phone }}</div>
@@ -134,11 +134,25 @@
 
 {{-- Totales --}}
 <table class="totals">
-    @if($order->igv > 0)
+    @if($order->taxable_amount > 0)
     <tr>
-        <td>Subtotal</td>
-        <td>S/ {{ number_format($order->subtotal, 2) }}</td>
+        <td>Op. Gravada</td>
+        <td>S/ {{ number_format($order->taxable_amount, 2) }}</td>
     </tr>
+    @endif
+    @if($order->exonerated_amount > 0)
+    <tr>
+        <td>Op. Exonerada</td>
+        <td>S/ {{ number_format($order->exonerated_amount, 2) }}</td>
+    </tr>
+    @endif
+    @if($order->unaffected_amount > 0)
+    <tr>
+        <td>Op. Inafecta</td>
+        <td>S/ {{ number_format($order->unaffected_amount, 2) }}</td>
+    </tr>
+    @endif
+    @if($order->igv > 0)
     <tr>
         <td>IGV (18%)</td>
         <td>S/ {{ number_format($order->igv, 2) }}</td>
@@ -165,6 +179,8 @@
     </tr>
     @endif
 </table>
+
+@include('employee.print._sunat', ['qrWidth' => 110])
 
 <div class="divider-solid"></div>
 

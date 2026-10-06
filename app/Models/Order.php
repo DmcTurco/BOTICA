@@ -10,6 +10,21 @@ class Order extends Model
 {
     protected $table = 'orders';
 
+    // ── Estado del envío a SUNAT ────────────────────────────────
+    const SUNAT_NOT_APPLICABLE = 'not_applicable'; // nota de venta o empresa sin facturación electrónica
+    const SUNAT_PENDING        = 'pending';        // por enviar (o reintentar)
+    const SUNAT_ACCEPTED       = 'accepted';       // SUNAT aceptó el comprobante (CDR recibido)
+    const SUNAT_REJECTED       = 'rejected';       // SUNAT lo rechazó: hay que corregir y emitir de nuevo
+    const SUNAT_ERROR          = 'error';          // falló la conexión o el envío: se puede reintentar
+
+    const SUNAT_LABELS = [
+        self::SUNAT_NOT_APPLICABLE => 'No aplica',
+        self::SUNAT_PENDING        => 'Pendiente',
+        self::SUNAT_ACCEPTED       => 'Aceptado',
+        self::SUNAT_REJECTED       => 'Rechazado',
+        self::SUNAT_ERROR          => 'Error de envío',
+    ];
+
     protected $fillable = [
         'company_id',
         'branch_id',
@@ -30,9 +45,20 @@ class Order extends Model
         'igv',
         'total',
         'status',
+        'sunat_status',
+        'sunat_code',
+        'sunat_message',
+        'sunat_hash',
+        'sunat_xml_path',
+        'sunat_cdr_path',
+        'sunat_environment',
+        'sunat_attempts',
+        'sunat_sent_at',
     ];
 
     protected $casts = [
+        'sunat_attempts' => 'integer',
+        'sunat_sent_at'  => 'datetime',
         'subtotal'          => 'decimal:2',
         'taxable_amount'    => 'decimal:2',
         'exonerated_amount' => 'decimal:2',
@@ -40,6 +66,26 @@ class Order extends Model
         'igv'               => 'decimal:2',
         'total'             => 'decimal:2',
     ];
+
+    // ── Helpers SUNAT ───────────────────────────────────────────
+
+    /** ¿Es un comprobante que se informa a SUNAT? (boleta o factura; la nota de venta no) */
+    public function isSunatVoucher(): bool
+    {
+        return in_array((int) $this->voucher_type, [1, 2], true);
+    }
+
+    /** ¿Se puede reenviar a SUNAT? (pendiente o con error de envío) */
+    public function canResendToSunat(): bool
+    {
+        return in_array($this->sunat_status, [self::SUNAT_PENDING, self::SUNAT_ERROR], true);
+    }
+
+    /** Etiqueta legible del estado SUNAT */
+    public function sunatLabel(): string
+    {
+        return self::SUNAT_LABELS[$this->sunat_status] ?? 'Desconocido';
+    }
 
     // ── Relaciones ──────────────────────────────────────────────
 

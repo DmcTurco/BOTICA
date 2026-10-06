@@ -66,6 +66,7 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
     Route::middleware('privilege:ver_historial')->group(function () {
         Route::get('orders/historial', [Employee\OrderController::class, 'historial'])->name('orders.historial');
         Route::get('orders/{order}/detalle', [Employee\OrderController::class, 'detalle'])->name('orders.detalle');
+        Route::post('orders/{order}/sunat', [Employee\OrderController::class, 'resendSunat'])->name('orders.sunat-resend');
         Route::get('consultar-documento', [Employee\OrderController::class, 'consultarDocumento'])->name('consultar-documento');
     });
 
