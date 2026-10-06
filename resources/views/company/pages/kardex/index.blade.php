@@ -35,13 +35,13 @@
 
                 {{-- Fecha desde --}}
                 <div>
-                    <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}"
+                    <input type="date" name="fecha_desde" value="{{ request('fecha_desde', now()->startOfMonth()->toDateString()) }}"
                            class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                 </div>
 
                 {{-- Fecha hasta --}}
                 <div>
-                    <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}"
+                    <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta', now()->endOfMonth()->toDateString()) }}"
                            class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                 </div>
 

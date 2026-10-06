@@ -5,12 +5,47 @@
 @section('main-class', 'overflow-hidden')
 
 @section('content-area')
+@php
+    $editOrder = $editOrder ?? null;
+
+    // Datos para el modo edición (null al registrar una venta nueva)
+    $editConfig = $editOrder ? [
+        'payment_type'      => $editOrder->payment_type,
+        'operation_number'  => $editOrder->operation_number,
+        'voucher_type'      => $editOrder->voucher_type,
+        'customer_name'     => $editOrder->customer_name,
+        'customer_document' => $editOrder->customer_document,
+        'document_type_id'  => $editOrder->document_type_id,
+        'update_url'        => route('employee.orders.update-historical', $editOrder),
+        'back_url'          => route('employee.cash-register.historical', $historicalCaja),
+        'items'             => $editItems,
+    ] : null;
+@endphp
 <div class="flex-1 min-h-0 flex flex-col overflow-hidden">
 
     {{-- ════════════════════════════════════════════════════════
          CONTENEDOR PRINCIPAL POS
          ════════════════════════════════════════════════════════ --}}
     <div class="flex-1 min-h-0 flex flex-col overflow-hidden rounded-xl border border-slate-200 shadow-sm bg-white">
+
+        {{-- ── Aviso: venta sobre una caja histórica ───────────── --}}
+        @if($historicalCaja)
+        <div class="shrink-0 flex items-center gap-3 px-5 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-800">
+            <i class="fas fa-clock-rotate-left text-amber-600"></i>
+            <p class="text-xs leading-relaxed">
+                @if($editOrder)
+                <strong>Editando la venta {{ $editOrder->voucher_number ?? '#' . $editOrder->id }}</strong>
+                de la caja histórica del {{ $historicalCaja->register_date->format('d/m/Y') }}.
+                Al guardar se ajusta el stock. El cliente y el comprobante no se pueden modificar.
+                @else
+                <strong>Caja histórica del {{ $historicalCaja->register_date->format('d/m/Y') }}.</strong>
+                Las ventas se registrarán con esa fecha y quedarán pendientes de validación del administrador.
+                @endif
+            </p>
+            <a href="{{ route('employee.cash-register.historical', $historicalCaja) }}"
+               class="ml-auto text-xs font-semibold underline whitespace-nowrap">Volver a la caja</a>
+        </div>
+        @endif
 
         {{-- ── Topbar ──────────────────────────────────────────── --}}
         <div class="shrink-0 flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
@@ -340,7 +375,7 @@
                     class="px-8 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm"
                     disabled>
                 <i class="fas fa-circle-check text-sm"></i>
-                Confirmar Venta
+                {{ $editOrder ? 'Guardar Cambios' : 'Confirmar Venta' }}
                 <kbd class="text-emerald-200 text-xs font-normal bg-white/10 px-1.5 py-0.5 rounded ml-1">F5</kbd>
             </button>
 
@@ -521,6 +556,11 @@ $('.btn-comprobante-inactivo').removeClass(PAGO_ACTIVO.join(' ')).addClass(PAGO_
 
 // ── Estado del carrito ────────────────────────────────────────
 let carrito = {};
+
+// ── Modo edición de una venta de caja histórica ───────────────
+const EDIT_ORDER = @json($editConfig);
+
+const BTN_LABEL = EDIT_ORDER ? 'Guardar Cambios' : 'Confirmar Venta';
 
 // ── Filtrado en tiempo real ───────────────────────────────────
 $('#inputBusqueda').on('input', function() {
@@ -792,17 +832,25 @@ $('#btnTerminarVenta').on('click', function() {
         subtotal: sub,
         igv:      igv,
         total:    total,
+        historical: @json($historicalCaja?->id),   // caja histórica (null = caja normal)
     };
 
     const $btn = $(this).prop('disabled', true).text('Procesando...');
 
     $.ajax({
-        url:         '{{ route("employee.orders.store") }}',
-        method:      'POST',
+        url:         EDIT_ORDER ? EDIT_ORDER.update_url : '{{ route("employee.orders.store") }}',
+        method:      EDIT_ORDER ? 'PUT' : 'POST',
         contentType: 'application/json',
         headers:     { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         data:        JSON.stringify(payload),
         success: function(res) {
+            // Edición: avisar y volver a la caja histórica
+            if (EDIT_ORDER) {
+                mostrarToast('success', res.message ?? 'Venta actualizada.');
+                setTimeout(function() { window.location.href = EDIT_ORDER.back_url; }, 700);
+                return;
+            }
+
             const numComp = res.voucher_number ?? '';
 
             // Mostrar el número en el topbar
@@ -833,16 +881,43 @@ $('#btnTerminarVenta').on('click', function() {
             });
         },
         error: function(xhr) {
-            const msg = xhr.responseJSON?.message ?? 'Error al registrar la venta.';
+            const msg = xhr.responseJSON?.message ?? (EDIT_ORDER ? 'Error al guardar los cambios.' : 'Error al registrar la venta.');
             mostrarToast('error', msg);
         },
         complete: function() {
             const hasItems = Object.keys(carrito).length > 0;
             $btn.prop('disabled', !hasItems)
-                .html('<i class="fas fa-circle-check text-sm"></i> Confirmar Venta <kbd class="text-emerald-200 text-xs font-normal bg-white/10 px-1.5 py-0.5 rounded ml-1">F5</kbd>');
+                .html('<i class="fas fa-circle-check text-sm"></i> ' + BTN_LABEL + ' <kbd class="text-emerald-200 text-xs font-normal bg-white/10 px-1.5 py-0.5 rounded ml-1">F5</kbd>');
         }
     });
 });
+
+// ── Precargar la venta que se está editando ───────────────────
+if (EDIT_ORDER) {
+    EDIT_ORDER.items.forEach(function(i) {
+        carrito[i.code] = { name: i.name, price: i.price, stock: i.stock, qty: i.qty };
+    });
+    renderCarrito();
+
+    // Pago
+    $('.btn-pago[data-value="' + EDIT_ORDER.payment_type + '"]').trigger('click');
+    $('#nroOperacion').val(EDIT_ORDER.operation_number ?? '');
+
+    // Comprobante y cliente: se muestran pero no se pueden modificar
+    $('.btn-comprobante[data-value="' + EDIT_ORDER.voucher_type + '"]').trigger('click');
+    $('#cliente').val(EDIT_ORDER.customer_name ?? '');
+    $('#documento').val(EDIT_ORDER.customer_document ?? '');
+    if (EDIT_ORDER.document_type_id) seleccionarTipoDocPorId(EDIT_ORDER.document_type_id);
+
+    $('#cliente, #documento, #nroOperacion').prop('disabled', true).addClass('bg-slate-50');
+    $('.btn-comprobante, .btn-tipo-doc').css({ 'pointer-events': 'none', 'opacity': '.6' });
+
+    // El número operación solo se puede cambiar si el pago no es efectivo
+    $('#nroOperacion').prop('disabled', false).removeClass('bg-slate-50');
+
+    // No tiene sentido "Nueva venta" mientras se edita
+    $('#btnNuevaVenta').addClass('hidden');
+}
 
 // ── Config de impresión de la sede (inyectada desde PHP) ─────
 const PRINT_CONFIG   = @json($printConfig);

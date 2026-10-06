@@ -27,7 +27,21 @@
         </div>
 
         {{-- Ventas — ítems controlados por privilegios --}}
-        @php $emp = auth()->guard('employee')->user(); @endphp
+        @php
+            $emp = auth()->guard('employee')->user();
+            // Sin caja abierta, las opciones de ventas se bloquean
+            $cajaAbierta = \App\Models\CashRegister::currentOpen($emp->id)->exists();
+
+            // Cajas históricas abiertas del empleado (para poder volver a ellas desde el menú)
+            $cajasHistoricas = $emp->hasPrivilege(\App\Models\Employee::PRIV_ABRIR_CAJA)
+                ? \App\Models\CashRegister::where('employee_id', $emp->id)
+                    ->where('status', 1)
+                    ->where('approval_status', \App\Models\CashRegister::APPROVAL_PENDING)
+                    ->orderBy('register_date')
+                    ->get(['id', 'register_date'])
+                : collect();
+            $historicaActiva = request()->route('cashRegister')?->id;
+        @endphp
         <div>
             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Ventas</p>
             <ul class="space-y-0.5">
@@ -37,38 +51,75 @@
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                               {{ request()->routeIs('employee.cash-register.show-open') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
                         <i class="fas fa-lock-open w-4 text-center shrink-0"></i>
-                        Apertura de caja
+                        {{ $cajaAbierta ? 'Abrir caja pasada' : 'Apertura de caja' }}
                     </a>
                 </li>
+                @foreach($cajasHistoricas as $historica)
+                <li>
+                    <a href="{{ route('employee.cash-register.historical', $historica) }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ $historicaActiva === $historica->id ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-clock-rotate-left w-4 text-center shrink-0 {{ $historicaActiva === $historica->id ? '' : 'text-amber-500' }}"></i>
+                        Caja del {{ $historica->register_date->format('d/m/Y') }}
+                    </a>
+                </li>
+                @endforeach
                 @endif
                 @if($emp->hasPrivilege(\App\Models\Employee::PRIV_EDITAR_APERTURA))
                 <li>
+                    @if($cajaAbierta)
                     <a href="{{ route('employee.cash-register.edit') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                               {{ request()->routeIs('employee.cash-register.edit') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
                         <i class="fas fa-pen-to-square w-4 text-center shrink-0"></i>
                         Editar apertura
                     </a>
+                    @else
+                    <span title="Abre tu caja primero"
+                          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 cursor-not-allowed select-none">
+                        <i class="fas fa-pen-to-square w-4 text-center shrink-0"></i>
+                        Editar apertura
+                        <i class="fas fa-lock ml-auto text-[10px]"></i>
+                    </span>
+                    @endif
                 </li>
                 @endif
                 @if($emp->hasPrivilege(\App\Models\Employee::PRIV_CERRAR_CAJA))
                 <li>
-                    <button onclick="abrirModalCierre()"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                                    text-slate-400 hover:bg-sky-600 hover:text-white text-left">
+                    @if($cajaAbierta)
+                    <a href="{{ route('employee.cash-register.show-close') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.cash-register.show-close') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
                         <i class="fas fa-lock w-4 text-center shrink-0"></i>
                         Cierre de caja
-                    </button>
+                    </a>
+                    @else
+                    <span title="Abre tu caja primero"
+                          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 cursor-not-allowed select-none">
+                        <i class="fas fa-lock w-4 text-center shrink-0"></i>
+                        Cierre de caja
+                        <i class="fas fa-lock ml-auto text-[10px]"></i>
+                    </span>
+                    @endif
                 </li>
                 @endif
                 @if($emp->hasPrivilege(\App\Models\Employee::PRIV_VER_VENTAS))
                 <li>
+                    @if($cajaAbierta)
                     <a href="{{ route('employee.orders.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                               {{ request()->routeIs('employee.orders.index') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
                         <i class="fas fa-cash-register w-4 text-center shrink-0"></i>
                         Ventas
                     </a>
+                    @else
+                    <span title="Abre tu caja primero"
+                          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 cursor-not-allowed select-none">
+                        <i class="fas fa-cash-register w-4 text-center shrink-0"></i>
+                        Ventas
+                        <i class="fas fa-lock ml-auto text-[10px]"></i>
+                    </span>
+                    @endif
                 </li>
                 @endif
                 @if($emp->hasPrivilege(\App\Models\Employee::PRIV_VER_HISTORIAL))

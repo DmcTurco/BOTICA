@@ -11,8 +11,8 @@ use Illuminate\Http\Request;
 class KardexController extends Controller
 {
     /**
-     * Muestra el kardex de un producto seleccionado, filtrado por sede.
-     * Si no se pasa ?producto=CODE, muestra solo el selector.
+     * Muestra el kardex de la sede del empleado en un rango de fechas
+     * (por defecto el mes actual). Si se pasa ?producto=CODE filtra por ese producto.
      */
     public function index(Request $request)
     {
@@ -29,8 +29,18 @@ class KardexController extends Controller
                 return $p;
             });
 
-        $producto    = null;
-        $movimientos = collect();
+        // Rango de fechas: por defecto del 1er al último día del mes actual
+        $fechaDesde = $request->input('fecha_desde') ?: now()->startOfMonth()->toDateString();
+        $fechaHasta = $request->input('fecha_hasta') ?: now()->endOfMonth()->toDateString();
+
+        // Las fechas siempre aplican; el producto es un filtro opcional
+        $query = StockMovement::with('product:code,name')
+            ->where('branch_id', $employee->branch_id)
+            ->whereDate('created_at', '>=', $fechaDesde)
+            ->whereDate('created_at', '<=', $fechaHasta)
+            ->orderBy('created_at', 'asc');
+
+        $producto = null;
 
         if ($request->filled('producto')) {
             $producto = Product::where('code', $request->producto)
@@ -44,23 +54,13 @@ class KardexController extends Controller
                     ->first();
                 $producto->stock_actual  = $branchStock?->stock_actual ?? 0;
                 $producto->stock_minimum = $branchStock?->stock_minimum;
-                $query = StockMovement::where('product_code', $producto->code)
-                    ->where('branch_id', $employee->branch_id)
-                    ->orderBy('created_at', 'asc');
 
-                // Filtro por rango de fechas
-                if ($request->filled('fecha_desde')) {
-                    $query->whereDate('created_at', '>=', $request->fecha_desde);
-                }
-
-                if ($request->filled('fecha_hasta')) {
-                    $query->whereDate('created_at', '<=', $request->fecha_hasta);
-                }
-
-                $movimientos = $query->get();
+                $query->where('product_code', $producto->code);
             }
         }
 
-        return view('employee.pages.kardex.index', compact('productos', 'producto', 'movimientos'));
+        $movimientos = $query->get();
+
+        return view('employee.pages.kardex.index', compact('productos', 'producto', 'movimientos', 'fechaDesde', 'fechaHasta'));
     }
 }

@@ -11,6 +11,7 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -45,17 +46,59 @@ class OrderController extends Controller
             $query->where('payment_type', $request->tipo_pago);
         }
 
-        if ($request->filled('fecha_desde')) {
-            $query->whereDate('created_at', '>=', $request->fecha_desde);
-        }
+        // Rango de fechas: por defecto del 1er al último día del mes actual
+        $fechaDesde = $request->input('fecha_desde') ?: now()->startOfMonth()->toDateString();
+        $fechaHasta = $request->input('fecha_hasta') ?: now()->endOfMonth()->toDateString();
 
-        if ($request->filled('fecha_hasta')) {
-            $query->whereDate('created_at', '<=', $request->fecha_hasta);
-        }
+        $query->whereDate('created_at', '>=', $fechaDesde)
+              ->whereDate('created_at', '<=', $fechaHasta);
 
         $orders = $query->paginate(15)->withQueryString();
 
-        return view('employee.pages.orders.historial', compact('orders'));
+        return view('employee.pages.orders.historial', compact('orders', 'fechaDesde', 'fechaHasta'));
+    }
+
+    /**
+     * Bloquea (FOR UPDATE) las filas de stock de la sede para los códigos dados.
+     * Se bloquean todas juntas y ordenadas por código para que dos ventas con los
+     * mismos productos en distinto orden no se esperen entre sí (deadlock).
+     * Devuelve las filas indexadas por código de producto.
+     */
+    private function lockStock(int $branchId, array $codes): \Illuminate\Support\Collection
+    {
+        return BranchStock::where('branch_id', $branchId)
+            ->whereIn('product_code', array_unique($codes))
+            ->orderBy('product_code')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('product_code');
+    }
+
+    /**
+     * Verifica que el stock alcance para los ítems, sumando las cantidades cuando
+     * un mismo producto aparece en varias líneas.
+     * Devuelve el nombre del primer producto sin stock suficiente, o null si todo alcanza.
+     */
+    private function insufficientStock(array $items, \Illuminate\Support\Collection $stocks): ?string
+    {
+        $required = [];
+        $names    = [];
+
+        foreach ($items as $item) {
+            $code            = $item['code'];
+            $required[$code] = ($required[$code] ?? 0) + (float) $item['qty'];
+            $names[$code]  ??= $item['name'] ?? $code;
+        }
+
+        foreach ($required as $code => $qty) {
+            $stock = $stocks->get($code);
+
+            if (!$stock || (float) $stock->stock_actual < $qty) {
+                return $names[$code];
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -96,9 +139,12 @@ class OrderController extends Controller
     /**
      * Muestra la pantalla de punto de venta.
      */
-    public function index()
+    public function index(Request $request)
     {
         $employee = auth()->guard('employee')->user();
+
+        // Caja histórica sobre la que se está registrando (la deja el middleware cash.open)
+        $historicalCaja = $request->attributes->get('cash_register');
 
         $branchId = $employee->branch_id;
 
@@ -123,7 +169,7 @@ class OrderController extends Controller
             'auto_print'       => false,
         ], $branch->getSettingGroup('printing'));
 
-        return view('employee.pages.orders.index', compact('products', 'documentTypes', 'printConfig'));
+        return view('employee.pages.orders.index', compact('products', 'documentTypes', 'printConfig', 'historicalCaja'));
     }
 
     /**
@@ -208,23 +254,27 @@ class OrderController extends Controller
 
         $employee = auth()->guard('employee')->user();
 
+        // Caja histórica (si la venta se registra sobre una fecha pasada) o caja normal de la sesión.
+        // En una caja histórica la venta y su kardex quedan con la fecha de esa caja.
+        $historicalCaja = $request->attributes->get('cash_register');
+        $cashRegisterId = $historicalCaja?->id ?? session('cash_register_id');
+        $movedAt        = $historicalCaja
+            ? Carbon::parse($historicalCaja->register_date)->setTimeFrom(now())
+            : null;
+
         DB::beginTransaction();
 
         try {
-            // Verificar stock en branch_stock antes de registrar nada
-            foreach ($request->items as $item) {
-                $stock = BranchStock::where('branch_id', $employee->branch_id)
-                    ->where('product_code', $item['code'])
-                    ->lockForUpdate()
-                    ->first();
+            // Bloquear el stock de todos los productos en orden por código (evita bloqueos
+            // cruzados entre ventas) y verificar que alcance antes de registrar nada
+            $stocks = $this->lockStock($employee->branch_id, array_column($request->items, 'code'));
 
-                if (!$stock || $stock->stock_actual < $item['qty']) {
-                    DB::rollBack();
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Stock insuficiente para: ' . ($item['name'] ?? $item['code']),
-                    ], 422);
-                }
+            if ($faltante = $this->insufficientStock($request->items, $stocks)) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stock insuficiente para: ' . $faltante,
+                ], 422);
             }
 
             // Generar número de comprobante automáticamente (atómico, dentro de la transacción)
@@ -232,11 +282,11 @@ class OrderController extends Controller
             $voucherNumber = DocumentSeries::siguiente($typeCode);
 
             // Crear la orden
-            $order = Order::create([
+            $order = new Order([
                 'company_id'        => $employee->company_id,
                 'branch_id'         => $employee->branch_id,
                 'employee_id'       => $employee->id,
-                'cash_register_id'  => session('cash_register_id'),
+                'cash_register_id'  => $cashRegisterId,
                 'customer_name'     => $request->customer_name ?: null,
                 'document_type_id'  => $documentTypeId,
                 'customer_document' => $request->customer_document ?: null,
@@ -249,6 +299,13 @@ class OrderController extends Controller
                 'total'             => $request->total,
                 'status'            => 1,
             ]);
+
+            if ($movedAt) {
+                $order->created_at = $movedAt;
+                $order->updated_at = $movedAt;
+            }
+
+            $order->save();
 
             // Registrar ítems, descontar stock en branch_stock y registrar kardex
             foreach ($request->items as $item) {
@@ -271,7 +328,7 @@ class OrderController extends Controller
                 $branchStock->update(['stock_actual' => $nuevoStock]);
 
                 // Registrar salida en el kardex
-                StockMovement::create([
+                $movement = new StockMovement([
                     'company_id'     => $employee->company_id,
                     'branch_id'      => $employee->branch_id,
                     'product_code'   => $item['code'],
@@ -282,6 +339,13 @@ class OrderController extends Controller
                     'unit_cost'      => $item['price'],
                     'balance'        => (int) $nuevoStock,
                 ]);
+
+                if ($movedAt) {
+                    $movement->created_at = $movedAt;
+                    $movement->updated_at = $movedAt;
+                }
+
+                $movement->save();
             }
 
             DB::commit();
@@ -355,7 +419,35 @@ class OrderController extends Controller
 
         $documentTypes = DocumentType::activos()->get();
 
-        return view('employee.pages.orders.edit', compact('order', 'cashRegister', 'products', 'documentTypes'));
+        // Configuración de impresión de la sede (la vista del POS la necesita)
+        $branch      = $employee->branch()->with('config')->first();
+        $printConfig = array_merge([
+            'default_template' => 'ticket_80mm',
+            'auto_print'       => false,
+        ], $branch->getSettingGroup('printing'));
+
+        // Ítems actuales de la orden para precargar el carrito. El stock máximo de cada
+        // uno es el stock actual de la sede más lo que la orden ya tiene descontado.
+        $stocks = BranchStock::where('branch_id', $branchId)
+            ->whereIn('product_code', $order->items->pluck('product_code'))
+            ->pluck('stock_actual', 'product_code');
+
+        $editItems = $order->items->map(fn ($item) => [
+            'code'  => $item->product_code,
+            'name'  => $item->product_name,
+            'price' => (float) $item->unit_price,
+            'qty'   => (int) $item->quantity,
+            'stock' => (int) (($stocks[$item->product_code] ?? 0) + $item->quantity),
+        ])->values();
+
+        return view('employee.pages.orders.index', [
+            'products'       => $products,
+            'documentTypes'  => $documentTypes,
+            'printConfig'    => $printConfig,
+            'historicalCaja' => $cashRegister,
+            'editOrder'      => $order,
+            'editItems'      => $editItems,
+        ]);
     }
 
     /**
@@ -385,6 +477,12 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
+            // 0. Bloquear de una vez el stock de los ítems actuales y nuevos, en orden por código
+            $stocks = $this->lockStock($employee->branch_id, array_merge(
+                $order->items->pluck('product_code')->all(),
+                array_column($request->items, 'code')
+            ));
+
             // 1. Devolver stock de los ítems actuales de la orden
             foreach ($order->items as $oldItem) {
                 $branchStock = BranchStock::where('branch_id', $employee->branch_id)
@@ -410,20 +508,18 @@ class OrderController extends Controller
                 }
             }
 
-            // 2. Verificar stock suficiente para los nuevos ítems
-            foreach ($request->items as $item) {
-                $stock = BranchStock::where('branch_id', $employee->branch_id)
-                    ->where('product_code', $item['code'])
-                    ->lockForUpdate()
-                    ->first();
+            // 2. Verificar stock suficiente para los nuevos ítems (con el stock ya devuelto)
+            $stocks = BranchStock::where('branch_id', $employee->branch_id)
+                ->whereIn('product_code', array_column($request->items, 'code'))
+                ->get()
+                ->keyBy('product_code');
 
-                if (!$stock || $stock->stock_actual < $item['qty']) {
-                    DB::rollBack();
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Stock insuficiente para: ' . ($item['name'] ?? $item['code']),
-                    ], 422);
-                }
+            if ($faltante = $this->insufficientStock($request->items, $stocks)) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stock insuficiente para: ' . $faltante,
+                ], 422);
             }
 
             // 3. Eliminar ítems anteriores y crear los nuevos

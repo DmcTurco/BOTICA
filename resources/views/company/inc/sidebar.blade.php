@@ -50,6 +50,14 @@
                         Empleados
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('company.sunat.edit') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('company.sunat.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                        <i class="fas fa-file-invoice w-4 text-center shrink-0"></i>
+                        Facturación SUNAT
+                    </a>
+                </li>
             </ul>
         </div>
 

@@ -29,6 +29,10 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
     // Administración — sedes y empleados
     Route::resource('branches',  Company\BranchController::class)->except(['show']);
     Route::resource('employees', Company\EmployeeController::class)->except(['show']);
+
+    // Facturación electrónica (SUNAT): datos fiscales, credenciales SOL y certificado
+    Route::get('sunat', [Company\SunatSettingController::class, 'edit'])->name('sunat.edit');
+    Route::put('sunat', [Company\SunatSettingController::class, 'update'])->name('sunat.update');
 });
 
 Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employee.')->group(function () {
@@ -45,12 +49,14 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
         // Cajas históricas
         Route::get('cash-register/historical/{cashRegister}',       [Employee\CashRegisterController::class, 'historical'])->name('cash-register.historical');
         Route::post('cash-register/historical/{cashRegister}/close', [Employee\CashRegisterController::class, 'closeHistorical'])->name('cash-register.close-historical');
+        Route::post('cash-register/historical/{cashRegister}/discard', [Employee\CashRegisterController::class, 'discardHistorical'])->name('cash-register.discard-historical');
     });
-    Route::middleware('privilege:editar_apertura')->group(function () {
+    Route::middleware(['privilege:editar_apertura', 'cash.open'])->group(function () {
         Route::get('cash-register/edit', [Employee\CashRegisterController::class, 'edit'])->name('cash-register.edit');
         Route::put('cash-register/edit', [Employee\CashRegisterController::class, 'update'])->name('cash-register.update');
     });
-    Route::middleware('privilege:cerrar_caja')->group(function () {
+    Route::middleware(['privilege:cerrar_caja', 'cash.open'])->group(function () {
+        Route::get('cash-register/close',  [Employee\CashRegisterController::class, 'showClose'])->name('cash-register.show-close');
         Route::post('cash-register/close', [Employee\CashRegisterController::class, 'close'])->name('cash-register.close');
     });
     // Estado de caja accesible para todos (necesario para el sidebar/layout)

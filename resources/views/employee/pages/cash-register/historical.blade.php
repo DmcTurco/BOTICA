@@ -200,11 +200,26 @@
             </div>
 
             {{-- Botón cerrar caja (solo si está abierta) --}}
-            @if($cashRegister->isEditable())
-            <form action="{{ route('employee.cash-register.close-historical', $cashRegister) }}" method="POST"
-                  onsubmit="return confirm('¿Cerrar esta caja y enviarla a validación del administrador?')">
+            @if($cashRegister->isEditable() && $ordenes->isEmpty())
+            {{-- Sin ventas: no hay nada que validar --}}
+            <button type="button" disabled
+                    class="w-full py-3.5 bg-slate-300 text-white font-bold rounded-2xl flex items-center justify-center gap-2 text-sm cursor-not-allowed">
+                <i class="fas fa-lock"></i>
+                Cerrar y Enviar a Validación
+            </button>
+            <p class="text-xs text-slate-400 text-center -mt-2 leading-relaxed">
+                Registra al menos una venta para poder enviar la caja a validación.
+            </p>
+            <button type="button" onclick="abrirModalDescartar()"
+                    class="w-full py-2.5 bg-white hover:bg-red-50 text-red-700 font-semibold rounded-xl border border-red-200
+                           transition-colors flex items-center justify-center gap-2 text-sm">
+                <i class="fas fa-trash-can"></i>
+                Descartar caja
+            </button>
+            @elseif($cashRegister->isEditable())
+            <form id="formCerrarHistorica" action="{{ route('employee.cash-register.close-historical', $cashRegister) }}" method="POST">
                 @csrf
-                <button type="submit"
+                <button type="button" onclick="abrirModalConfirmar()"
                         class="w-full py-3.5 bg-slate-700 hover:bg-slate-800 active:scale-[.98] text-white font-bold rounded-2xl
                                transition-all flex items-center justify-center gap-2 shadow-sm text-sm">
                     <i class="fas fa-lock"></i>
@@ -227,4 +242,90 @@
     </div>
 
 </div>
+
+{{-- Modal confirmar cierre de caja histórica --}}
+<div id="modalConfirmarCierre" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center shrink-0">
+                <i class="fas fa-lock text-slate-700 text-sm"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">Cerrar y enviar a validación</h3>
+        </div>
+        <p class="text-slate-600 text-sm mb-1">
+            ¿Seguro que deseas cerrar la caja del
+            <strong class="text-slate-800">{{ $cashRegister->register_date->format('d/m/Y') }}</strong>
+            y enviarla a validación del administrador?
+        </p>
+        <p class="text-red-600 text-xs mb-6">Ya no podrás registrar más ventas en esta caja.</p>
+        <div class="flex gap-3 justify-end">
+            <button type="button" onclick="cerrarModalConfirmar()"
+                    class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                Cancelar
+            </button>
+            <button type="button" id="btnConfirmarCierre" onclick="confirmarCierre()"
+                    class="px-4 py-2 text-sm font-medium text-white bg-slate-700 hover:bg-slate-800 rounded-lg transition-colors">
+                Cerrar y Enviar
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Modal descartar caja histórica vacía --}}
+@if($cashRegister->isEditable() && $ordenes->isEmpty())
+<div id="modalDescartar" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                <i class="fas fa-trash-can text-red-600 text-sm"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">Descartar caja</h3>
+        </div>
+        <p class="text-slate-600 text-sm mb-1">
+            ¿Seguro que deseas descartar la caja histórica del
+            <strong class="text-slate-800">{{ $cashRegister->register_date->format('d/m/Y') }}</strong>?
+        </p>
+        <p class="text-red-600 text-xs mb-6">No tiene ventas. Esta acción no se puede deshacer.</p>
+        <form action="{{ route('employee.cash-register.discard-historical', $cashRegister) }}" method="POST" class="flex gap-3 justify-end">
+            @csrf
+            <button type="button" onclick="cerrarModalDescartar()"
+                    class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                Cancelar
+            </button>
+            <button type="submit"
+                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                Descartar
+            </button>
+        </form>
+    </div>
+</div>
+@endif
+@endsection
+
+@section('scripts')
+<script>
+function abrirModalDescartar() {
+    document.getElementById('modalDescartar').style.setProperty('display', 'flex', 'important');
+}
+
+function cerrarModalDescartar() {
+    document.getElementById('modalDescartar').style.setProperty('display', 'none', 'important');
+}
+
+function abrirModalConfirmar() {
+    document.getElementById('modalConfirmarCierre').style.setProperty('display', 'flex', 'important');
+}
+
+function cerrarModalConfirmar() {
+    document.getElementById('modalConfirmarCierre').style.setProperty('display', 'none', 'important');
+}
+
+// Envía el cierre (se deshabilita el botón para evitar doble envío)
+function confirmarCierre() {
+    const btn = document.getElementById('btnConfirmarCierre');
+    btn.disabled = true;
+    btn.classList.add('opacity-60', 'cursor-not-allowed');
+    document.getElementById('formCerrarHistorica').submit();
+}
+</script>
 @endsection

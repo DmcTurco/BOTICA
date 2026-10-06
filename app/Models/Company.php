@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\HasConfig;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -33,6 +34,12 @@ class Company extends Authenticatable
     ];
 
     // ── Relaciones ──────────────────────────────────────────────
+
+    /** Configuración de facturación electrónica (SUNAT) */
+    public function sunatSetting(): HasOne
+    {
+        return $this->hasOne(CompanySunatSetting::class, 'company_id');
+    }
 
     /** Sedes de la compañía */
     public function branches(): HasMany

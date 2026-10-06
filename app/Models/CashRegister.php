@@ -24,6 +24,16 @@ class CashRegister extends Model
         self::APPROVAL_REJECTED => 'Rechazada',
     ];
 
+    // ── Formas de pago (orders.payment_type) ────────────────────
+    const PAYMENT_CASH = 1;
+
+    const PAYMENT_TYPE_LABELS = [
+        1 => 'Efectivo',
+        2 => 'Tarjeta',
+        3 => 'Transferencia',
+        4 => 'Yape',
+    ];
+
     protected $fillable = [
         'company_id',
         'branch_id',
@@ -94,18 +104,23 @@ class CashRegister extends Model
         return $query->where('status', 1);
     }
 
-    /** Caja del día actual del empleado (para el POS normal) */
-    public function scopeTodayOpen($query, int $employeeId)
+    /**
+     * Caja normal abierta del empleado (para el POS).
+     * No filtra por fecha: si no se cerró al terminar el día, sigue abierta
+     * al cambiar de día. Las cajas históricas (pendientes de validación) no cuentan.
+     */
+    public function scopeCurrentOpen($query, int $employeeId)
     {
         return $query->where('status', 1)
                      ->where('employee_id', $employeeId)
-                     ->whereDate('register_date', Carbon::today());
+                     ->where('approval_status', self::APPROVAL_NORMAL);
     }
 
-    /** Cajas históricas (register_date < hoy) */
+    /** Cajas históricas (fecha anterior a hoy, abiertas a propósito para validación) */
     public function scopeHistorical($query)
     {
-        return $query->whereDate('register_date', '<', Carbon::today());
+        return $query->whereDate('register_date', '<', Carbon::today())
+                     ->where('approval_status', '!=', self::APPROVAL_NORMAL);
     }
 
     /** Cajas históricas pendientes de aprobación */
@@ -116,10 +131,11 @@ class CashRegister extends Model
 
     // ── Helpers ─────────────────────────────────────────────────
 
-    /** ¿Es una caja histórica? (fecha anterior a hoy) */
+    /** ¿Es una caja histórica? (fecha anterior a hoy y no es una caja normal que quedó abierta) */
     public function isHistorical(): bool
     {
-        return Carbon::parse($this->register_date)->lt(Carbon::today());
+        return $this->approval_status !== self::APPROVAL_NORMAL
+            && Carbon::parse($this->register_date)->lt(Carbon::today());
     }
 
     /** ¿Está pendiente de validación? */
@@ -152,9 +168,45 @@ class CashRegister extends Model
         return self::APPROVAL_LABELS[$this->approval_status] ?? 'Desconocido';
     }
 
-    /** Total facturado en las órdenes activas de esta caja */
+    /** Total facturado en las órdenes activas de esta caja (todas las formas de pago) */
     public function totalOrders(): float
     {
         return (float) $this->orders()->where('status', 1)->sum('total');
+    }
+
+    /**
+     * Ventas activas de la caja agrupadas por forma de pago.
+     * Devuelve [payment_type => total] con las 4 formas siempre presentes.
+     */
+    public function totalsByPaymentType(): array
+    {
+        $totals = array_fill_keys(array_keys(self::PAYMENT_TYPE_LABELS), 0.0);
+
+        $rows = $this->orders()
+            ->where('status', 1)
+            ->selectRaw('payment_type, SUM(total) as total')
+            ->groupBy('payment_type')
+            ->get();
+
+        foreach ($rows as $row) {
+            $type = (int) $row->payment_type;
+            if (array_key_exists($type, $totals)) {
+                $totals[$type] = round((float) $row->total, 2);
+            }
+        }
+
+        return $totals;
+    }
+
+    /** Total vendido en efectivo en esta caja */
+    public function totalCash(): float
+    {
+        return $this->totalsByPaymentType()[self::PAYMENT_CASH];
+    }
+
+    /** Efectivo que debería haber en el cajón: apertura + ventas en efectivo */
+    public function expectedCash(): float
+    {
+        return round((float) $this->opening_amount + $this->totalCash(), 2);
     }
 }

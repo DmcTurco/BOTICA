@@ -35,13 +35,13 @@
 
                 {{-- Fecha desde --}}
                 <div>
-                    <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}"
+                    <input type="date" name="fecha_desde" value="{{ $fechaDesde }}"
                            class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                 </div>
 
                 {{-- Fecha hasta --}}
                 <div>
-                    <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}"
+                    <input type="date" name="fecha_hasta" value="{{ $fechaHasta }}"
                            class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                 </div>
 
@@ -61,7 +61,6 @@
     </div>
 
     @if($producto)
-
     {{-- Tarjeta resumen del producto --}}
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 shrink-0">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -98,6 +97,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     {{-- Tabla kardex --}}
     <div class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-0">
@@ -114,6 +114,9 @@
                 <thead class="sticky top-0 z-10">
                     <tr class="bg-slate-50 border-b border-slate-200">
                         <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-36">Fecha</th>
+                        @unless($producto)
+                        <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Producto</th>
+                        @endunless
                         <th class="text-center px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Tipo</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Referencia</th>
                         <th class="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-28">Costo Unit.</th>
@@ -131,6 +134,14 @@
                             <p class="text-xs text-slate-700">{{ $mov->created_at->format('d/m/Y') }}</p>
                             <p class="text-[10px] text-slate-400">{{ $mov->created_at->format('H:i') }}</p>
                         </td>
+
+                        {{-- Producto (solo cuando no hay filtro de producto) --}}
+                        @unless($producto)
+                        <td class="px-5 py-3">
+                            <p class="text-xs text-slate-700">{{ $mov->product?->name ?? $mov->product_code }}</p>
+                            <p class="text-[10px] text-slate-400 font-mono">{{ $mov->product_code }}</p>
+                        </td>
+                        @endunless
 
                         {{-- Badge tipo --}}
                         <td class="px-5 py-3 text-center">
@@ -182,13 +193,11 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-16 text-center">
+                        <td colspan="{{ $producto ? 7 : 8 }}" class="px-5 py-16 text-center">
                             <div class="flex flex-col items-center gap-2 text-slate-400">
                                 <i class="fas fa-chart-gantt text-3xl"></i>
-                                <p class="text-sm">No hay movimientos registrados para este producto</p>
-                                @if(request()->hasAny(['fecha_desde','fecha_hasta']))
-                                    <p class="text-xs">Prueba ajustando el rango de fechas</p>
-                                @endif
+                                <p class="text-sm">No hay movimientos en el rango seleccionado</p>
+                                <p class="text-xs">Prueba ajustando el rango de fechas o el producto</p>
                             </div>
                         </td>
                     </tr>
@@ -199,18 +208,6 @@
 
     </div>
 
-    @else
-
-    {{-- Estado inicial: sin producto seleccionado --}}
-    <div class="flex-1 flex items-center justify-center bg-white rounded-xl border border-slate-200 shadow-sm">
-        <div class="flex flex-col items-center gap-3 text-slate-400 py-20">
-            <i class="fas fa-chart-gantt text-5xl"></i>
-            <p class="text-base font-medium text-slate-500">Selecciona un producto</p>
-            <p class="text-sm">Elige un producto del selector para ver su historial de movimientos</p>
-        </div>
-    </div>
-
-    @endif
 
 </div>
 @endsection

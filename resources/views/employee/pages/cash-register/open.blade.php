@@ -14,6 +14,34 @@
         </p>
     </div>
 
+    {{-- ── Ya tiene una caja abierta: solo puede abrir una de fecha pasada ── --}}
+    @if($cajaAbierta)
+    <div class="mb-5 p-4 bg-sky-50 border border-sky-200 rounded-xl text-sm text-sky-800">
+        <p class="font-semibold flex items-center gap-1.5">
+            <i class="fas fa-circle-info"></i> Ya tienes una caja abierta
+        </p>
+        <p class="text-xs mt-1 leading-relaxed">
+            Puedes abrir una caja de una <strong>fecha pasada</strong> si olvidaste registrar una venta.
+            Esa caja quedará pendiente de validación del administrador.
+            Para seguir vendiendo hoy, <a href="{{ route('employee.orders.index') }}" class="underline font-semibold">vuelve a Ventas</a>.
+        </p>
+    </div>
+    @endif
+
+    {{-- ── Mensaje informativo (por ejemplo, tras iniciar sesión sin caja) ── --}}
+    @if(session('info'))
+    <div class="mb-5 p-4 bg-sky-50 border border-sky-200 rounded-xl text-sm text-sky-800">
+        <i class="fas fa-circle-info mr-1.5"></i>{{ session('info') }}
+    </div>
+    @endif
+
+    {{-- ── Mensaje de error (por ejemplo, caja ya abierta) ── --}}
+    @if(session('error'))
+    <div class="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+        <i class="fas fa-circle-exclamation mr-1.5"></i>{{ session('error') }}
+    </div>
+    @endif
+
     {{-- ── Errores ──────────────────────────────────────── --}}
     @if($errors->any())
     <div class="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 space-y-1">
@@ -97,11 +125,15 @@
                         Fecha de la caja
                     </label>
                     <input type="date" id="register_date" name="register_date"
-                           value="{{ old('register_date', $today) }}"
-                           max="{{ $today }}"
+                           value="{{ old('register_date', $maxDate) }}"
+                           max="{{ $maxDate }}"
                            class="w-full text-sm text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5
                                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                     <p class="text-xs text-slate-400">No puedes abrir una caja para una fecha futura.</p>
+                    <p id="nota-precarga" class="hidden text-xs text-sky-700 bg-sky-50 border border-sky-200 rounded-lg px-2.5 py-1.5">
+                        <i class="fas fa-rotate-left mr-1"></i>
+                        Se cargaron los billetes y monedas de la apertura anterior de esta fecha.
+                    </p>
                 </div>
 
                 {{-- Aviso caja histórica (oculto por defecto) --}}
@@ -172,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ── Lógica de fecha (histórica vs. hoy) ──────────────────────
-    const today          = '{{ $today }}';
+    const today          = '{{ $today }}';  // las fechas menores a hoy son históricas
     const dateInput      = document.getElementById('register_date');
     const avisoHistorica = document.getElementById('aviso-historica');
     const panelTotal     = document.getElementById('panel-total');
@@ -199,7 +231,28 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    dateInput.addEventListener('change', actualizarModoFecha);
+    // ── Precarga de denominaciones de una apertura anterior de la misma fecha ──
+    const aperturasPrevias = @json($previousDenominations);
+    const notaPrecarga     = document.getElementById('nota-precarga');
+
+    function precargarDenominaciones() {
+        const previas = aperturasPrevias[dateInput.value];
+        notaPrecarga.classList.toggle('hidden', !previas);
+
+        if (!previas) return;
+
+        document.querySelectorAll('.fila-denominacion').forEach(function (fila) {
+            const input = fila.querySelector('.campo-cantidad');
+            input.value = previas[input.name] ?? 0;
+        });
+
+        recalcular();
+    }
+
+    dateInput.addEventListener('change', function () {
+        actualizarModoFecha();
+        precargarDenominaciones();
+    });
     actualizarModoFecha(); // ejecutar al cargar (por si hay old value)
 
     function recalcular() {
@@ -251,6 +304,9 @@ document.addEventListener('DOMContentLoaded', function () {
         input.addEventListener('input', recalcular);
         input.addEventListener('focus', function () { this.select(); });
     });
+
+    // Al cargar: si la fecha inicial ya tiene una apertura anterior, precargarla
+    precargarDenominaciones();
 
 });
 </script>

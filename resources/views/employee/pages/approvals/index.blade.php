@@ -32,6 +32,14 @@
     </div>
     @endif
 
+    @if($errors->any())
+    <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 space-y-1 shrink-0">
+        @foreach($errors->all() as $error)
+            <p><i class="fas fa-circle-exclamation mr-1.5 text-red-400"></i>{{ $error }}</p>
+        @endforeach
+    </div>
+    @endif
+
     {{-- ── CAJAS PENDIENTES ─────────────────────────────────────── --}}
     <div class="shrink-0">
         <h2 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -129,49 +137,21 @@
                 @endif
 
                 {{-- Botones de acción --}}
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-3 bg-slate-50 border-t border-slate-100">
-
-                    {{-- Formulario de rechazo (desplegable) --}}
-                    <div class="w-full sm:flex-1" x-data="{ rechazando: false }">
-                        <div x-show="!rechazando" class="flex items-center gap-2">
-                            <button @click="rechazando = true"
-                                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold transition-colors border border-red-200">
-                                <i class="fas fa-xmark"></i> Rechazar
-                            </button>
-                        </div>
-
-                        <div x-show="rechazando" x-cloak class="flex flex-col sm:flex-row gap-2 w-full">
-                            <form action="{{ route('employee.approvals.reject', $caja) }}" method="POST"
-                                  class="flex flex-col sm:flex-row gap-2 w-full">
-                                @csrf
-                                <input type="text" name="rejection_reason"
-                                       placeholder="Motivo del rechazo (obligatorio)..."
-                                       required maxlength="500"
-                                       class="flex-1 text-xs border border-red-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent">
-                                <div class="flex gap-2 shrink-0">
-                                    <button type="submit"
-                                            class="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors">
-                                        <i class="fas fa-check"></i> Confirmar rechazo
-                                    </button>
-                                    <button type="button" @click="rechazando = false"
-                                            class="inline-flex items-center px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-600 text-xs font-medium transition-colors border border-slate-200">
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    {{-- Botón aprobar --}}
-                    <form action="{{ route('employee.approvals.approve', $caja) }}" method="POST"
-                          onsubmit="return confirm('¿Aprobar la caja del {{ $caja->register_date->format('d/m/Y') }} de {{ $caja->employee->name }}?')">
-                        @csrf
-                        <button type="submit"
-                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm">
-                            <i class="fas fa-circle-check"></i> Aprobar caja
-                        </button>
-                    </form>
-
+                <div class="flex items-center justify-end gap-2 px-4 py-3 bg-slate-50 border-t border-slate-100">
+                    <button type="button"
+                            data-action="{{ route('employee.approvals.reject', $caja) }}"
+                            data-fecha="{{ $caja->register_date->format('d/m/Y') }}"
+                            data-empleado="{{ $caja->employee->name }}"
+                            class="btn-rechazar inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white hover:bg-red-50 text-red-700 text-xs font-bold transition-colors border border-red-200">
+                        <i class="fas fa-xmark"></i> Rechazar
+                    </button>
+                    <button type="button"
+                            data-action="{{ route('employee.approvals.approve', $caja) }}"
+                            data-fecha="{{ $caja->register_date->format('d/m/Y') }}"
+                            data-empleado="{{ $caja->employee->name }}"
+                            class="btn-aprobar inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm">
+                        <i class="fas fa-circle-check"></i> Aprobar caja
+                    </button>
                 </div>
 
             </div>{{-- /caja pendiente --}}
@@ -238,5 +218,103 @@
     </div>
     @endif
 
+
+{{-- Modal aprobar caja --}}
+<div id="modalAprobar" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
+                <i class="fas fa-circle-check text-emerald-600 text-sm"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">Aprobar caja</h3>
+        </div>
+        <p class="text-slate-600 text-sm mb-1">
+            ¿Aprobar la caja del <strong id="aprobar-fecha" class="text-slate-800"></strong>
+            de <strong id="aprobar-empleado" class="text-slate-800"></strong>?
+        </p>
+        <p class="text-slate-400 text-xs mb-6">Las ventas de esta caja quedarán validadas.</p>
+        <form id="formAprobar" action="" method="POST" class="flex gap-3 justify-end">
+            @csrf
+            <button type="button" onclick="cerrarModal('modalAprobar')"
+                    class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                Cancelar
+            </button>
+            <button type="submit"
+                    class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
+                Aprobar
+            </button>
+        </form>
+    </div>
 </div>
+
+{{-- Modal rechazar caja --}}
+<div id="modalRechazar" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                <i class="fas fa-xmark text-red-600 text-sm"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">Rechazar caja</h3>
+        </div>
+        <p class="text-slate-600 text-sm mb-3">
+            Vas a rechazar la caja del <strong id="rechazar-fecha" class="text-slate-800"></strong>
+            de <strong id="rechazar-empleado" class="text-slate-800"></strong>.
+        </p>
+        <form id="formRechazar" action="" method="POST">
+            @csrf
+            <label for="rejection_reason" class="block text-xs font-semibold text-slate-600 mb-1.5">
+                Motivo del rechazo <span class="text-red-500">*</span>
+            </label>
+            <textarea name="rejection_reason" id="rejection_reason" rows="3" required maxlength="500"
+                      placeholder="Explica por qué se rechaza esta caja..."
+                      class="w-full text-sm text-slate-700 border border-slate-300 rounded-lg px-3 py-2 resize-none
+                             focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"></textarea>
+            <p class="text-red-600 text-xs mt-2 mb-5">Se revertirá el stock de las ventas de esta caja.</p>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="cerrarModal('modalRechazar')"
+                        class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                    Rechazar caja
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+function abrirModal(id) {
+    document.getElementById(id).style.setProperty('display', 'flex', 'important');
+}
+
+function cerrarModal(id) {
+    document.getElementById(id).style.setProperty('display', 'none', 'important');
+}
+
+// Aprobar: llena el modal con los datos de la caja y apunta el formulario a su ruta
+document.querySelectorAll('.btn-aprobar').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        document.getElementById('formAprobar').action = btn.dataset.action;
+        document.getElementById('aprobar-fecha').textContent    = btn.dataset.fecha;
+        document.getElementById('aprobar-empleado').textContent = btn.dataset.empleado;
+        abrirModal('modalAprobar');
+    });
+});
+
+// Rechazar: igual, y deja vacío el motivo
+document.querySelectorAll('.btn-rechazar').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        document.getElementById('formRechazar').action = btn.dataset.action;
+        document.getElementById('rechazar-fecha').textContent    = btn.dataset.fecha;
+        document.getElementById('rechazar-empleado').textContent = btn.dataset.empleado;
+        document.getElementById('rejection_reason').value = '';
+        abrirModal('modalRechazar');
+        document.getElementById('rejection_reason').focus();
+    });
+});
+</script>
 @endsection
