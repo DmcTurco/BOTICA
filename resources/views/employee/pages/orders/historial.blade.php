@@ -154,6 +154,22 @@
                                 </span>
                             </div>
                             @endif
+
+                            {{-- Nota de crédito que anula esta venta --}}
+                            @if($order->creditNote)
+                            <div class="mt-1">
+                                <span title="{{ $order->creditNote->sunat_message ?: 'Aún no se ha enviado a SUNAT' }}"
+                                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium
+                                      {{ match($order->creditNote->sunat_status) {
+                                          \App\Models\Order::SUNAT_ACCEPTED => 'bg-emerald-50 text-emerald-700',
+                                          \App\Models\Order::SUNAT_REJECTED => 'bg-red-50 text-red-600',
+                                          default                              => 'bg-amber-50 text-amber-700',
+                                      } }}">
+                                    <i class="fas fa-file-circle-minus text-[10px]"></i>
+                                    NC {{ $order->creditNote->voucher_number }}: {{ $order->creditNote->sunatLabel() }}
+                                </span>
+                            </div>
+                            @endif
                         </td>
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1">
@@ -167,10 +183,28 @@
                                         onclick="printSale({{ $order->id }})" title="Imprimir comprobante">
                                     <i class="fas fa-print text-xs"></i>
                                 </button>
-                                @if($order->canResendToSunat())
+                                @php $emp = auth()->guard('employee')->user(); @endphp
+
+                                @if($order->canResendToSunat() && $emp->hasPrivilege(\App\Models\Employee::PRIV_ENVIAR_FE_SUNAT))
                                 <button type="button"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
                                         onclick="reenviarSunat({{ $order->id }})" title="Reenviar a SUNAT">
+                                    <i class="fas fa-paper-plane text-xs"></i>
+                                </button>
+                                @endif
+
+                                @if($order->canIssueCreditNote() && $emp->hasPrivilege(\App\Models\Employee::PRIV_CREAR_NOTA_CREDITO))
+                                <button type="button"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                        onclick="abrirModalNotaCredito({{ $order->id }}, '{{ $order->voucher_number }}')" title="Anular con nota de crédito">
+                                    <i class="fas fa-file-circle-minus text-xs"></i>
+                                </button>
+                                @endif
+
+                                @if($order->creditNote?->canResendToSunat() && $emp->hasPrivilege(\App\Models\Employee::PRIV_ENVIAR_NCE_SUNAT))
+                                <button type="button"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                                        onclick="reenviarNotaCredito({{ $order->creditNote->id }})" title="Reenviar la nota de crédito a SUNAT">
                                     <i class="fas fa-paper-plane text-xs"></i>
                                 </button>
                                 @endif
@@ -321,6 +355,54 @@
     </div>
 </div>
 
+{{-- Modal nota de crédito --}}
+<div id="modalNotaCredito" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                <i class="fas fa-file-circle-minus text-red-600 text-sm"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">Anular con nota de crédito</h3>
+        </div>
+
+        <p class="text-slate-600 text-sm mb-4">
+            Se anulará por completo el comprobante <strong id="nc-comprobante" class="text-slate-800"></strong>:
+            la venta queda anulada, el stock vuelve a la sede y la nota de crédito se envía a SUNAT.
+        </p>
+
+        <div class="space-y-3">
+            <div>
+                <label for="nc-motivo" class="block text-xs font-semibold text-slate-600 mb-1.5">Motivo <span class="text-red-500">*</span></label>
+                <select id="nc-motivo"
+                        class="w-full text-sm text-slate-700 border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent">
+                    @foreach(\App\Models\CreditNote::REASONS as $code => $label)
+                    <option value="{{ $code }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="nc-descripcion" class="block text-xs font-semibold text-slate-600 mb-1.5">Descripción <span class="text-red-500">*</span></label>
+                <textarea id="nc-descripcion" rows="3" maxlength="250"
+                          placeholder="Explica por qué se anula este comprobante..."
+                          class="w-full text-sm text-slate-700 border border-slate-300 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"></textarea>
+            </div>
+            <p id="nc-error" class="hidden text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2"></p>
+        </div>
+
+        <p class="text-red-600 text-xs mt-4 mb-5">Esta acción no se puede deshacer.</p>
+
+        <div class="flex gap-3 justify-end">
+            <button type="button" onclick="cerrarModalNotaCredito()"
+                    class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                Cancelar
+            </button>
+            <button type="button" id="nc-confirmar" onclick="emitirNotaCredito()"
+                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                Emitir nota de crédito
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -343,6 +425,74 @@ function reenviarSunat(id) {
         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
     })
     .finally(() => window.location.reload());
+}
+
+/** Reenvía a SUNAT una nota de crédito pendiente o con error y recarga la lista */
+function reenviarNotaCredito(id) {
+    showLoader(true);
+
+    fetch(`{{ url('employee/credit-notes') }}/${id}/sunat`, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+    })
+    .finally(() => window.location.reload());
+}
+
+// ── Nota de crédito ───────────────────────────────────────────
+let notaCreditoOrderId = null;
+
+function abrirModalNotaCredito(orderId, voucherNumber) {
+    notaCreditoOrderId = orderId;
+    document.getElementById('nc-comprobante').textContent = voucherNumber;
+    document.getElementById('nc-descripcion').value = '';
+    document.getElementById('nc-error').classList.add('hidden');
+    document.getElementById('nc-confirmar').disabled = false;
+    document.getElementById('modalNotaCredito').style.setProperty('display', 'flex', 'important');
+}
+
+function cerrarModalNotaCredito() {
+    document.getElementById('modalNotaCredito').style.setProperty('display', 'none', 'important');
+}
+
+/** Emite la nota de crédito; si algo falla, el motivo se muestra en el mismo modal */
+function emitirNotaCredito() {
+    const error = document.getElementById('nc-error');
+    const boton = document.getElementById('nc-confirmar');
+
+    error.classList.add('hidden');
+    boton.disabled = true;
+
+    fetch(`{{ url('employee/orders') }}/${notaCreditoOrderId}/credit-note`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            reason_code: document.getElementById('nc-motivo').value,
+            reason_text: document.getElementById('nc-descripcion').value
+        })
+    })
+    .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.success) {
+            window.location.reload();
+            return;
+        }
+
+        // Errores de validación (422) o del servidor
+        error.textContent = data.message
+            ?? (data.errors ? Object.values(data.errors).flat().join(' ') : 'No se pudo emitir la nota de crédito.');
+        error.classList.remove('hidden');
+        boton.disabled = false;
+    })
+    .catch(() => {
+        error.textContent = 'No se pudo conectar con el servidor.';
+        error.classList.remove('hidden');
+        boton.disabled = false;
+    });
 }
 
 /**

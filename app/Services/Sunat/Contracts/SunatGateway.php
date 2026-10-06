@@ -2,6 +2,7 @@
 
 namespace App\Services\Sunat\Contracts;
 
+use App\Models\CreditNote;
 use App\Models\Order;
 use App\Services\Sunat\SunatResult;
 
@@ -18,4 +19,10 @@ interface SunatGateway
      * SunatResult con estado "rejected" o "error".
      */
     public function send(Order $order): SunatResult;
+
+    /**
+     * Envía una nota de crédito (anulación total de una boleta o factura) a SUNAT.
+     * Mismas reglas de resultado que send().
+     */
+    public function sendCreditNote(CreditNote $note): SunatResult;
 }

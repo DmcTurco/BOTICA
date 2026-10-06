@@ -66,7 +66,14 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
     Route::middleware('privilege:ver_historial')->group(function () {
         Route::get('orders/historial', [Employee\OrderController::class, 'historial'])->name('orders.historial');
         Route::get('orders/{order}/detalle', [Employee\OrderController::class, 'detalle'])->name('orders.detalle');
-        Route::post('orders/{order}/sunat', [Employee\OrderController::class, 'resendSunat'])->name('orders.sunat-resend');
+        Route::post('orders/{order}/sunat', [Employee\OrderController::class, 'resendSunat'])
+            ->middleware('privilege:enviar_fe_sunat')->name('orders.sunat-resend');
+
+        // Nota de crédito: anula una boleta o factura aceptada por SUNAT
+        Route::post('orders/{order}/credit-note', [Employee\CreditNoteController::class, 'store'])
+            ->middleware('privilege:crear_nota_credito')->name('orders.credit-note');
+        Route::post('credit-notes/{creditNote}/sunat', [Employee\CreditNoteController::class, 'resend'])
+            ->middleware('privilege:enviar_nce_sunat')->name('credit-notes.sunat-resend');
         Route::get('consultar-documento', [Employee\OrderController::class, 'consultarDocumento'])->name('consultar-documento');
     });
 

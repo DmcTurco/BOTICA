@@ -3,17 +3,20 @@
 namespace App\Services\Sunat;
 
 use App\Models\CompanySunatSetting;
+use App\Models\CreditNote;
 use App\Models\Order;
 use App\Services\Sunat\Contracts\SunatGateway;
-use App\Services\Sunat\TaxCalculator;
 use App\Support\NumberToWords;
+use Closure;
 use DateTime;
 use Greenter\Model\Client\Client;
 use Greenter\Model\Company\Address;
 use Greenter\Model\Company\Company;
+use Greenter\Model\DocumentInterface;
 use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Model\Sale\Legend;
+use Greenter\Model\Sale\Note;
 use Greenter\Model\Sale\SaleDetail;
 use Greenter\See;
 use Greenter\Ws\Services\SunatEndpoints;
@@ -21,7 +24,7 @@ use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 /**
- * Envía boletas y facturas directo a SUNAT con la librería Greenter (sin proveedor).
+ * Envía boletas, facturas y notas de crédito directo a SUNAT con la librería Greenter (sin proveedor).
  */
 class GreenterGateway implements SunatGateway
 {
@@ -35,17 +38,39 @@ class GreenterGateway implements SunatGateway
 
     public function send(Order $order): SunatResult
     {
+        return $this->transmit(
+            $order->company_id,
+            fn (CompanySunatSetting $setting) => $this->buildInvoice($order, $setting),
+            "la orden {$order->id}"
+        );
+    }
+
+    public function sendCreditNote(CreditNote $note): SunatResult
+    {
+        return $this->transmit(
+            $note->company_id,
+            fn (CompanySunatSetting $setting) => $this->buildNote($note, $setting),
+            "la nota de crédito {$note->id}"
+        );
+    }
+
+    /**
+     * Arma el documento, lo firma, lo envía a SUNAT e interpreta la respuesta.
+     * Nunca lanza excepciones: los fallos se devuelven como resultado "error".
+     *
+     * @param  Closure(CompanySunatSetting): DocumentInterface  $builder
+     */
+    private function transmit(int $companyId, Closure $builder, string $label): SunatResult
+    {
         try {
-            $setting = CompanySunatSetting::with('company')->where('company_id', $order->company_id)->first();
+            $setting = CompanySunatSetting::with('company')->where('company_id', $companyId)->first();
 
             if (!$setting || !$setting->isReady()) {
                 return new SunatResult(Order::SUNAT_ERROR, 'CONFIG', 'La facturación electrónica de la compañía no está configurada completa.');
             }
 
-            $see     = $this->buildSee($setting);
-            $invoice = $this->buildInvoice($order, $setting);
-
-            $result = $see->send($invoice);
+            $see    = $this->buildSee($setting);
+            $result = $see->send($builder($setting));
             $xml    = $see->getFactory()->getLastXml();
             $hash   = $this->digest($xml);
 
@@ -75,7 +100,7 @@ class GreenterGateway implements SunatGateway
                 $xml
             );
         } catch (\Throwable $e) {
-            Log::error("Error al enviar la orden {$order->id} a SUNAT: " . $e->getMessage());
+            Log::error("Error al enviar {$label} a SUNAT: " . $e->getMessage());
 
             return new SunatResult(Order::SUNAT_ERROR, 'EXCEPTION', $e->getMessage());
         }
@@ -151,6 +176,49 @@ class GreenterGateway implements SunatGateway
         ]);
 
         return $invoice;
+    }
+
+    /**
+     * Arma la nota de crédito (07) que anula por completo la venta original:
+     * mismos importes y mismo detalle, referenciando el comprobante afectado.
+     */
+    private function buildNote(CreditNote $note, CompanySunatSetting $setting): Note
+    {
+        $note->loadMissing(['order.items', 'order.branch', 'order.documentType']);
+        $order = $note->order;
+
+        [$series, $number]               = explode('-', $note->voucher_number);
+        [$affectedSeries, $affectedNumber] = explode('-', $order->voucher_number);
+
+        $credit = (new Note())
+            ->setUblVersion('2.1')
+            ->setTipoDoc('07')
+            ->setSerie($series)
+            ->setCorrelativo((string) (int) $number)
+            ->setFechaEmision(new DateTime($note->created_at->format('Y-m-d\TH:i:sP')))
+            ->setTipDocAfectado((int) $order->voucher_type === 2 ? '01' : '03')       // comprobante que se anula
+            ->setNumDocfectado($affectedSeries . '-' . (int) $affectedNumber)
+            ->setCodMotivo($note->reason_code)
+            ->setDesMotivo($note->reason_text)
+            ->setTipoMoneda('PEN')
+            ->setCompany($this->company($order, $setting))
+            ->setClient($this->client($order))
+            ->setMtoOperGravadas((float) $note->taxable_amount)
+            ->setMtoOperExoneradas((float) $note->exonerated_amount)
+            ->setMtoOperInafectas((float) $note->unaffected_amount)
+            ->setMtoIGV((float) $note->igv)
+            ->setTotalImpuestos((float) $note->igv)
+            ->setValorVenta((float) $note->subtotal)
+            ->setSubTotal((float) $note->total)
+            ->setMtoImpVenta((float) $note->total);
+
+        $credit->setDetails($order->items->map(fn ($item) => $this->detail($item))->all());
+
+        $credit->setLegends([
+            (new Legend())->setCode('1000')->setValue(NumberToWords::soles((float) $note->total)),
+        ]);
+
+        return $credit;
     }
 
     private function company(Order $order, CompanySunatSetting $setting): Company

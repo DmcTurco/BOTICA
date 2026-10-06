@@ -67,6 +67,7 @@ class StockMovement extends Model
             'purchase' => 'Compra #' . $this->reference_id,
             'order'    => 'Venta #'  . $this->reference_id,
             'manual'   => 'Ajuste manual',
+            'credit_note' => 'Anulación (NC #' . $this->reference_id . ')',
             default    => '—',
         };
     }

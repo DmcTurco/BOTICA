@@ -30,6 +30,8 @@ class DocumentSeries extends Model
     const FACTURA       = 'FACTURA';
     const NOTA_VENTA    = 'NOTA_VENTA';
     const NOTA_CREDITO  = 'NOTA_CREDITO';
+    const NOTA_CREDITO_BOLETA  = 'NOTA_CREDITO_BOLETA';  // serie que empieza con B (anula boletas)
+    const NOTA_CREDITO_FACTURA = 'NOTA_CREDITO_FACTURA'; // serie que empieza con F (anula facturas)
     const PRODUCTO      = 'PRODUCTO';
     const PROVEEDOR     = 'PROVEEDOR';
     const CLIENTE       = 'CLIENTE';
@@ -46,6 +48,8 @@ class DocumentSeries extends Model
         self::BOLETA     => ['prefix' => 'B',  'width' => 3, 'name' => 'Boleta de Venta'],
         self::FACTURA    => ['prefix' => 'F',  'width' => 3, 'name' => 'Factura'],
         self::NOTA_VENTA => ['prefix' => 'NV', 'width' => 2, 'name' => 'Nota de Venta'],
+        self::NOTA_CREDITO_BOLETA  => ['prefix' => 'BC', 'width' => 2, 'name' => 'Nota de Crédito (Boleta)'],
+        self::NOTA_CREDITO_FACTURA => ['prefix' => 'FC', 'width' => 2, 'name' => 'Nota de Crédito (Factura)'],
     ];
 
     // Límite de correlativo según SUNAT (8 dígitos)

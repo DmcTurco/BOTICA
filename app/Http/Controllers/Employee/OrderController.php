@@ -29,7 +29,8 @@ class OrderController extends Controller
     {
         $employee = auth()->guard('employee')->user();
 
-        $query = Order::where('company_id', $employee->company_id)
+        $query = Order::with('creditNote')
+            ->where('company_id', $employee->company_id)
             ->where('branch_id', $employee->branch_id)
             ->orderBy('created_at', 'desc');
 

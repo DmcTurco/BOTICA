@@ -81,6 +81,15 @@ class Order extends Model
         return in_array($this->sunat_status, [self::SUNAT_PENDING, self::SUNAT_ERROR], true);
     }
 
+    /** ¿Se puede anular con una nota de crédito? (boleta o factura aceptada, activa y sin nota) */
+    public function canIssueCreditNote(): bool
+    {
+        return (bool) $this->status
+            && $this->isSunatVoucher()
+            && $this->sunat_status === self::SUNAT_ACCEPTED
+            && !$this->creditNote;
+    }
+
     /** Etiqueta legible del estado SUNAT */
     public function sunatLabel(): string
     {
@@ -88,6 +97,12 @@ class Order extends Model
     }
 
     // ── Relaciones ──────────────────────────────────────────────
+
+    /** Nota de crédito que anula esta venta (si existe) */
+    public function creditNote(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(CreditNote::class, 'order_id');
+    }
 
     /** Compañía a la que pertenece */
     public function company(): BelongsTo

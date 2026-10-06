@@ -91,16 +91,16 @@ class BranchRequest extends FormRequest
 
                     // Formato según el tipo (SUNAT: boleta B+3, factura F+3)
                     $format = match ($row->type_code) {
-                        DocumentSeries::BOLETA  => '/^B[A-Z0-9]{3}$/',
-                        DocumentSeries::FACTURA => '/^F[A-Z0-9]{3}$/',
-                        default                 => '/^[A-Z0-9]{2,4}$/',
+                        DocumentSeries::BOLETA, DocumentSeries::NOTA_CREDITO_BOLETA   => '/^B[A-Z0-9]{3}$/',
+                        DocumentSeries::FACTURA, DocumentSeries::NOTA_CREDITO_FACTURA => '/^F[A-Z0-9]{3}$/',
+                        default                                                       => '/^[A-Z0-9]{2,4}$/',
                     };
 
                     if (!preg_match($format, $value)) {
                         $hint = match ($row->type_code) {
-                            DocumentSeries::BOLETA  => 'debe tener 4 caracteres y empezar con B (ej. B001)',
-                            DocumentSeries::FACTURA => 'debe tener 4 caracteres y empezar con F (ej. F001)',
-                            default                 => 'debe tener entre 2 y 4 letras o números (ej. NV01)',
+                            DocumentSeries::BOLETA, DocumentSeries::NOTA_CREDITO_BOLETA   => 'debe tener 4 caracteres y empezar con B (ej. B001)',
+                            DocumentSeries::FACTURA, DocumentSeries::NOTA_CREDITO_FACTURA => 'debe tener 4 caracteres y empezar con F (ej. F001)',
+                            default                                                       => 'debe tener entre 2 y 4 letras o números (ej. NV01)',
                         };
                         $validator->errors()->add("series.$id", "La serie de {$label} {$hint}.");
                         continue;

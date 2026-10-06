@@ -64,7 +64,7 @@ class BranchController extends Controller
         $series = $branch->documentSeries()
             ->whereIn('type_code', array_keys(DocumentSeries::PER_BRANCH))
             ->where('active', true)
-            ->orderByRaw("CASE type_code WHEN 'BOLETA' THEN 1 WHEN 'FACTURA' THEN 2 ELSE 3 END")
+            ->orderByRaw("CASE type_code WHEN 'BOLETA' THEN 1 WHEN 'FACTURA' THEN 2 WHEN 'NOTA_VENTA' THEN 3 WHEN 'NOTA_CREDITO_BOLETA' THEN 4 ELSE 5 END")
             ->get();
 
         return view('company.pages.branches.form', compact('branch', 'series'));
