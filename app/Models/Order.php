@@ -68,6 +68,9 @@ class Order extends Model
         'total'             => 'decimal:2',
     ];
 
+    /** Desde este total (exclusivo) la boleta exige identificar al cliente (SUNAT) */
+    const BOLETA_ID_THRESHOLD = 700;
+
     // ── Helpers SUNAT ───────────────────────────────────────────
 
     /** ¿Es un comprobante que se informa a SUNAT? (boleta o factura; la nota de venta no) */

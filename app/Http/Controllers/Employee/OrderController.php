@@ -107,6 +107,32 @@ class OrderController extends Controller
     }
 
     /**
+     * SUNAT exige identificar al cliente (apellidos y nombres, tipo y número de documento)
+     * en las boletas cuyo total excede S/ 700. Devuelve el mensaje de error o null si cumple.
+     */
+    private function boletaIdentificationError(float $total, ?string $name, ?int $documentTypeId, ?string $document): ?string
+    {
+        if ($total <= Order::BOLETA_ID_THRESHOLD) {
+            return null;
+        }
+
+        $message = 'Las boletas de más de S/ ' . Order::BOLETA_ID_THRESHOLD . ' requieren identificar al cliente: nombres y apellidos, tipo y número de documento.';
+
+        if (blank($name) || blank($document) || !$documentTypeId || $documentTypeId === DocumentType::SIN_DOCUMENTO) {
+            return $message;
+        }
+
+        // El número debe tener la longitud propia de su tipo (p. ej. DNI de 8 dígitos)
+        $digits = DocumentType::whereKey($documentTypeId)->value('digits');
+
+        if ($digits && strlen(preg_replace('/\D/', '', $document)) !== (int) $digits) {
+            return "El número de documento debe tener {$digits} dígitos.";
+        }
+
+        return null;
+    }
+
+    /**
      * ¿La compañía tiene la facturación electrónica activa y completa?
      */
     private function sunatEnabled(int $companyId): bool
@@ -371,6 +397,17 @@ class OrderController extends Controller
 
         ['tax' => $tax, 'units' => $units] = $pricing;
 
+        // Boleta de más de S/ 700: el cliente debe estar identificado
+        if ((int) $request->voucher_type === 1) {
+            $error = $this->boletaIdentificationError(
+                $tax['total'], $request->customer_name, $documentTypeId, $request->customer_document
+            );
+
+            if ($error) {
+                return response()->json(['success' => false, 'message' => $error], 422);
+            }
+        }
+
         // Boleta o factura con facturación electrónica activa: queda pendiente de informar a SUNAT
         $sunatStatus = in_array((int) $request->voucher_type, [1, 2], true) && $this->sunatEnabled($employee->company_id)
             ? Order::SUNAT_PENDING
@@ -626,6 +663,17 @@ class OrderController extends Controller
         }
 
         ['tax' => $tax, 'units' => $units] = $pricing;
+
+        // Si al editar la boleta supera S/ 700, el cliente que ya tiene la orden debe estar identificado
+        if ($order->isBoleta()) {
+            $error = $this->boletaIdentificationError(
+                $tax['total'], $order->customer_name, $order->document_type_id, $order->customer_document
+            );
+
+            if ($error) {
+                return response()->json(['success' => false, 'message' => $error], 422);
+            }
+        }
 
         // Boleta o factura aún no aceptada por SUNAT: tras editarla vuelve a quedar pendiente
         $resendSunat = $order->isSunatVoucher() && $this->sunatEnabled($employee->company_id);
