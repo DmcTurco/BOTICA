@@ -28,9 +28,12 @@ use InvalidArgumentException;
  */
 class GreenterGateway implements SunatGateway
 {
-    /** Credenciales públicas del ambiente de pruebas de SUNAT (si no hay otras guardadas) */
+    /**
+     * Credenciales públicas del ambiente de pruebas de SUNAT (pautas oficiales del servicio BETA):
+     * usuario = RUC + MODDATOS y clave = MODDATOS (distingue mayúsculas).
+     */
     private const BETA_USER     = 'MODDATOS';
-    private const BETA_PASSWORD = 'moddatos';
+    private const BETA_PASSWORD = 'MODDATOS';
 
     public function __construct(private CertificateService $certificates)
     {
@@ -111,16 +114,18 @@ class GreenterGateway implements SunatGateway
      */
     private function buildSee(CompanySunatSetting $setting): See
     {
-        $isBeta = $setting->environment !== CompanySunatSetting::ENV_PRODUCTION;
+        $isBeta = $setting->isBeta();
 
         $see = new See();
         $see->setCachePath(null);
         $see->setCertificate($this->pem($setting));
         $see->setService($isBeta ? SunatEndpoints::FE_BETA : SunatEndpoints::FE_PRODUCCION);
+
+        // En pruebas siempre se usan las credenciales públicas de SUNAT; en producción, las de la empresa
         $see->setClaveSOL(
             $setting->company->ruc,
-            $setting->sol_user ?: ($isBeta ? self::BETA_USER : ''),
-            $setting->sol_password ?: ($isBeta ? self::BETA_PASSWORD : '')
+            $isBeta ? self::BETA_USER : $setting->sol_user,
+            $isBeta ? self::BETA_PASSWORD : $setting->sol_password
         );
 
         return $see;
@@ -131,6 +136,13 @@ class GreenterGateway implements SunatGateway
      */
     private function pem(CompanySunatSetting $setting): string
     {
+        // Pruebas: certificado autofirmado incluido en el sistema (SUNAT beta no exige uno registrado)
+        if ($setting->isBeta()) {
+            $pem = file_get_contents(resource_path('sunat/beta-certificate.pem'));
+
+            return substr($pem, strpos($pem, '-----BEGIN'));
+        }
+
         $certs = [];
 
         if (!openssl_pkcs12_read($this->certificates->read($setting), $certs, $setting->certificate_password)) {

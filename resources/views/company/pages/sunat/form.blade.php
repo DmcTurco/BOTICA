@@ -140,6 +140,7 @@
                     <p class="text-xs text-slate-500">
                         Usa un <strong>usuario SOL secundario</strong> con permiso de facturación electrónica, no el principal.
                         La clave se guarda cifrada y no se vuelve a mostrar.
+                        <strong>En el ambiente de pruebas no hacen falta</strong>: el sistema usa las claves públicas de SUNAT (usuario <em>RUC</em>MODDATOS, clave MODDATOS).
                     </p>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -190,7 +191,7 @@
                         </div>
                     </div>
                     <p class="text-xs text-slate-400">
-                        El archivo se valida al guardar y queda cifrado en el servidor. Para el ambiente de pruebas no es obligatorio.
+                        El archivo se valida al guardar y queda cifrado en el servidor. En el ambiente de pruebas no es necesario: el sistema firma con un certificado de prueba incluido y SUNAT no lo exige registrado.
                     </p>
                 </section>
 
@@ -217,7 +218,7 @@
                         <span class="text-sm text-slate-700">Emisión electrónica activa</span>
                     </label>
                     <p class="text-xs text-slate-400">
-                        Para activarla o usar producción deben estar completos el usuario y la clave SOL y el certificado digital.
+                        En pruebas solo hacen falta los datos fiscales. Para usar producción deben estar completos el usuario y la clave SOL y el certificado digital.
                     </p>
                 </section>
 

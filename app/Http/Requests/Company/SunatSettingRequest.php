@@ -61,7 +61,8 @@ class SunatSettingRequest extends FormRequest
     {
         return [
             function (Validator $validator) {
-                if (!$this->boolean('enabled') && $this->input('environment') !== CompanySunatSetting::ENV_PRODUCTION) {
+                // En pruebas (beta) no hacen falta claves SOL ni certificado propios
+                if ($this->input('environment') !== CompanySunatSetting::ENV_PRODUCTION) {
                     return;
                 }
 
@@ -73,11 +74,11 @@ class SunatSettingRequest extends FormRequest
                 $hasCert = $this->hasFile('certificate') || $current?->hasCertificate();
 
                 if (!$hasUser || !$hasPass) {
-                    $validator->errors()->add('sol_user', 'Para activar la emisión o usar producción debes ingresar el usuario y la clave SOL.');
+                    $validator->errors()->add('sol_user', 'Para usar producción debes ingresar el usuario y la clave SOL.');
                 }
 
                 if (!$hasCert) {
-                    $validator->errors()->add('certificate', 'Para activar la emisión o usar producción debes cargar el certificado digital.');
+                    $validator->errors()->add('certificate', 'Para usar producción debes cargar el certificado digital.');
                 }
             },
         ];

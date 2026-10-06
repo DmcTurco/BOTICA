@@ -8,7 +8,9 @@
 
     {{-- ── Encabezado ──────────────────────────────────── --}}
     <div class="mb-6">
-        <h1 class="text-lg font-bold text-slate-800">Apertura de Caja</h1>
+        <h1 class="text-lg font-bold text-slate-800">
+            {{ $cajaAbierta ? 'Abrir caja de una fecha pasada' : 'Apertura de Caja' }}
+        </h1>
         <p class="text-sm text-slate-400 mt-0.5">
             {{ now()->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY · HH:mm') }}
         </p>
@@ -194,9 +196,39 @@
     </form>
 </div>
 
+{{-- Modal: abrir la caja sin efectivo inicial --}}
+<div id="modalAperturaCero" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
+                <i class="fas fa-triangle-exclamation text-amber-600 text-sm"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">Apertura sin efectivo</h3>
+        </div>
+        <p class="text-slate-600 text-sm mb-1">
+            No ingresaste ningún billete ni moneda: la caja se abrirá con
+            <strong class="text-slate-800">S/ 0.00</strong>.
+        </p>
+        <p class="text-slate-400 text-xs mb-6">¿Deseas abrirla así, sin efectivo inicial?</p>
+        <div class="flex gap-3 justify-end">
+            <button type="button" onclick="cerrarModalAperturaCero()"
+                    class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                No, revisar
+            </button>
+            <button type="button" id="btnConfirmarAperturaCero" onclick="confirmarAperturaCero()"
+                    class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
+                Sí, abrir con S/ 0.00
+            </button>
+        </div>
+    </div>
+</div>
+
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+    // Total de billetes y monedas ingresado (se actualiza en recalcular())
+    let totalApertura = 0;
 
     // Bloquear Enter
     document.getElementById('formApertura').addEventListener('keydown', function (e) {
@@ -280,6 +312,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         const total = totalBilletes + totalMonedas;
+        totalApertura = Math.round(total * 100) / 100;
 
         document.getElementById('total-billetes').textContent  = 'S/ ' + totalBilletes.toFixed(2);
         document.getElementById('total-monedas').textContent   = 'S/ ' + totalMonedas.toFixed(2);
@@ -304,6 +337,32 @@ document.addEventListener('DOMContentLoaded', function () {
         input.addEventListener('input', recalcular);
         input.addEventListener('focus', function () { this.select(); });
     });
+
+    // ── Abrir con S/ 0.00: pedir confirmación antes de enviar ─────
+    const formApertura = document.getElementById('formApertura');
+    let confirmadoEnCero = false;
+
+    formApertura.addEventListener('submit', function (e) {
+        recalcular(); // por si el navegador restauró valores sin disparar los eventos
+
+        if (totalApertura === 0 && !confirmadoEnCero) {
+            e.preventDefault();
+            document.getElementById('modalAperturaCero').style.setProperty('display', 'flex', 'important');
+        }
+    });
+
+    window.cerrarModalAperturaCero = function () {
+        document.getElementById('modalAperturaCero').style.setProperty('display', 'none', 'important');
+    };
+
+    // Confirmado: se envía el formulario (se deshabilita el botón para evitar doble envío)
+    window.confirmarAperturaCero = function () {
+        confirmadoEnCero = true;
+        const boton = document.getElementById('btnConfirmarAperturaCero');
+        boton.disabled = true;
+        boton.classList.add('opacity-60', 'cursor-not-allowed');
+        formApertura.submit();
+    };
 
     // Al cargar: si la fecha inicial ya tiene una apertura anterior, precargarla
     precargarDenominaciones();

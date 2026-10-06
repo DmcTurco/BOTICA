@@ -80,7 +80,17 @@ class CompanySunatSetting extends Model
             && $this->certificate_expires_at->lte(now()->addDays($days));
     }
 
-    /** Campos fiscales que faltan completar (para mostrar el estado) */
+    /** ¿Está en el ambiente de pruebas (beta) de SUNAT? */
+    public function isBeta(): bool
+    {
+        return $this->environment !== self::ENV_PRODUCTION;
+    }
+
+    /**
+     * Campos que faltan completar (para mostrar el estado).
+     * En el ambiente de pruebas SUNAT no exige certificado ni claves SOL registrados:
+     * el sistema usa unos de prueba, así que solo se piden los datos fiscales.
+     */
     public function missingFields(): array
     {
         $missing = [];
@@ -89,8 +99,11 @@ class CompanySunatSetting extends Model
         if (empty($this->legal_name))      $missing[] = 'Razón social';
         if (empty($this->fiscal_address))  $missing[] = 'Dirección fiscal';
         if (empty($this->ubigeo))          $missing[] = 'Ubigeo';
-        if (!$this->hasSolCredentials())   $missing[] = 'Usuario y clave SOL';
-        if (!$this->hasCertificate())      $missing[] = 'Certificado digital';
+
+        if (!$this->isBeta()) {
+            if (!$this->hasSolCredentials()) $missing[] = 'Usuario y clave SOL';
+            if (!$this->hasCertificate())    $missing[] = 'Certificado digital';
+        }
 
         return $missing;
     }
@@ -98,6 +111,7 @@ class CompanySunatSetting extends Model
     /** ¿Está todo completo para poder emitir? */
     public function isReady(): bool
     {
-        return empty($this->missingFields()) && !$this->certificateExpired();
+        // En pruebas se firma con el certificado de prueba del sistema: no importa si el cargado venció
+        return empty($this->missingFields()) && ($this->isBeta() || !$this->certificateExpired());
     }
 }
