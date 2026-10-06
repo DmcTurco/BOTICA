@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 50); // Unidad, Blister, Caja, Frasco, etc.
             $table->string('abbreviation', 10);
+            $table->string('sunat_code', 3)->default('NIU'); // catálogo SUNAT 03: NIU unidad, BX caja, BO frasco...
             $table->smallInteger('status')->nullable();
             $table->timestamps();
             $table->softDeletes();

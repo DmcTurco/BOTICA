@@ -15,7 +15,10 @@ return new class extends Migration
             $table->string('product_name', 150);
             $table->decimal('unit_price', 10, 2);
             $table->decimal('quantity', 10, 2);
-            $table->decimal('subtotal', 10, 2);
+            $table->decimal('subtotal', 10, 2);                     // base imponible de la línea (sin IGV)
+            $table->string('igv_affectation', 2)->default('20');    // 10 gravado, 20 exonerado, 30 inafecto
+            $table->decimal('igv_amount', 10, 2)->default(0);       // IGV de la línea
+            $table->string('unit_code', 3)->default('NIU');         // unidad de medida SUNAT
             $table->timestamps();
         });
     }

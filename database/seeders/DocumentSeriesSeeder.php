@@ -10,7 +10,7 @@ class DocumentSeriesSeeder extends Seeder
     /**
      * Siembra las series iniciales para todos los tipos de documento del sistema.
      *
-     * Comprobantes de venta (BOLETA, FACTURA, NOTA_VENTA): se crean por sede en BranchSeeder.
+     * Comprobantes de venta (BOLETA, FACTURA, NOTA_VENTA y notas de crédito): se crean por sede en BranchSeeder.
      *
      * Documentos internos (6 dígitos):
      *   PRODUCTO       → P-000001
@@ -86,16 +86,6 @@ class DocumentSeriesSeeder extends Seeder
                 'series'         => 'CIR',
                 'current_number' => 0,
                 'digits'         => 6,
-                'active'         => true,
-                'created_at'     => $now,
-                'updated_at'     => $now,
-            ],
-            [
-                'type_code'      => 'NOTA_CREDITO',
-                'name'           => 'Nota de Crédito',
-                'series'         => 'BN01',
-                'current_number' => 0,
-                'digits'         => 8,
                 'active'         => true,
                 'created_at'     => $now,
                 'updated_at'     => $now,

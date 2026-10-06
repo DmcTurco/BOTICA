@@ -34,6 +34,7 @@ return new class extends Migration
 
             // Control
             $table->boolean('taxed_product')->default(false)->comment('Si aplica IGV');
+            $table->string('igv_affectation', 2)->default('20')->comment('Catálogo SUNAT 07: 10 gravado, 20 exonerado, 30 inafecto');
             $table->boolean('requires_recipe')->default(false);
             $table->string('location', 50)->nullable()->comment('Ubicación de referencia en farmacia');
             $table->smallInteger('status')->nullable();
