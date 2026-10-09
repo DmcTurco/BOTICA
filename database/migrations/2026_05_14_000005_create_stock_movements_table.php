@@ -20,16 +20,16 @@ return new class extends Migration
 
             // Tipo: entrada (compra) o salida (venta)
             $table->enum('type', ['entrada', 'salida', 'ajuste'])
-                  ->comment('entrada=compra, salida=venta, ajuste=corrección manual');
+                  ->comment('entrada=compra/producción, salida=venta/insumo, ajuste=corrección manual');
 
             // Referencia al documento origen
             $table->string('reference_type', 20)->nullable()
-                  ->comment('purchase, order, manual');
+                  ->comment('purchase, order, manual, credit_note, production');
             $table->unsignedBigInteger('reference_id')->nullable()->index();
 
-            $table->integer('quantity')->comment('Siempre positivo; el tipo indica si suma o resta');
+            $table->decimal('quantity', 10, 2)->comment('Siempre positivo; el tipo indica si suma o resta');
             $table->decimal('unit_cost', 10, 2)->default(0)->comment('Costo unitario al momento del movimiento');
-            $table->integer('balance')->comment('Stock resultante después de este movimiento');
+            $table->decimal('balance', 10, 2)->comment('Stock resultante después de este movimiento');
 
             $table->string('notes', 255)->nullable();
             $table->timestamps();

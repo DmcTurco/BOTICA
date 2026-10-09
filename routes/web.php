@@ -112,6 +112,7 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
         Route::resource('products', Employee\ProductController::class);
         Route::resource('laboratories', Employee\LaboratoryController::class);
         Route::resource('categories', Employee\CategoryController::class);
+        Route::resource('units', Employee\UnitController::class)->only(['index', 'store', 'update', 'destroy']);
     });
 
     // Compras (ingreso de stock)
@@ -120,6 +121,104 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
         Route::get('purchases/create', [Employee\PurchaseController::class, 'create'])->name('purchases.create');
         Route::post('purchases', [Employee\PurchaseController::class, 'store'])->name('purchases.store');
         Route::get('purchases/{purchase}', [Employee\PurchaseController::class, 'show'])->name('purchases.show');
+        Route::post('purchases/{purchase}/void', [Employee\PurchaseController::class, 'void'])
+            ->middleware('privilege:eliminar_guia_ingreso')->name('purchases.void');
+    });
+
+    // Laboratorio — fórmulas magistrales y preparaciones (lotes)
+    Route::middleware('privilege:ver_formulas')->group(function () {
+        Route::resource('formulas', Employee\FormulaController::class);
+    });
+    Route::middleware('privilege:producir_formulas')->group(function () {
+        Route::get('productions', [Employee\ProductionController::class, 'index'])->name('productions.index');
+        Route::get('productions/create', [Employee\ProductionController::class, 'create'])->name('productions.create');
+        Route::post('productions', [Employee\ProductionController::class, 'store'])->name('productions.store');
+        Route::get('productions/{production}', [Employee\ProductionController::class, 'show'])->name('productions.show');
+        Route::get('productions/{production}/label', [Employee\ProductionController::class, 'label'])->name('productions.label');
+        Route::post('productions/{production}/void', [Employee\ProductionController::class, 'void'])->name('productions.void');
+    });
+
+    // Ajuste de inventario (conteo físico, merma, vencidos)
+    Route::middleware('privilege:ajuste_inventario')->group(function () {
+        Route::get('adjustments', [Employee\InventoryAdjustmentController::class, 'index'])->name('adjustments.index');
+        Route::post('adjustments', [Employee\InventoryAdjustmentController::class, 'store'])->name('adjustments.store');
+    });
+
+    // Productos por debajo del stock mínimo
+    Route::get('replenishment', [Employee\ReplenishmentController::class, 'index'])
+        ->middleware('privilege:productos_reposicion')->name('replenishment.index');
+
+    // Traspasos de mercadería entre sedes
+    Route::middleware('privilege:traspaso_salida')->group(function () {
+        Route::get('transfers', [Employee\StockTransferController::class, 'index'])->name('transfers.index');
+        Route::get('transfers/create', [Employee\StockTransferController::class, 'create'])->name('transfers.create');
+        Route::post('transfers', [Employee\StockTransferController::class, 'store'])->name('transfers.store');
+        Route::get('transfers/{transfer}', [Employee\StockTransferController::class, 'show'])->name('transfers.show');
+        Route::post('transfers/{transfer}/void', [Employee\StockTransferController::class, 'void'])
+            ->middleware('privilege:eliminar_guia_salida')->name('transfers.void');
+    });
+
+    // Caja: gastos del día / otros ingresos, historial de cierres e impresión del día
+    Route::middleware('privilege:gastos_dia,otros_ingresos')->group(function () {
+        Route::get('cash-movements', [Employee\CashMovementController::class, 'index'])->name('cash-movements.index');
+        Route::post('cash-movements', [Employee\CashMovementController::class, 'store'])->name('cash-movements.store');
+        Route::post('cash-movements/{movement}/void', [Employee\CashMovementController::class, 'void'])->name('cash-movements.void');
+    });
+    Route::get('cash-closures/print', [Employee\CashClosureController::class, 'print'])
+        ->middleware('privilege:imprimir_mov_caja')->name('cash-closures.print');
+    Route::middleware('privilege:ver_cierres_caja')->group(function () {
+        Route::get('cash-closures', [Employee\CashClosureController::class, 'index'])->name('cash-closures.index');
+        Route::get('cash-closures/{cashRegister}', [Employee\CashClosureController::class, 'show'])->name('cash-closures.show');
+    });
+
+    // Ventas perdidas, tipo de cambio y correlativos
+    Route::middleware('privilege:venta_perdida_sin_stock')->group(function () {
+        Route::get('lost-sales', [Employee\LostSaleController::class, 'index'])->name('lost-sales.index');
+        Route::post('lost-sales', [Employee\LostSaleController::class, 'store'])->name('lost-sales.store');
+    });
+    Route::middleware('privilege:tipo_cambio')->group(function () {
+        Route::get('exchange-rates', [Employee\ExchangeRateController::class, 'index'])->name('exchange-rates.index');
+        Route::post('exchange-rates', [Employee\ExchangeRateController::class, 'store'])->name('exchange-rates.store');
+    });
+    Route::middleware('privilege:admin_correlativos')->group(function () {
+        Route::get('series', [Employee\DocumentSeriesController::class, 'index'])->name('series.index');
+        Route::put('series/{series}', [Employee\DocumentSeriesController::class, 'update'])->name('series.update');
+    });
+
+    // Reportes de ventas, productos e inventario (cada uno con su privilegio)
+    Route::prefix('reports')->name('reports.')->group(function () {
+        $sales = Employee\SalesReportController::class;
+        Route::get('monthly', [$sales, 'monthly'])->middleware('privilege:record_mensual_ventas')->name('monthly');
+        Route::get('general', [$sales, 'general'])->middleware('privilege:record_general_ventas')->name('general');
+        Route::get('documents', [$sales, 'documents'])->middleware('privilege:ver_docs_mes')->name('documents');
+        Route::get('range', [$sales, 'range'])->middleware('privilege:reportes_por_fecha')->name('range');
+        Route::get('best-sellers', [$sales, 'bestSellers'])->middleware('privilege:reporte_mas_vendidos')->name('best-sellers');
+        Route::get('no-rotation', [$sales, 'noRotation'])->middleware('privilege:productos_sin_rotacion')->name('no-rotation');
+        Route::get('profit', [$sales, 'profit'])->middleware('privilege:reporte_utilidad')->name('profit');
+        Route::get('commissions', [$sales, 'commissions'])->middleware('privilege:reporte_comisiones')->name('commissions');
+
+        $inventory = Employee\InventoryReportController::class;
+        Route::get('expiring', [$inventory, 'expiring'])->middleware('privilege:reporte_vencimientos')->name('expiring');
+        Route::get('inventory/total', [$inventory, 'index'])->defaults('variant', 'total')->middleware('privilege:inventario_total')->name('inventory.total');
+        Route::get('inventory/stock', [$inventory, 'index'])->defaults('variant', 'stock')->middleware('privilege:inventario_total_stock')->name('inventory.stock');
+        Route::get('inventory/laboratory', [$inventory, 'index'])->defaults('variant', 'laboratory')->middleware('privilege:inv_por_laboratorio_total')->name('inventory.laboratory');
+        Route::get('inventory/laboratory-stock', [$inventory, 'index'])->defaults('variant', 'laboratory-stock')->middleware('privilege:inv_por_laboratorio_stock')->name('inventory.laboratory-stock');
+        Route::get('inventory/valued', [$inventory, 'index'])->defaults('variant', 'valued')->middleware('privilege:reporte_inv_valorizado')->name('inventory.valued');
+    });
+
+    // Herramientas: comisiones, actualización de precios y datos del local
+    Route::middleware('privilege:admin_comision')->group(function () {
+        Route::get('commissions/settings', [Employee\SalesReportController::class, 'commissionSettings'])->name('commissions.settings');
+        Route::put('commissions/settings', [Employee\SalesReportController::class, 'updateCommissions'])->name('commissions.update');
+    });
+    Route::middleware('privilege:actualizacion_precio')->group(function () {
+        Route::get('prices', [Employee\PriceUpdateController::class, 'index'])->name('prices.index');
+        Route::put('prices', [Employee\PriceUpdateController::class, 'update'])->name('prices.update');
+        Route::post('prices/bulk', [Employee\PriceUpdateController::class, 'bulk'])->name('prices.bulk');
+    });
+    Route::middleware('privilege:editar_datos_local')->group(function () {
+        Route::get('local', [Employee\LocalDataController::class, 'edit'])->name('local.edit');
+        Route::put('local', [Employee\LocalDataController::class, 'update'])->name('local.update');
     });
 
     // Kardex de inventario

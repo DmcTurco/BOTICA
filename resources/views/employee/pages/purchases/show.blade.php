@@ -18,6 +18,21 @@
         </div>
     </div>
 
+    @include('employee.partials.alerts')
+
+    @if((int) $purchase->status === 0)
+    <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+        <i class="fas fa-ban mr-1"></i> Compra anulada el {{ $purchase->voided_at?->format('d/m/Y H:i') }} — {{ $purchase->void_reason }}
+    </div>
+    @elseif(auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_ELIMINAR_GUIA_ING))
+    <div class="flex justify-end">
+        <button type="button" onclick="document.getElementById('modalAnular').style.setProperty('display','flex','important')"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-red-50 border border-red-200 text-red-600 text-sm font-medium rounded-lg transition-colors">
+            <i class="fas fa-ban text-xs"></i> Anular compra
+        </button>
+    </div>
+    @endif
+
     {{-- Info del documento --}}
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Información del documento</p>
@@ -104,4 +119,23 @@
     </div>
 
 </div>
+
+@if((int) $purchase->status === 1 && auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_ELIMINAR_GUIA_ING))
+<div id="modalAnular" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
+    <form action="{{ route('employee.purchases.void', $purchase) }}" method="POST" class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+        @csrf
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0"><i class="fas fa-ban text-red-600 text-sm"></i></div>
+            <h3 class="text-base font-semibold text-slate-800">Anular compra #{{ $purchase->id }}</h3>
+        </div>
+        <p class="text-sm text-slate-600">Se descontará del stock lo que ingresó con esta compra. Solo es posible si esas unidades aún están en la sede.</p>
+        <input type="text" name="void_reason" required maxlength="255" placeholder="Motivo de la anulación"
+               class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400">
+        <div class="flex gap-3 justify-end">
+            <button type="button" onclick="document.getElementById('modalAnular').style.setProperty('display','none','important')" class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg">Cancelar</button>
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg">Anular compra</button>
+        </div>
+    </form>
+</div>
+@endif
 @endsection

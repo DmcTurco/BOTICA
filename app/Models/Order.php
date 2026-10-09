@@ -44,6 +44,8 @@ class Order extends Model
         'exonerated_amount',
         'unaffected_amount',
         'igv',
+        'discount_percent',
+        'discount_amount',
         'total',
         'status',
         'sunat_status',
@@ -66,6 +68,8 @@ class Order extends Model
         'exonerated_amount' => 'decimal:2',
         'unaffected_amount' => 'decimal:2',
         'igv'               => 'decimal:2',
+        'discount_amount'   => 'decimal:2',
+        'discount_percent'  => 'decimal:2',
         'total'             => 'decimal:2',
     ];
 

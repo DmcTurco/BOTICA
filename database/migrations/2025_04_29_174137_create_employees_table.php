@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->decimal('commission_rate', 5, 2)->default(0);  // % de comisión sobre sus ventas
             $table->json('privileges')->nullable(); // privilegios para empleados (role_id=3); null = sin restricciones (branch_admin)
             $table->rememberToken();
             $table->timestamps();

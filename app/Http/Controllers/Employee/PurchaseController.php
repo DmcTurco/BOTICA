@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseDetail;
 use App\Models\StockMovement;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -172,5 +173,49 @@ class PurchaseController extends Controller
 
         $purchase->load('items.product');
         return view('employee.pages.purchases.show', compact('purchase'));
+    }
+
+    /**
+     * Anula una compra (eliminar guía de ingreso): descuenta del stock lo que ingresó.
+     * Solo es posible si esas unidades todavía están en la sede (no se vendieron).
+     */
+    public function void(Request $request, Purchase $purchase, StockService $stock)
+    {
+        $employee = auth()->guard('employee')->user();
+
+        abort_if($purchase->company_id !== $employee->company_id || $purchase->branch_id !== $employee->branch_id, 403);
+
+        $request->validate(['void_reason' => 'required|string|max:255'], [
+            'void_reason.required' => 'Indica el motivo de la anulación.',
+        ]);
+
+        if ((int) $purchase->status === 0) {
+            return back()->with('error', 'Esta compra ya está anulada.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($purchase->items()->orderBy('product_code')->get() as $item) {
+                $stock->move(
+                    $employee->company_id, $employee->branch_id, $item->product_code, -(float) $item->quantity,
+                    'purchase_void', $purchase->id, (float) $item->unit_cost, 'Anulación de compra'
+                );
+            }
+
+            $purchase->update(['status' => 0, 'voided_at' => now(), 'void_reason' => $request->void_reason]);
+
+            DB::commit();
+
+            return redirect()->route('employee.purchases.show', $purchase)
+                ->with('success', 'Compra anulada. El stock fue descontado.');
+        } catch (\RuntimeException $e) {
+            DB::rollBack();
+            return back()->with('error', 'No se puede anular: parte de esa mercadería ya no está en stock. ' . $e->getMessage());
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al anular compra: ' . $e->getMessage());
+            return back()->with('error', 'Error al anular la compra. Inténtelo de nuevo.');
+        }
     }
 }

@@ -34,6 +34,8 @@ return new class extends Migration
                   ->comment('1=confirmada, 0=anulada');
 
             $table->text('notes')->nullable();
+            $table->timestamp('voided_at')->nullable();
+            $table->string('void_reason', 255)->nullable();
             $table->timestamp('purchased_at')->useCurrent();
             $table->timestamps();
         });

@@ -13,18 +13,19 @@ class EnsureEmployeeHasPrivilege
      *
      * Uso en rutas:
      *   ->middleware('privilege:ver_ventas')   — privilegio específico
+     *   ->middleware('privilege:gastos_dia,otros_ingresos') — basta con tener uno de la lista
      *   ->middleware('privilege:any')           — al menos un privilegio (acceso base)
      *
      * Los branch_admin siempre pasan. Los empleados (role_id=3) sin ningún
      * privilegio asignado solo pueden ver el dashboard.
      */
-    public function handle(Request $request, Closure $next, string $privilege): Response
+    public function handle(Request $request, Closure $next, string ...$privileges): Response
     {
         $employee = auth()->guard('employee')->user();
 
-        $allowed = $privilege === 'any'
+        $allowed = $privileges === ['any']
             ? $employee?->hasAnyPrivilege()
-            : $employee?->hasPrivilege($privilege);
+            : collect($privileges)->contains(fn (string $privilege) => $employee?->hasPrivilege($privilege));
 
         if (!$allowed) {
             if ($request->expectsJson()) {

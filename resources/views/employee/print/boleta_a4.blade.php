@@ -329,6 +329,12 @@
             <span>S/ {{ number_format($order->unaffected_amount, 2) }}</span>
         </div>
         @endif
+        @if($order->discount_amount > 0)
+        <div class="totals-row">
+            <span class="lbl">Descuento ({{ rtrim(rtrim(number_format($order->discount_percent, 2), '0'), '.') }}%)</span>
+            <span>- S/ {{ number_format($order->discount_amount, 2) }}</span>
+        </div>
+        @endif
         @if($order->igv > 0)
         <div class="totals-row">
             <span class="lbl">IGV (18%)</span>

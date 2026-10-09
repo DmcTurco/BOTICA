@@ -142,6 +142,12 @@
 
 {{-- Totales --}}
 <table class="totals">
+    @if($order->discount_amount > 0)
+    <tr>
+        <td>Descuento ({{ rtrim(rtrim(number_format($order->discount_percent, 2), '0'), '.') }}%)</td>
+        <td>- S/ {{ number_format($order->discount_amount, 2) }}</td>
+    </tr>
+    @endif
     @if($order->igv > 0)
     <tr>
         <td>Subtotal</td>

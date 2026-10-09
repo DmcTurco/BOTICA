@@ -25,11 +25,14 @@ class Purchase extends Model
         'total',
         'status',
         'notes',
+        'voided_at',
+        'void_reason',
         'purchased_at',
     ];
 
     protected $casts = [
         'purchased_at' => 'datetime',
+        'voided_at'    => 'datetime',
         'subtotal'     => 'decimal:2',
         'tax'          => 'decimal:2',
         'total'        => 'decimal:2',

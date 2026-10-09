@@ -91,6 +91,9 @@
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $badge[0] }}">
                                 {{ $badge[1] }}
                             </span>
+                            @if((int) $compra->status === 0)
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600">Anulada</span>
+                            @endif
                         </td>
                         <td class="px-5 py-3 text-slate-500 text-xs font-mono hidden md:table-cell">
                             {{ $compra->document_number ?: '—' }}

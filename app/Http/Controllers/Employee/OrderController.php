@@ -145,13 +145,40 @@ class OrderController extends Controller
         return $setting && $setting->enabled && $setting->isReady();
     }
 
+    /** Descuento máximo que se puede dar en una venta (%) */
+    const MAX_DISCOUNT_PERCENT = 50;
+
+    /**
+     * Porcentaje de descuento pedido por el cajero. Solo lo aplica quien tiene el privilegio
+     * de descuentos; sin él se ignora el valor enviado (nunca se confía en el navegador).
+     * Devuelve [porcentaje, mensaje de error|null].
+     */
+    private function discountPercent(Request $request): array
+    {
+        $percent = round((float) $request->input('discount_percent', 0), 2);
+
+        if ($percent <= 0) {
+            return [0.0, null];
+        }
+
+        if (!auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_APLICAR_DESCUENTO)) {
+            return [0.0, 'No tienes permiso para aplicar descuentos.'];
+        }
+
+        if ($percent > self::MAX_DISCOUNT_PERCENT) {
+            return [0.0, 'El descuento máximo permitido es ' . self::MAX_DISCOUNT_PERCENT . '%.'];
+        }
+
+        return [$percent, null];
+    }
+
     /**
      * Calcula el IGV y los totales de una venta con la afectación de cada producto
      * leída de la base de datos (nunca del navegador).
      * Devuelve ['tax' => cálculo, 'units' => código SUNAT de unidad por producto]
      * o ['error' => mensaje] si algún producto no es de la compañía o los totales no coinciden.
      */
-    private function pricing(array $items, int $companyId, mixed $clientTotal): array
+    private function pricing(array $items, int $companyId, mixed $clientTotal, float $discountPercent = 0): array
     {
         $codes    = array_unique(array_column($items, 'code'));
         $products = Product::with(['unit:id,sunat_code', 'presentations'])
@@ -181,7 +208,8 @@ class OrderController extends Controller
 
         $tax = app(TaxCalculator::class)->calculate(
             $items,
-            $products->map(fn ($p) => $p->igv_affectation)->all()
+            $products->map(fn ($p) => $p->igv_affectation)->all(),
+            $discountPercent
         );
 
         // El total que vio el cajero debe coincidir con el del servidor (tolerancia por redondeo)
@@ -261,6 +289,8 @@ class OrderController extends Controller
             'operation_number'  => $order->operation_number,
             'subtotal'          => $order->subtotal,
             'igv'               => $order->igv,
+            'discount_amount'   => $order->discount_amount,
+            'discount_percent'  => $order->discount_percent,
             'total'             => $order->total,
             'status'            => $order->status,
             'items'             => $order->items->map(fn($item) => [
@@ -368,6 +398,7 @@ class OrderController extends Controller
             'subtotal'          => 'nullable|numeric|min:0',
             'igv'               => 'nullable|numeric|min:0',
             'total'             => 'nullable|numeric|min:0',
+            'discount_percent'  => 'nullable|numeric|min:0|max:100',
         ]);
 
         // Factura requiere RUC (document_type_id = 3)
@@ -407,8 +438,14 @@ class OrderController extends Controller
 
         $employee = auth()->guard('employee')->user();
 
+        [$discountPercent, $discountError] = $this->discountPercent($request);
+
+        if ($discountError) {
+            return response()->json(['success' => false, 'message' => $discountError], 422);
+        }
+
         // IGV y totales: se calculan aquí con la afectación real de cada producto
-        $pricing = $this->pricing($request->items, $employee->company_id, $request->total);
+        $pricing = $this->pricing($request->items, $employee->company_id, $request->total, $discountPercent);
 
         if (isset($pricing['error'])) {
             return response()->json(['success' => false, 'message' => $pricing['error']], 422);
@@ -477,6 +514,8 @@ class OrderController extends Controller
                 'exonerated_amount' => $tax['exonerated'],
                 'unaffected_amount' => $tax['unaffected'],
                 'igv'               => $tax['igv'],
+                'discount_percent'  => $discountPercent,
+                'discount_amount'   => $tax['discount'],
                 'total'             => $tax['total'],
                 'status'            => 1,
                 'sunat_status'      => $sunatStatus,
@@ -497,6 +536,7 @@ class OrderController extends Controller
                     'product_name'    => $item['name'],
                     'unit_price'      => $item['price'],
                     'quantity'        => $item['qty'],
+                    'discount_amount' => $tax['lines'][$i]['discount'],
                     'subtotal'        => $tax['lines'][$i]['base'],
                     'igv_affectation' => $tax['lines'][$i]['affectation'],
                     'igv_amount'      => $tax['lines'][$i]['igv'],
@@ -664,6 +704,7 @@ class OrderController extends Controller
             'subtotal'          => 'nullable|numeric|min:0',
             'igv'               => 'nullable|numeric|min:0',
             'total'             => 'nullable|numeric|min:0',
+            'discount_percent'  => 'nullable|numeric|min:0|max:100',
         ]);
 
         $employee     = auth()->guard('employee')->user();
@@ -675,8 +716,14 @@ class OrderController extends Controller
         abort_if($order->sunat_status === Order::SUNAT_ACCEPTED, 403,
             'Este comprobante ya fue aceptado por SUNAT y no se puede editar. Emite una nota de crédito.');
 
+        [$discountPercent, $discountError] = $this->discountPercent($request);
+
+        if ($discountError) {
+            return response()->json(['success' => false, 'message' => $discountError], 422);
+        }
+
         // IGV y totales: se recalculan con la afectación real de cada producto
-        $pricing = $this->pricing($request->items, $employee->company_id, $request->total);
+        $pricing = $this->pricing($request->items, $employee->company_id, $request->total, $discountPercent);
 
         if (isset($pricing['error'])) {
             return response()->json(['success' => false, 'message' => $pricing['error']], 422);
@@ -755,6 +802,7 @@ class OrderController extends Controller
                     'product_name'    => $item['name'],
                     'unit_price'      => $item['price'],
                     'quantity'        => $item['qty'],
+                    'discount_amount' => $tax['lines'][$i]['discount'],
                     'subtotal'        => $tax['lines'][$i]['base'],
                     'igv_affectation' => $tax['lines'][$i]['affectation'],
                     'igv_amount'      => $tax['lines'][$i]['igv'],
@@ -791,6 +839,8 @@ class OrderController extends Controller
                 'exonerated_amount' => $tax['exonerated'],
                 'unaffected_amount' => $tax['unaffected'],
                 'igv'               => $tax['igv'],
+                'discount_percent'  => $discountPercent,
+                'discount_amount'   => $tax['discount'],
                 'total'             => $tax['total'],
             ] + ($resendSunat ? [
                 'sunat_status'  => Order::SUNAT_PENDING,

@@ -24,8 +24,8 @@ class StockMovement extends Model
 
     protected $casts = [
         'unit_cost' => 'decimal:2',
-        'quantity'  => 'integer',
-        'balance'   => 'integer',
+        'quantity'  => 'float',
+        'balance'   => 'float',
     ];
 
     // ── Relaciones ──────────────────────────────────────────────
@@ -67,6 +67,11 @@ class StockMovement extends Model
             'purchase' => 'Compra #' . $this->reference_id,
             'order'    => 'Venta #'  . $this->reference_id,
             'manual'   => 'Ajuste manual',
+            'production' => 'Preparación #' . $this->reference_id,
+            'production_void' => 'Anulación de preparación #' . $this->reference_id,
+            'purchase_void'   => 'Anulación de compra #' . $this->reference_id,
+            'transfer'        => 'Traspaso #' . $this->reference_id,
+            'transfer_void'   => 'Anulación de traspaso #' . $this->reference_id,
             'credit_note' => 'Anulación (NC #' . $this->reference_id . ')',
             default    => '—',
         };

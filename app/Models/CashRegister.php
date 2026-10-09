@@ -96,6 +96,12 @@ class CashRegister extends Model
         return $this->hasMany(Order::class, 'cash_register_id');
     }
 
+    /** Gastos y otros ingresos registrados en esta caja */
+    public function movements(): HasMany
+    {
+        return $this->hasMany(CashMovement::class, 'cash_register_id');
+    }
+
     // ── Scopes ──────────────────────────────────────────────────
 
     /** Cajas con status abierta */
@@ -204,9 +210,21 @@ class CashRegister extends Model
         return $this->totalsByPaymentType()[self::PAYMENT_CASH];
     }
 
-    /** Efectivo que debería haber en el cajón: apertura + ventas en efectivo */
+    /** Otros ingresos en efectivo registrados en la caja (no son ventas) */
+    public function otherIncome(): float
+    {
+        return (float) $this->movements()->active()->where('type', CashMovement::INCOME)->sum('amount');
+    }
+
+    /** Gastos pagados con efectivo de la caja */
+    public function expenses(): float
+    {
+        return (float) $this->movements()->active()->where('type', CashMovement::EXPENSE)->sum('amount');
+    }
+
+    /** Efectivo que debería haber en el cajón: apertura + ventas en efectivo + otros ingresos − gastos */
     public function expectedCash(): float
     {
-        return round((float) $this->opening_amount + $this->totalCash(), 2);
+        return round((float) $this->opening_amount + $this->totalCash() + $this->otherIncome() - $this->expenses(), 2);
     }
 }

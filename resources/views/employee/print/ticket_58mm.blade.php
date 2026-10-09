@@ -117,6 +117,9 @@
     @if($order->unaffected_amount > 0)
     <tr><td>Op. Inafecta</td><td>S/ {{ number_format($order->unaffected_amount, 2) }}</td></tr>
     @endif
+    @if($order->discount_amount > 0)
+    <tr><td>Desc. {{ rtrim(rtrim(number_format($order->discount_percent, 2), '0'), '.') }}%</td><td>- S/ {{ number_format($order->discount_amount, 2) }}</td></tr>
+    @endif
     @if($order->igv > 0)
     <tr><td>IGV (18%)</td><td>S/ {{ number_format($order->igv, 2) }}</td></tr>
     @endif

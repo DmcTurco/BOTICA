@@ -7,6 +7,7 @@
 @section('content-area')
 @php
     $editOrder = $editOrder ?? null;
+    $canDiscount = auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_APLICAR_DESCUENTO);
 
     // Datos para el modo edición (null al registrar una venta nueva)
     $editConfig = $editOrder ? [
@@ -16,6 +17,7 @@
         'customer_name'     => $editOrder->customer_name,
         'customer_document' => $editOrder->customer_document,
         'document_type_id'  => $editOrder->document_type_id,
+        'discount_percent'  => (float) $editOrder->discount_percent,
         'update_url'        => route('employee.orders.update-historical', $editOrder),
         'back_url'          => route('employee.cash-register.historical', $historicalCaja),
         'items'             => $editItems,
@@ -381,16 +383,26 @@
                 <kbd class="text-emerald-200 text-xs font-normal bg-white/10 px-1.5 py-0.5 rounded ml-1">F5</kbd>
             </button>
 
+            @if($canDiscount)
+            <div class="flex items-center gap-2" title="Descuento porcentual aplicado a todos los productos (máx. 50%)">
+                <label for="descuentoPct" class="text-xs font-medium text-slate-500">Desc. %</label>
+                <input type="number" id="descuentoPct" min="0" max="50" step="0.5" value="0"
+                       class="w-16 px-2 py-1.5 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            @endif
+
             <div class="flex items-center gap-8 ml-auto">
                 <div class="text-right space-y-0.5">
                     <p class="text-xs text-slate-400">Op. Gravada</p>
                     <p class="text-xs text-slate-400">Op. Exonerada</p>
+                    <p class="text-xs text-slate-400">Descuento</p>
                     <p class="text-xs text-slate-400">IGV (18%)</p>
                     <p class="text-sm font-bold text-emerald-600">Total</p>
                 </div>
                 <div class="text-right min-w-20 space-y-0.5">
                     <p id="opGravada"   class="text-xs text-slate-600">S/ 0.00</p>
                     <p id="opExonerada" class="text-xs text-slate-600">S/ 0.00</p>
+                    <p id="descuento"  class="text-xs text-slate-600">S/ 0.00</p>
                     <p id="igv"         class="text-xs text-slate-600">S/ 0.00</p>
                     <p id="total"       class="text-xl font-bold text-slate-800">S/ 0.00</p>
                 </div>
@@ -779,6 +791,14 @@ function renderCarrito() {
     actualizarContadorCarrito();
 }
 
+// Porcentaje de descuento ingresado (0 si no hay campo o el valor no es válido)
+function porcentajeDescuento() {
+    const v = parseFloat($('#descuentoPct').val());
+    return isNaN(v) ? 0 : Math.min(Math.max(v, 0), 50);
+}
+
+$('#descuentoPct').on('input', actualizarTotales);
+
 // Redondeo a 2 decimales (igual que el servidor)
 function redondear(n) {
     return Math.round((n + Number.EPSILON) * 100) / 100;
@@ -789,10 +809,14 @@ let totalesVenta = { sub: 0, igv: 0, total: 0 };
 
 // 10 = gravado (IGV 18%) · 20 = exonerado · 30 = inafecto
 function actualizarTotales() {
-    let gravada = 0, exonerada = 0, igv = 0;
+    let gravada = 0, exonerada = 0, igv = 0, descuento = 0;
+    const pct = porcentajeDescuento();
 
     Object.values(carrito).forEach(i => {
-        const base = redondear(i.price * i.qty);
+        const bruto = redondear(i.price * i.qty);
+        const desc  = redondear(bruto * pct / 100);
+        const base  = redondear(bruto - desc);
+        descuento  += desc;
 
         if (i.afectacion === '10') {
             gravada += base;
@@ -805,7 +829,9 @@ function actualizarTotales() {
     const sub   = redondear(gravada + exonerada);
     const total = redondear(sub + igv);
 
-    totalesVenta = { sub, igv: redondear(igv), total };
+    totalesVenta = { sub, igv: redondear(igv), total, descuento: redondear(descuento) };
+
+    $('#descuento').text((descuento > 0 ? '− ' : '') + 'S/ ' + redondear(descuento).toFixed(2));
 
     $('#opGravada').text('S/ ' + redondear(gravada).toFixed(2));
     $('#opExonerada').text('S/ ' + redondear(exonerada).toFixed(2));
@@ -862,6 +888,7 @@ $('#btnTerminarVenta').on('click', function() {
         subtotal: sub,
         igv:      igv,
         total:    total,
+        discount_percent: porcentajeDescuento(),
         historical: @json($historicalCaja?->id),   // caja histórica (null = caja normal)
     };
 
@@ -933,6 +960,7 @@ if (EDIT_ORDER) {
     // Pago
     $('.btn-pago[data-value="' + EDIT_ORDER.payment_type + '"]').trigger('click');
     $('#nroOperacion').val(EDIT_ORDER.operation_number ?? '');
+    if (EDIT_ORDER.discount_percent) { $('#descuentoPct').val(EDIT_ORDER.discount_percent); actualizarTotales(); }
 
     // Comprobante y cliente: se muestran pero no se pueden modificar
     $('.btn-comprobante[data-value="' + EDIT_ORDER.voucher_type + '"]').trigger('click');

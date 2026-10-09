@@ -14,6 +14,7 @@ class OrderItem extends Model
         'product_name',
         'unit_price',
         'quantity',
+        'discount_amount',
         'subtotal',
         'igv_affectation',
         'igv_amount',

@@ -60,6 +60,8 @@ return new class extends Migration
             $table->decimal('exonerated_amount', 10, 2)->default(0);    // operaciones exoneradas
             $table->decimal('unaffected_amount', 10, 2)->default(0);    // operaciones inafectas
             $table->decimal('igv', 10, 2)->default(0);
+            $table->decimal('discount_percent', 5, 2)->default(0);      // % de descuento aplicado a todas las líneas
+            $table->decimal('discount_amount', 10, 2)->default(0);      // descuento aplicado (sin IGV, ya restado de las bases)
             $table->decimal('total', 10, 2)->default(0);
             $table->unsignedTinyInteger('status')->default(1);
 
