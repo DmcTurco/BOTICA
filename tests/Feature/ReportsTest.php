@@ -9,34 +9,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-/** Crea una venta con un solo ítem: neta (sin IGV), con su IGV opcional */
-function reportSale(Employee $employee, string $code, float $qty, float $net, array $overrides = []): Order
-{
-    static $n = 0;
-    $n++;
-
-    $createdAt = $overrides['created_at'] ?? null;
-    unset($overrides['created_at']);
-
-    $order = Order::create(array_merge([
-        'company_id' => 1, 'branch_id' => $employee->branch_id, 'employee_id' => $employee->id,
-        'voucher_type' => 3, 'voucher_number' => 'NV01-' . str_pad((string) $n, 8, '0', STR_PAD_LEFT),
-        'payment_type' => 1, 'subtotal' => $net, 'igv' => 0, 'total' => $net, 'status' => 1,
-    ], $overrides));
-
-    // created_at no es asignable en masa: se fija aparte para simular ventas de otras fechas
-    if ($createdAt) {
-        $order->forceFill(['created_at' => $createdAt])->save();
-    }
-
-    OrderItem::create([
-        'order_id' => $order->id, 'product_code' => $code, 'product_name' => "Producto {$code}",
-        'unit_price' => $net / $qty, 'quantity' => $qty, 'subtotal' => $net, 'igv_affectation' => '20', 'igv_amount' => 0,
-    ]);
-
-    return $order;
-}
-
 // ── Ventas ────────────────────────────────────────────────────
 
 it('el récord mensual suma las ventas del mes y excluye las anuladas', function () {

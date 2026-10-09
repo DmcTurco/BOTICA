@@ -34,6 +34,8 @@ class Product extends Model
         'taxed_product',
         'igv_affectation',
         'requires_recipe',
+        'controlled_type',
+        'sanitary_registry',
         'location',
         'status',
         'employee_id',
@@ -58,6 +60,18 @@ class Product extends Model
         'taxed_product'          => 'boolean',
         'requires_recipe'        => 'boolean',
     ];
+
+    // Tipos de producto controlado (DIGEMID)
+    const CONTROLLED_LABELS = [
+        'psicotropico'  => 'Psicotrópico',
+        'estupefaciente' => 'Estupefaciente',
+    ];
+
+    /** Nivel de receta que exige al venderse: 0 libre · 1 con receta · 2 controlado */
+    public function getRecipeLevelAttribute(): int
+    {
+        return $this->controlled_type ? 2 : ($this->requires_recipe ? 1 : 0);
+    }
 
     // ── Relaciones ──────────────────────────────────────────────
 

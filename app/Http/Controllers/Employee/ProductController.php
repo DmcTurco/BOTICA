@@ -90,7 +90,9 @@ class ProductController extends Controller
             $producto->units_per_package      = $request->unidades_por_paquete;
             $producto->igv_affectation        = $request->afectacion_igv;
             $producto->taxed_product          = $request->afectacion_igv === Product::IGV_GRAVADO;
-            $producto->requires_recipe        = $request->has('requiere_receta') ? 1 : 0;
+            $producto->requires_recipe        = $request->has('requiere_receta') || $request->filled('tipo_controlado') ? 1 : 0;
+            $producto->controlled_type        = $request->tipo_controlado ?: null;
+            $producto->sanitary_registry      = $request->registro_sanitario;
             $producto->save();
 
             // Crear registro de stock inicial en la sede del empleado
@@ -171,7 +173,9 @@ class ProductController extends Controller
             $product->units_per_package      = $request->unidades_por_paquete;
             $product->igv_affectation        = $request->afectacion_igv;
             $product->taxed_product          = $request->afectacion_igv === Product::IGV_GRAVADO;
-            $product->requires_recipe        = $request->has('requiere_receta') ? 1 : 0;
+            $product->requires_recipe        = $request->has('requiere_receta') || $request->filled('tipo_controlado') ? 1 : 0;
+            $product->controlled_type        = $request->tipo_controlado ?: null;
+            $product->sanitary_registry      = $request->registro_sanitario;
             $product->save();
 
             // Actualizar mínimos/máximos en el branch_stock de la sede del empleado

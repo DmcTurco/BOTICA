@@ -63,6 +63,8 @@ class EmployeeManagementController extends Controller
             'privileges' => $privileges,
         ]);
 
+        \App\Models\AuditLog::record('employee.create', 'Creó al empleado ' . $request->name, $request->email, ['rol' => $request->role_id, 'privilegios' => $request->input('privileges', [])]);
+
         return redirect()->route('employee.employees.index')
             ->with('success', 'Empleado creado correctamente.');
     }
@@ -119,6 +121,8 @@ class EmployeeManagementController extends Controller
 
         $employee->update($data);
 
+        \App\Models\AuditLog::record('employee.update', 'Actualizó al empleado ' . $employee->name, $employee->email, ['rol' => $request->role_id, 'privilegios' => $data['privileges']]);
+
         return redirect()->route('employee.employees.index')
             ->with('success', 'Empleado actualizado correctamente.');
     }
@@ -144,6 +148,8 @@ class EmployeeManagementController extends Controller
         }
 
         $employee->delete();
+
+        \App\Models\AuditLog::record('employee.delete', 'Eliminó al empleado ' . $employee->name, $employee->email);
 
         return redirect()->route('employee.employees.index')
             ->with('success', 'Empleado eliminado correctamente.');

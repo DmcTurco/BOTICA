@@ -53,7 +53,7 @@ return new class extends Migration
             $table->string('customer_document', 20)->nullable();
             $table->unsignedTinyInteger('voucher_type')->default(1)->comment('1=boleta,2=factura,3=nota');
             $table->string('voucher_number', 30)->nullable();           // se numera por compañía (cada RUC numera aparte)
-            $table->unsignedTinyInteger('payment_type')->default(1)->comment('1=efectivo,2=tarjeta,3=transferencia,4=yape');
+            $table->unsignedTinyInteger('payment_type')->default(1)->comment('1=efectivo,2=tarjeta,3=transferencia,4=yape,5=crédito (fiado)');
             $table->string('operation_number', 50)->nullable();
             $table->decimal('subtotal', 10, 2)->default(0);             // suma de las bases (gravado + exonerado + inafecto)
             $table->decimal('taxable_amount', 10, 2)->default(0);       // operaciones gravadas
@@ -63,6 +63,8 @@ return new class extends Migration
             $table->decimal('discount_percent', 5, 2)->default(0);      // % de descuento aplicado a todas las líneas
             $table->decimal('discount_amount', 10, 2)->default(0);      // descuento aplicado (sin IGV, ya restado de las bases)
             $table->decimal('total', 10, 2)->default(0);
+            $table->decimal('credit_balance', 10, 2)->default(0);       // lo que el cliente aún debe (ventas a crédito)
+            $table->date('credit_due_date')->nullable();                // vencimiento del fiado
             $table->unsignedTinyInteger('status')->default(1);
 
             // Estado del envío a SUNAT (solo boletas y facturas; la nota de venta es 'not_applicable')

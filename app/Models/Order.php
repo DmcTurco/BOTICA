@@ -47,6 +47,8 @@ class Order extends Model
         'discount_percent',
         'discount_amount',
         'total',
+        'credit_balance',
+        'credit_due_date',
         'status',
         'sunat_status',
         'sunat_code',
@@ -70,11 +72,19 @@ class Order extends Model
         'igv'               => 'decimal:2',
         'discount_amount'   => 'decimal:2',
         'discount_percent'  => 'decimal:2',
+        'credit_balance'    => 'decimal:2',
+        'credit_due_date'   => 'date',
         'total'             => 'decimal:2',
     ];
 
     /** Desde este total (exclusivo) la boleta exige identificar al cliente (SUNAT) */
     const BOLETA_ID_THRESHOLD = 700;
+
+    /** Receta médica que acompañó la venta (productos con receta o controlados) */
+    public function prescription(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Prescription::class, 'order_id');
+    }
 
     // ── Helpers SUNAT ───────────────────────────────────────────
 

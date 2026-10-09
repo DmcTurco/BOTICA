@@ -3,6 +3,8 @@
 @section('title', 'Categorías')
 @section('main-padding', 'p-2 md:p-3')
 
+@php $canManage = auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_MANTENIMIENTO_FAMILIAS); @endphp
+
 @section('content-area')
 <div class="flex-1 flex flex-col gap-3 min-h-0">
 
@@ -12,10 +14,12 @@
             <h1 class="text-xl font-bold text-slate-800">Categorías</h1>
             <p class="text-sm text-slate-500 mt-0.5">Administra las categorías de productos</p>
         </div>
+        @if($canManage)
         <a href="{{ route('employee.categories.create') }}"
            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i> Nueva Categoría
         </a>
+        @endif
     </div>
 
     {{-- Filtros --}}
@@ -117,6 +121,7 @@
                         </td>
                         <td class="px-5 py-3">
                             <div class="flex items-center justify-end gap-1">
+@if($canManage)
                                 <a href="{{ route('employee.categories.edit', $categoria->id) }}"
                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Editar">
                                     <i class="fas fa-pencil text-xs"></i>
@@ -126,6 +131,7 @@
                                         data-id="{{ $categoria->id }}" data-nombre="{{ $categoria->name }}" title="Eliminar">
                                     <i class="fas fa-trash text-xs"></i>
                                 </button>
+@endif
                             </div>
                         </td>
                     </tr>
@@ -135,7 +141,9 @@
                             <div class="flex flex-col items-center gap-2 text-slate-400">
                                 <i class="fas fa-tags text-3xl"></i>
                                 <p class="text-sm">No hay categorías registradas</p>
+                                @if($canManage)
                                 <a href="{{ route('employee.categories.create') }}" class="text-emerald-600 text-sm hover:underline">Crear primera categoría</a>
+                                @endif
                             </div>
                         </td>
                     </tr>

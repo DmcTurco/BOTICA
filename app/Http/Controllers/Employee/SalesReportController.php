@@ -8,6 +8,7 @@ use App\Models\CashRegister;
 use App\Models\Employee;
 use App\Models\Order;
 use App\Models\Product;
+use App\Support\CsvExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -178,6 +179,11 @@ class SalesReportController extends Controller
 
         $names = Product::withTrashed()->whereIn('code', $rows->pluck('product_code'))->pluck('name', 'code');
 
+        if ($request->query('export') === 'csv') {
+            return CsvExport::download('mas_vendidos_' . $from->format('Ymd') . '_' . $to->format('Ymd'), ['Código', 'Producto', 'Unidades vendidas', 'Venta neta'],
+                $rows->map(fn ($r) => [$r->product_code, $names[$r->product_code] ?? '', (float) $r->qty, (float) $r->net]));
+        }
+
         return view('employee.pages.reports.best-sellers', [
             'rows'  => $rows,
             'names' => $names,
@@ -219,6 +225,11 @@ class SalesReportController extends Controller
             })
             ->sortByDesc('stock_value')->values();
 
+        if ($request->query('export') === 'csv') {
+            return CsvExport::download('sin_rotacion_' . $days . 'dias', ['Código', 'Producto', 'Categoría', 'Laboratorio', 'Stock', 'Precio de compra', 'Valor a costo'],
+                $products->map(fn ($p) => [$p->code, $p->name, $p->category?->name, $p->laboratory?->name, (float) $p->stock_actual, (float) $p->purchase_price, (float) $p->stock_value]));
+        }
+
         return view('employee.pages.reports.no-rotation', [
             'products'   => $products,
             'days'       => $days,
@@ -253,6 +264,11 @@ class SalesReportController extends Controller
                 'margin' => $sales > 0 ? round($profit / $sales * 100, 1) : 0,
             ];
         })->sortByDesc('profit')->values();
+
+        if ($request->query('export') === 'csv') {
+            return CsvExport::download('utilidad_' . $from->format('Ymd') . '_' . $to->format('Ymd'), ['Código', 'Producto', 'Unidades', 'Venta neta', 'Costo', 'Utilidad', 'Margen %'],
+                $rows->map(fn ($r) => [$r->code, $r->name, $r->qty, $r->sales, $r->cost, $r->profit, (float) $r->margin]));
+        }
 
         return view('employee.pages.reports.profit', [
             'rows'   => $rows,
@@ -292,6 +308,11 @@ class SalesReportController extends Controller
                     'commission' => round($net * (float) $e->commission_rate / 100, 2),
                 ];
             })->filter(fn ($r) => $r->documents > 0 || $r->rate > 0)->values();
+
+        if ($request->query('export') === 'csv') {
+            return CsvExport::download('comisiones_' . $from->format('Ymd') . '_' . $to->format('Ymd'), ['Vendedor', 'Documentos', 'Venta neta', 'Comisión %', 'Comisión'],
+                $rows->map(fn ($r) => [$r->name, $r->documents, (float) $r->net, (float) $r->rate, (float) $r->commission]));
+        }
 
         return view('employee.pages.reports.commissions', [
             'rows' => $rows, 'from' => $from, 'to' => $to,
@@ -335,6 +356,8 @@ class SalesReportController extends Controller
                 Employee::whereKey($id)->update(['commission_rate' => (float) ($rate ?: 0)]);
             }
         }
+
+        \App\Models\AuditLog::record('commission.update', 'Actualizó los porcentajes de comisión', null, ['porcentajes' => $request->rates]);
 
         return redirect()->route('employee.commissions.settings')->with('success', 'Comisiones actualizadas.');
     }

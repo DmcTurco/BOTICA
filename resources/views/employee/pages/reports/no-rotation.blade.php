@@ -25,6 +25,7 @@
     </div>
 
     @include('employee.partials.alerts')
+    @include('employee.partials.export-button')
 
     <div class="grid grid-cols-2 gap-3 shrink-0">
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Productos parados</p><p class="text-lg font-bold text-slate-800">{{ $products->count() }}</p></div>

@@ -19,11 +19,13 @@ class Client extends Model
         'phone',
         'email',
         'address',
+        'credit_limit',
         'status',
     ];
 
     protected $casts = [
-        'status' => 'integer',
+        'status'       => 'integer',
+        'credit_limit' => 'decimal:2',
     ];
 
     /** Cliente predeterminado de las ventas al público general (sin identificar) */
@@ -42,6 +44,18 @@ class Client extends Model
     public function documentType(): BelongsTo
     {
         return $this->belongsTo(DocumentType::class, 'document_type_id');
+    }
+
+    /** Lo que el cliente debe hoy por ventas a crédito vigentes */
+    public function creditDebt(): float
+    {
+        return round((float) $this->orders()->where('status', 1)->where('credit_balance', '>', 0)->sum('credit_balance'), 2);
+    }
+
+    /** Crédito que aún puede usar (tope − deuda) */
+    public function creditAvailable(): float
+    {
+        return max(0, round((float) $this->credit_limit - $this->creditDebt(), 2));
     }
 
     /** Órdenes realizadas por este cliente */

@@ -7,6 +7,7 @@ use App\Http\Requests\Company\InventoryAdjustmentRequest;
 use App\Models\BranchStock;
 use App\Models\Product;
 use App\Models\StockMovement;
+use App\Services\BatchService;
 use App\Services\StockService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -84,7 +85,21 @@ class InventoryAdjustmentController extends Controller
                 'manual', null, (float) $product->purchase_price, mb_substr($notes, 0, 255), 'ajuste'
             );
 
+            // Lotes: al restar se descuenta por FEFO (incluye vencidos); al sumar se puede indicar lote y vencimiento
+            $batches = app(BatchService::class);
+            if ($delta < 0) {
+                $batches->consume($employee->branch_id, $product->code, abs($delta), null, null, false, false);
+            } elseif ($request->filled('batch') || $request->filled('expiration_date')) {
+                $batches->receive(
+                    $employee->company_id, $employee->branch_id, $product->code, $delta,
+                    $request->batch, $request->expiration_date, (float) $product->purchase_price, 'adjustment', null
+                );
+            }
+            $batches->reconcile($employee->branch_id, $product->code);
+
             DB::commit();
+
+            \App\Models\AuditLog::record('stock.adjust', 'Ajustó el stock de «' . $product->name . '» (' . ($delta > 0 ? '+' : '') . $delta . ')', $product->code, ['motivo' => $notes, 'antes' => $current, 'despues' => round($current + $delta, 2)]);
 
             return redirect()->route('employee.adjustments.index')
                 ->with('success', 'Ajuste registrado: «' . $product->name . '» ' . ($delta > 0 ? '+' : '') . $delta . '. Stock actual: ' . round($current + $delta, 2) . '.');

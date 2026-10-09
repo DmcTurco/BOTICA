@@ -63,6 +63,10 @@ class PriceUpdateController extends Controller
             }
         });
 
+        if ($changed) {
+            \App\Models\AuditLog::record('price.update', 'Cambió ' . $changed . ' precio(s) de productos', null, ['cambios' => $changed]);
+        }
+
         return back()->with('success', $changed ? "Se actualizaron {$changed} precio(s)." : 'No hubo cambios de precio.');
     }
 
@@ -93,6 +97,8 @@ class PriceUpdateController extends Controller
                 $changed += $this->applyPrices($product, $new, $employee->id);
             });
         });
+
+        \App\Models\AuditLog::record('price.bulk', 'Aplicó ' . $data['percent'] . '% al ' . ['sale' => 'precio de venta', 'purchase' => 'precio de compra', 'both' => 'precio de compra y venta'][$data['target']] . ' de ' . $changed . ' precio(s)', null, ['filtro' => $request->query()]);
 
         return back()->with('success', "Se aplicó {$data['percent']}% y se actualizaron {$changed} precio(s).");
     }

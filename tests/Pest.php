@@ -112,3 +112,66 @@ function openRegister(Employee $employee, float $opening = 100, float $cashSale 
 
     return $register;
 }
+
+/** Deja lista una sede para vender: serie de nota de venta, caja abierta y un producto gravado de S/ 10 */
+function posSetup(\App\Models\Employee $employee): void
+{
+    // Correlativos globales (cliente público) y tipos de documento
+    test()->seed([Database\Seeders\DocumentSeriesSeeder::class, Database\Seeders\DocumentTypeSeeder::class]);
+    \App\Models\DocumentSeries::create([
+        'company_id' => 1, 'branch_id' => $employee->branch_id, 'type_code' => \App\Models\DocumentSeries::NOTA_VENTA,
+        'name' => 'Nota de Venta', 'series' => 'NV01', 'current_number' => 0, 'digits' => 8, 'active' => true,
+    ]);
+    openRegister($employee, 100, 0);
+    stockProduct('P1', 10, 4);
+    App\Models\Product::where('code', 'P1')->update(['igv_affectation' => '10', 'unit_sale_price' => 10]);
+}
+
+function posSale(array $extra = []): Illuminate\Testing\TestResponse
+{
+    return test()->postJson(route('employee.orders.store'), array_merge([
+        'items'        => [['code' => 'P1', 'name' => 'Producto P1', 'price' => 10, 'qty' => 2]],
+        'payment_type' => 1, 'voucher_type' => 3,
+    ], $extra));
+}
+
+/** Crea una venta con un solo ítem: neta (sin IGV), con su IGV opcional */
+function reportSale(\App\Models\Employee $employee, string $code, float $qty, float $net, array $overrides = []): \App\Models\Order
+{
+    static $n = 0;
+    $n++;
+
+    $createdAt = $overrides['created_at'] ?? null;
+    unset($overrides['created_at']);
+
+    $order = \App\Models\Order::create(array_merge([
+        'company_id' => 1, 'branch_id' => $employee->branch_id, 'employee_id' => $employee->id,
+        'voucher_type' => 3, 'voucher_number' => 'NV01-' . str_pad((string) $n, 8, '0', STR_PAD_LEFT),
+        'payment_type' => 1, 'subtotal' => $net, 'igv' => 0, 'total' => $net, 'status' => 1,
+    ], $overrides));
+
+    // created_at no es asignable en masa: se fija aparte para simular ventas de otras fechas
+    if ($createdAt) {
+        $order->forceFill(['created_at' => $createdAt])->save();
+    }
+
+    \App\Models\OrderItem::create([
+        'order_id' => $order->id, 'product_code' => $code, 'product_name' => "Producto {$code}",
+        'unit_price' => $net / $qty, 'quantity' => $qty, 'subtotal' => $net, 'igv_affectation' => '20', 'igv_amount' => 0,
+    ]);
+
+    return $order;
+}
+
+/** Ingresa un lote directamente (stock total + lote), sin pasar por una compra */
+function addBatch(string $code, float $qty, ?string $expires, string $batch, int $branchId = 1): \App\Models\StockBatch
+{
+    \App\Models\BranchStock::where('branch_id', $branchId)->where('product_code', $code)->increment('stock_actual', $qty);
+
+    return app(\App\Services\BatchService::class)->receive(1, $branchId, $code, $qty, $batch, $expires, 1, 'purchase', null);
+}
+
+function remaining(string $batch): float
+{
+    return \App\Models\StockBatch::where('batch', $batch)->value('quantity_remaining');
+}

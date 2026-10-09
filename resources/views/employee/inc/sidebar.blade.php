@@ -172,6 +172,26 @@
                     </a>
                 </li>
                 @endif
+                @if($emp->hasPrivilege(\App\Models\Employee::PRIV_VER_RECETAS))
+                <li>
+                    <a href="{{ route('employee.prescriptions.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.prescriptions.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-file-prescription w-4 text-center shrink-0"></i>
+                        Registro de recetas
+                    </a>
+                </li>
+                @endif
+                @if($emp->hasPrivilege(\App\Models\Employee::PRIV_CUENTAS_COBRAR))
+                <li>
+                    <a href="{{ route('employee.receivables.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.receivables.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-hand-holding-dollar w-4 text-center shrink-0"></i>
+                        Cuentas por cobrar
+                    </a>
+                </li>
+                @endif
                 @if($emp->hasPrivilege(\App\Models\Employee::PRIV_TIPO_CAMBIO))
                 <li>
                     <a href="{{ route('employee.exchange-rates.index') }}"
@@ -203,8 +223,11 @@
             $hasAdjust    = $emp->hasPrivilege(\App\Models\Employee::PRIV_AJUSTE_INVENTARIO);
             $hasReplenish = $emp->hasPrivilege(\App\Models\Employee::PRIV_PRODUCTOS_REPOSICION);
             $hasTransfer  = $emp->hasPrivilege(\App\Models\Employee::PRIV_TRASPASO_SALIDA);
+            $hasSuppliers = $emp->hasPrivilege(\App\Models\Employee::PRIV_PROVEEDORES);
+            $hasPayables  = $emp->hasPrivilege(\App\Models\Employee::PRIV_CUENTAS_PAGAR);
+            $hasControlled = $emp->hasPrivilege(\App\Models\Employee::PRIV_LIBRO_CONTROLADOS);
         @endphp
-        @if($hasInventory || $hasPurchases || $hasKardex || $hasAdjust || $hasReplenish || $hasTransfer)
+        @if($hasInventory || $hasPurchases || $hasKardex || $hasAdjust || $hasReplenish || $hasTransfer || $hasSuppliers || $hasPayables || $hasControlled)
         <div>
             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Inventario</p>
             <ul class="space-y-0.5">
@@ -249,6 +272,46 @@
                               {{ request()->routeIs('employee.purchases.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
                         <i class="fas fa-truck-ramp-box w-4 text-center shrink-0"></i>
                         Compras
+                    </a>
+                </li>
+                @endif
+                @if($hasSuppliers)
+                <li>
+                    <a href="{{ route('employee.suppliers.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.suppliers.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-truck w-4 text-center shrink-0"></i>
+                        Proveedores
+                    </a>
+                </li>
+                @endif
+                @if($hasPurchases)
+                <li>
+                    <a href="{{ route('employee.purchase-orders.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.purchase-orders.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-file-circle-check w-4 text-center shrink-0"></i>
+                        Órdenes de compra
+                    </a>
+                </li>
+                @endif
+                @if($hasPayables)
+                <li>
+                    <a href="{{ route('employee.payables.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.payables.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-file-invoice-dollar w-4 text-center shrink-0"></i>
+                        Cuentas por pagar
+                    </a>
+                </li>
+                @endif
+                @if($hasControlled)
+                <li>
+                    <a href="{{ route('employee.controlled-book.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.controlled-book.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-book-medical w-4 text-center shrink-0"></i>
+                        Libro de controlados
                     </a>
                 </li>
                 @endif
@@ -342,7 +405,10 @@
                     ['employee.reports.no-rotation',            $E::PRIV_PRODUCTOS_SIN_ROTACION,   'fa-hourglass-half', 'Sin rotación'],
                     ['employee.reports.profit',                 $E::PRIV_REPORTE_UTILIDAD,         'fa-sack-dollar',    'Utilidad'],
                     ['employee.reports.commissions',            $E::PRIV_REPORTE_COMISIONES,       'fa-percent',        'Comisiones'],
-                    ['employee.reports.expiring',               $E::PRIV_REPORTE_VENCIMIENTOS,     'fa-calendar-xmark', 'Lotes por vencer'],
+                    ['employee.audit.index',                    $E::PRIV_VER_BITACORA,             'fa-clipboard-list', 'Bitácora'],
+                    ['employee.accounting.sales',               $E::PRIV_REGISTROS_CONTABLES,      'fa-book',           'Registro de ventas'],
+                    ['employee.accounting.purchases',           $E::PRIV_REGISTROS_CONTABLES,      'fa-book-open',      'Registro de compras'],
+                    ['employee.reports.expiring',               $E::PRIV_REPORTE_VENCIMIENTOS,     'fa-calendar-xmark', 'Lotes y vencimientos'],
                     ['employee.reports.inventory.total',        $E::PRIV_INVENTARIO_TOTAL,         'fa-boxes-stacked',  'Inventario total'],
                     ['employee.reports.inventory.stock',        $E::PRIV_INVENTARIO_TOTAL_STOCK,   'fa-box-open',       'Inventario con stock'],
                     ['employee.reports.inventory.laboratory',   $E::PRIV_INV_LAB_TOTAL,            'fa-flask',          'Inventario por laboratorio'],

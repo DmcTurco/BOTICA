@@ -46,7 +46,7 @@ class PrintController extends Controller
             'documentType',
         ]);
 
-        $paymentLabels  = [1 => 'Efectivo', 2 => 'Tarjeta', 3 => 'Transferencia', 4 => 'Yape'];
+        $paymentLabels  = [1 => 'Efectivo', 2 => 'Tarjeta', 3 => 'Transferencia', 4 => 'Yape', 5 => 'Crédito'];
         $voucherLabels  = [1 => 'Boleta de Venta', 2 => 'Factura', 3 => 'Nota de Venta'];
 
         // Boleta o factura electrónica: razón social y dirección fiscal + QR de SUNAT.

@@ -33,6 +33,8 @@ class CreditNoteController extends Controller
             return response()->json(['success' => false, 'message' => 'No se pudo emitir la nota de crédito.'], 500);
         }
 
+        \App\Models\AuditLog::record('credit_note.issue', 'Emitió la nota de crédito ' . $note->voucher_number . ' (S/ ' . number_format($note->total, 2) . ')', $order->voucher_number, ['motivo' => $request->reason_text]);
+
         SendCreditNoteToSunat::dispatchAfterResponse($note->id);
 
         return response()->json([

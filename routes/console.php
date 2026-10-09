@@ -16,3 +16,6 @@ Schedule::command('sunat:send-summaries')->dailyAt('06:00');
 
 // Reintenta cada hora las facturas y boletas individuales que quedaron pendientes o con error de envío
 Schedule::command('sunat:retry-pending')->hourly();
+
+// Respaldo diario de la base de datos (se conservan BACKUP_KEEP_DAYS días)
+Schedule::command('db:backup')->dailyAt('02:00');

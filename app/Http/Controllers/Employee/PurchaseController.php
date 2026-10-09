@@ -8,7 +8,10 @@ use App\Models\BranchStock;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseDetail;
+use App\Models\PurchaseOrder;
 use App\Models\StockMovement;
+use App\Models\Supplier;
+use App\Services\BatchService;
 use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -65,7 +68,16 @@ class PurchaseController extends Controller
             ->orderBy('name')
             ->get(['code', 'name', 'purchase_price']);
 
-        return view('employee.pages.purchases.form', compact('productos', 'producto'));
+        $suppliers = Supplier::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get(['id', 'name', 'ruc']);
+
+        // Recepción de una orden de compra: se precargan sus productos y el proveedor
+        $order = $request->filled('order')
+            ? PurchaseOrder::with('items')->where('company_id', $employee->company_id)->where('status', 'pending')->find($request->query('order'))
+            : null;
+
+        $preload = $order ? $order->items->map(fn ($i) => ['code' => $i->product_code, 'qty' => (float) $i->quantity, 'cost' => (float) $i->unit_cost])->values()->all() : [];
+
+        return view('employee.pages.purchases.form', compact('productos', 'producto', 'suppliers', 'order', 'preload'));
     }
 
     /**
@@ -87,6 +99,10 @@ class PurchaseController extends Controller
             $tax   = (float) ($request->tax ?? 0);
             $total = $subtotal + $tax;
 
+            // Proveedor registrado (su nombre se copia al documento) y condición de pago
+            $supplier         = $request->filled('supplier_id') ? Supplier::find($request->supplier_id) : null;
+            $paymentCondition = $request->input('payment_condition', 'cash');
+
             // Crear cabecera de compra
             $compra = Purchase::create([
                 'company_id'      => $employee->company_id,
@@ -94,7 +110,12 @@ class PurchaseController extends Controller
                 'employee_id'     => $employee->id,
                 'document_type'   => $request->document_type,
                 'document_number' => $request->document_number,
-                'supplier'        => $request->supplier,
+                'supplier'        => $supplier?->name ?? $request->supplier,
+                'supplier_id'     => $supplier?->id,
+                'payment_condition' => $paymentCondition,
+                'due_date'        => $paymentCondition === 'credit' ? $request->due_date : null,
+                'paid_amount'     => $paymentCondition === 'credit' ? 0 : $total,
+                'purchase_order_id' => $request->purchase_order_id,
                 'subtotal'        => $subtotal,
                 'tax'             => $tax,
                 'total'           => $total,
@@ -116,6 +137,12 @@ class PurchaseController extends Controller
                     'expiration_date' => $item['expiration_date'] ?? null,
                     'batch'           => $item['batch'] ?? null,
                 ]);
+
+                // Desglose por lote y vencimiento (para vender primero lo que vence antes)
+                app(BatchService::class)->receive(
+                    $employee->company_id, $employee->branch_id, $item['product_code'], (float) $item['quantity'],
+                    $item['batch'] ?? null, $item['expiration_date'] ?? null, (float) $item['unit_cost'], 'purchase', $compra->id
+                );
 
                 // Incrementar stock en branch_stock con lockForUpdate para evitar condiciones de carrera.
                 // Si no existe el registro, se crea con el stock recibido.
@@ -150,6 +177,11 @@ class PurchaseController extends Controller
                 ]);
             }
 
+            // La orden de compra queda recibida
+            if ($request->filled('purchase_order_id')) {
+                PurchaseOrder::where('company_id', $employee->company_id)->whereKey($request->purchase_order_id)->update(['status' => PurchaseOrder::RECEIVED]);
+            }
+
             DB::commit();
 
             return redirect()->route('employee.purchases.index')
@@ -171,7 +203,7 @@ class PurchaseController extends Controller
 
         abort_if($purchase->company_id !== $employee->company_id, 403);
 
-        $purchase->load('items.product');
+        $purchase->load(['items.product', 'payments.employee', 'supplierRecord']);
         return view('employee.pages.purchases.show', compact('purchase'));
     }
 
@@ -196,6 +228,13 @@ class PurchaseController extends Controller
         DB::beginTransaction();
 
         try {
+            $batches = app(BatchService::class);
+
+            // Si parte de los lotes de esta compra ya se vendió, no se puede anular
+            if (!$batches->isIntact('purchase', $purchase->id, $employee->branch_id)) {
+                throw new \RuntimeException('Parte de los lotes de esta compra ya se vendió o se movió.');
+            }
+
             foreach ($purchase->items()->orderBy('product_code')->get() as $item) {
                 $stock->move(
                     $employee->company_id, $employee->branch_id, $item->product_code, -(float) $item->quantity,
@@ -203,9 +242,16 @@ class PurchaseController extends Controller
                 );
             }
 
+            $batches->discardSource('purchase', $purchase->id, $employee->branch_id);
+            foreach ($purchase->items as $item) {
+                $batches->reconcile($employee->branch_id, $item->product_code);
+            }
+
             $purchase->update(['status' => 0, 'voided_at' => now(), 'void_reason' => $request->void_reason]);
 
             DB::commit();
+
+            \App\Models\AuditLog::record('purchase.void', 'Anuló la compra #' . $purchase->id . ' (S/ ' . number_format($purchase->total, 2) . ')', 'Compra #' . $purchase->id, ['motivo' => $request->void_reason]);
 
             return redirect()->route('employee.purchases.show', $purchase)
                 ->with('success', 'Compra anulada. El stock fue descontado.');

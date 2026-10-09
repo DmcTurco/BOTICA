@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\BranchStock;
 use App\Models\Product;
 use App\Models\StockTransfer;
+use App\Services\BatchService;
 use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -91,14 +92,29 @@ class StockTransferController extends Controller
                 'notes'          => $request->notes,
             ]);
 
+            $batches = app(BatchService::class);
+
             foreach ($items as $item) {
                 $quantity = round((float) $item['quantity'], 2);
                 $cost     = (float) ($costs[$item['product_code']] ?? 0);
+
+                // No se envían unidades vencidas
+                if ($batches->sellable($employee->branch_id, $item['product_code']) < $quantity) {
+                    throw new \RuntimeException('Hay unidades vencidas de ' . $item['product_code'] . ': solo se pueden enviar las vigentes.');
+                }
 
                 $transfer->items()->create(['product_code' => $item['product_code'], 'quantity' => $quantity]);
 
                 $stock->move($employee->company_id, $employee->branch_id, $item['product_code'], -$quantity, 'transfer', $transfer->id, $cost, 'Salida hacia ' . $transfer->toBranch->name);
                 $stock->move($employee->company_id, (int) $request->to_branch_id, $item['product_code'], $quantity, 'transfer', $transfer->id, $cost, 'Ingreso desde ' . $transfer->fromBranch->name);
+
+                // Los lotes viajan con la mercadería: mismo número y vencimiento en la sede de destino
+                foreach ($batches->consume($employee->branch_id, $item['product_code'], $quantity, 'transfer', $transfer->id) as $line) {
+                    $batches->receive(
+                        $employee->company_id, (int) $request->to_branch_id, $item['product_code'], $line['quantity'],
+                        $line['batch']->batch, $line['batch']->expiration_date, $line['batch']->unit_cost, 'transfer', $transfer->id
+                    );
+                }
             }
 
             DB::commit();
@@ -151,15 +167,30 @@ class StockTransferController extends Controller
             $transfer->load('items');
             $costs = Product::whereIn('code', $transfer->items->pluck('product_code'))->pluck('purchase_price', 'code');
 
+            // Si el destino ya vendió parte de los lotes recibidos, no se puede devolver
+            $batches = app(BatchService::class);
+            if (!$batches->isIntact('transfer', $transfer->id, $transfer->to_branch_id)) {
+                throw new \RuntimeException('La sede de destino ya vendió parte de esos lotes.');
+            }
+
             foreach ($transfer->items->sortBy('product_code') as $item) {
                 $cost = (float) ($costs[$item->product_code] ?? 0);
                 $stock->move($employee->company_id, $transfer->to_branch_id, $item->product_code, -$item->quantity, 'transfer_void', $transfer->id, $cost, 'Anulación de traspaso');
                 $stock->move($employee->company_id, $transfer->from_branch_id, $item->product_code, $item->quantity, 'transfer_void', $transfer->id, $cost, 'Anulación de traspaso');
             }
 
+            // Los lotes vuelven a la sede de origen y salen del destino
+            $batches->discardSource('transfer', $transfer->id, $transfer->to_branch_id);
+            $batches->restore('transfer', $transfer->id);
+            foreach ($transfer->items as $item) {
+                $batches->reconcile($transfer->to_branch_id, $item->product_code);
+            }
+
             $transfer->update(['status' => 0, 'voided_at' => now(), 'void_reason' => $request->void_reason]);
 
             DB::commit();
+
+            \App\Models\AuditLog::record('transfer.void', 'Anuló el traspaso #' . $transfer->id, 'Traspaso #' . $transfer->id, ['motivo' => $request->void_reason]);
 
             return redirect()->route('employee.transfers.show', $transfer)->with('success', 'Traspaso anulado. La mercadería volvió a la sede de origen.');
         } catch (\RuntimeException $e) {

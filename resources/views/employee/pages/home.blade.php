@@ -190,7 +190,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @php
-                            $pagos = [1 => 'Efectivo', 2 => 'Tarjeta', 3 => 'Transferencia', 4 => 'Yape'];
+                            $pagos = [1 => 'Efectivo', 2 => 'Tarjeta', 3 => 'Transferencia', 4 => 'Yape', 5 => 'Crédito'];
                             $comprobantes = [1 => 'Boleta', 2 => 'Factura', 3 => 'Nota de Venta'];
                         @endphp
                         @foreach($recentOrders as $order)

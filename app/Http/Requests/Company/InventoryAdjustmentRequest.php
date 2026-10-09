@@ -44,6 +44,9 @@ class InventoryAdjustmentRequest extends FormRequest
             'quantity' => 'required|numeric|min:0|max:99999999',
             'reason'   => ['required', Rule::in(array_keys(self::REASONS))],
             'notes'    => 'nullable|string|max:255|required_if:reason,otro',
+            // Solo se usan al sumar unidades: lote y vencimiento de lo que ingresa
+            'batch'           => 'nullable|string|max:30',
+            'expiration_date' => 'nullable|date',
         ];
     }
 

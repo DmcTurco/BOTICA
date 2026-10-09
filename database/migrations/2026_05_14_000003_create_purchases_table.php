@@ -24,6 +24,11 @@ return new class extends Migration
 
             $table->string('document_number', 30)->nullable()->comment('Número de boleta/factura del proveedor');
             $table->string('supplier', 150)->nullable()->comment('Nombre del proveedor o laboratorio');
+            $table->unsignedBigInteger('supplier_id')->nullable()->index();   // proveedor registrado (suppliers)
+            $table->string('payment_condition', 10)->default('cash')->comment('cash=contado, credit=crédito');
+            $table->date('due_date')->nullable()->comment('Vencimiento de la deuda si es a crédito');
+            $table->decimal('paid_amount', 10, 2)->default(0)->comment('Lo ya pagado al proveedor');
+            $table->unsignedBigInteger('purchase_order_id')->nullable()->index(); // orden de compra que se está recibiendo
 
             $table->decimal('subtotal', 10, 2)->default(0);
             $table->decimal('tax', 10, 2)->default(0)->comment('IGV u otro impuesto');

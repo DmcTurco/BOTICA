@@ -26,6 +26,9 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
 
     Route::get('/home', [Company\CompanyController::class, 'index'])->name('home');
 
+    // Resumen comparativo de todas las sedes
+    Route::get('reports/branches', [Company\BranchReportController::class, 'index'])->name('reports.branches');
+
     // Administración — sedes y empleados
     Route::resource('branches',  Company\BranchController::class)->except(['show']);
     Route::resource('employees', Company\EmployeeController::class)->except(['show']);
@@ -93,6 +96,10 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
         Route::put('orders/{order}/historical', [Employee\OrderController::class, 'updateHistorical'])->name('orders.update-historical');
     });
 
+    // Alternativas por principio activo para el punto de venta
+    Route::get('pos/alternatives', [Employee\ProductAlternativeController::class, 'index'])
+        ->middleware('privilege:ver_ventas')->name('pos.alternatives');
+
     // Búsqueda y listado de clientes — accesible con cualquier privilegio (usada en el POS)
     Route::middleware('privilege:any')->group(function () {
         Route::get('clients/search', [Employee\ClientController::class, 'search'])->name('clients.search');
@@ -108,11 +115,20 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
     });
 
     // Inventario — productos, categorías y laboratorios
+    // Consulta: ver_inventario · Cambios: crear_productos / mantenimiento_familias
     Route::middleware('privilege:ver_inventario')->group(function () {
-        Route::resource('products', Employee\ProductController::class);
-        Route::resource('laboratories', Employee\LaboratoryController::class);
-        Route::resource('categories', Employee\CategoryController::class);
-        Route::resource('units', Employee\UnitController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('products', Employee\ProductController::class)->only(['index']);
+        Route::resource('laboratories', Employee\LaboratoryController::class)->only(['index']);
+        Route::resource('categories', Employee\CategoryController::class)->only(['index']);
+        Route::get('units', [Employee\UnitController::class, 'index'])->name('units.index');
+    });
+    Route::middleware('privilege:crear_productos')->group(function () {
+        Route::resource('products', Employee\ProductController::class)->except(['index', 'show']);
+    });
+    Route::middleware('privilege:mantenimiento_familias')->group(function () {
+        Route::resource('laboratories', Employee\LaboratoryController::class)->except(['index', 'show']);
+        Route::resource('categories', Employee\CategoryController::class)->except(['index', 'show']);
+        Route::resource('units', Employee\UnitController::class)->only(['store', 'update', 'destroy']);
     });
 
     // Compras (ingreso de stock)
@@ -185,6 +201,20 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
         Route::put('series/{series}', [Employee\DocumentSeriesController::class, 'update'])->name('series.update');
     });
 
+    // Baja de lotes vencidos
+    Route::post('batches/{batch}/write-off', [Employee\BatchController::class, 'writeOff'])
+        ->middleware('privilege:ajuste_inventario')->name('batches.write-off');
+
+    // Bitácora de actividad
+    Route::get('audit', [Employee\AuditLogController::class, 'index'])
+        ->middleware('privilege:ver_bitacora')->name('audit.index');
+
+    // Registros de ventas y compras para el contador
+    Route::middleware('privilege:registros_contables')->prefix('accounting')->name('accounting.')->group(function () {
+        Route::get('sales', [Employee\AccountingController::class, 'sales'])->name('sales');
+        Route::get('purchases', [Employee\AccountingController::class, 'purchases'])->name('purchases');
+    });
+
     // Reportes de ventas, productos e inventario (cada uno con su privilegio)
     Route::prefix('reports')->name('reports.')->group(function () {
         $sales = Employee\SalesReportController::class;
@@ -219,6 +249,37 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
     Route::middleware('privilege:editar_datos_local')->group(function () {
         Route::get('local', [Employee\LocalDataController::class, 'edit'])->name('local.edit');
         Route::put('local', [Employee\LocalDataController::class, 'update'])->name('local.update');
+    });
+
+    // Proveedores, órdenes de compra y cuentas por pagar
+    Route::middleware('privilege:proveedores')->group(function () {
+        Route::resource('suppliers', Employee\SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
+    });
+    Route::middleware('privilege:ver_compras')->group(function () {
+        Route::get('purchase-orders', [Employee\PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+        Route::get('purchase-orders/create', [Employee\PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+        Route::post('purchase-orders', [Employee\PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+        Route::get('purchase-orders/{purchaseOrder}', [Employee\PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+        Route::post('purchase-orders/{purchaseOrder}/cancel', [Employee\PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
+    });
+    Route::middleware('privilege:cuentas_pagar')->group(function () {
+        Route::get('payables', [Employee\AccountsPayableController::class, 'index'])->name('payables.index');
+        Route::post('payables/{purchase}/pay', [Employee\AccountsPayableController::class, 'pay'])->name('payables.pay');
+    });
+
+    // Recetas médicas y libro de controlados
+    Route::get('prescriptions', [Employee\PrescriptionController::class, 'index'])
+        ->middleware('privilege:ver_recetas')->name('prescriptions.index');
+    Route::middleware('privilege:libro_controlados')->group(function () {
+        Route::get('controlled-book', [Employee\ControlledBookController::class, 'index'])->name('controlled-book.index');
+        Route::get('controlled-book/print', [Employee\ControlledBookController::class, 'print'])->name('controlled-book.print');
+    });
+
+    // Cuentas por cobrar (fiado) y abonos de clientes
+    Route::middleware('privilege:cuentas_cobrar')->group(function () {
+        Route::get('receivables', [Employee\AccountsReceivableController::class, 'index'])->name('receivables.index');
+        Route::get('receivables/{client}', [Employee\AccountsReceivableController::class, 'show'])->name('receivables.show');
+        Route::post('receivables/{client}/pay', [Employee\AccountsReceivableController::class, 'pay'])->name('receivables.pay');
     });
 
     // Kardex de inventario

@@ -23,6 +23,7 @@ class LocalDataController extends Controller
     public function update(LocalDataRequest $request)
     {
         auth()->guard('employee')->user()->branch->update($request->validated());
+        \App\Models\AuditLog::record('local.update', 'Actualizó los datos del local', null, $request->validated());
 
         return redirect()->route('employee.local.edit')->with('success', 'Datos del local actualizados.');
     }

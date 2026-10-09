@@ -64,6 +64,17 @@
                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
             </div>
 
+            <div class="sm:col-span-3">
+                <label class="block text-xs font-medium text-slate-600 mb-1">Lote (al sumar unidades)</label>
+                <input type="text" name="batch" maxlength="30" value="{{ old('batch') }}" placeholder="Opcional"
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div class="sm:col-span-3">
+                <label class="block text-xs font-medium text-slate-600 mb-1">Vencimiento (al sumar unidades)</label>
+                <input type="date" name="expiration_date" value="{{ old('expiration_date') }}"
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
             <div class="sm:col-span-6 flex justify-end">
                 <button type="submit"
                         class="px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm flex items-center gap-2">

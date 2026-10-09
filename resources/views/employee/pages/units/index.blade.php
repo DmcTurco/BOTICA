@@ -3,6 +3,8 @@
 @section('title', 'Unidades de Medida')
 @section('main-padding', 'p-2 md:p-3')
 
+@php $canManage = auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_MANTENIMIENTO_FAMILIAS); @endphp
+
 @section('content-area')
 <div class="flex-1 flex flex-col gap-3 min-h-0">
 
@@ -11,10 +13,12 @@
             <h1 class="text-xl font-bold text-slate-800">Unidades de Medida</h1>
             <p class="text-sm text-slate-500 mt-0.5">Tabletas, cajas, frascos, gramos... usadas en productos y presentaciones</p>
         </div>
+        @if($canManage)
         <button type="button" id="btnNueva"
                 class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i> Nueva Unidad
         </button>
+        @endif
     </div>
 
     @include('employee.partials.alerts')
@@ -57,6 +61,7 @@
                         </td>
                         <td class="px-5 py-3">
                             <div class="flex items-center justify-end gap-1">
+                                @if($canManage)
                                 <button type="button" class="btn-editar w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-amber-50 hover:text-amber-600"
                                         data-id="{{ $unit->id }}" data-name="{{ $unit->name }}" data-abbr="{{ $unit->abbreviation }}"
                                         data-sunat="{{ $unit->sunat_code }}" data-status="{{ $unit->status }}" title="Editar">
@@ -66,6 +71,7 @@
                                         data-id="{{ $unit->id }}" data-nombre="{{ $unit->name }}" title="Eliminar">
                                     <i class="fas fa-trash text-xs pointer-events-none"></i>
                                 </button>
+                                @endif
                             </div>
                         </td>
                     </tr>

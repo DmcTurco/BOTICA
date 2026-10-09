@@ -31,6 +31,8 @@ class ProductRequest extends FormRequest
             'categoria_id'        => 'required|exists:categories,id',
             'laboratorio_id'      => 'nullable|exists:laboratories,id',
             'principio_activo'    => 'nullable|max:100',
+            'tipo_controlado'     => 'nullable|in:psicotropico,estupefaciente',
+            'registro_sanitario'  => 'nullable|max:30',
             'unidad_medida_id'    => 'required|exists:units,id',
             'afectacion_igv'      => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Models\Product::IGV_LABELS))],
             'precio_compra'       => 'required|numeric|min:0',

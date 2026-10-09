@@ -163,6 +163,8 @@
                                             data-name="{{ $product->name }}"
                                             data-price="{{ $product->unit_sale_price }}"
                                             data-afectacion="{{ $product->igv_affectation }}"
+                                            data-receta="{{ $product->recipe_level }}"
+                                            data-ingredient="{{ $product->active_ingredient }}"
                                             data-stock="{{ (int)($product->branchStocks->first()?->stock_actual ?? 0) }}"
                                             data-presentations='@json($presData)'
                                             title="Agregar al carrito">
@@ -182,6 +184,8 @@
                                 <td colspan="4" class="py-12 text-center">
                                     <i class="fas fa-magnifying-glass text-3xl text-slate-200 mb-2 block"></i>
                                     <p class="text-sm text-slate-400">Sin resultados</p>
+                                    <button type="button" id="btnBuscarPrincipio" class="mt-2 text-xs font-medium text-sky-600 hover:text-sky-700"><i class="fas fa-right-left mr-1"></i> Buscar productos con ese principio activo</button>
+                                    <div id="altSinResultados" class="mt-3 space-y-1 max-w-sm mx-auto text-left"></div>
                                 </td>
                             </tr>
                         </tbody>
@@ -276,6 +280,18 @@
                                 <i class="fas fa-mobile-screen-button text-base"></i>
                                 <span class="text-[11px] font-semibold leading-none">Yape</span>
                             </button>
+                            @unless($editOrder)
+                            <button class="btn-pago btn-pago-inactivo col-span-2 flex items-center justify-center gap-2 py-2.5 px-1 rounded-xl border-2 transition-all" data-value="5">
+                                <i class="fas fa-handshake text-base"></i>
+                                <span class="text-[11px] font-semibold leading-none">Crédito (fiado)</span>
+                            </button>
+                            @endunless
+                        </div>
+                        <div id="seccionCredito" class="hidden mt-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                            <p class="text-[11px] text-amber-800 mb-1.5">Requiere un cliente registrado con línea de crédito. No aplica a facturas.</p>
+                            <label class="block text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Vence el</label>
+                            <input type="date" id="creditDueDate" value="{{ date('Y-m-d', strtotime('+30 days')) }}" min="{{ date('Y-m-d') }}"
+                                   class="w-full px-2 py-1.5 text-sm border border-amber-300 rounded-lg bg-white">
                         </div>
                     </div>
 
@@ -412,6 +428,34 @@
     </div>
 </div>
 
+{{-- ── Modal: receta médica (productos con receta o controlados) ───── --}}
+<div id="modalReceta" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg">
+        <div class="flex items-start gap-3 p-5 border-b border-slate-100">
+            <div class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center shrink-0"><i class="fas fa-file-prescription text-sky-600 text-sm"></i></div>
+            <div>
+                <p class="text-sm font-bold text-slate-800">Receta médica</p>
+                <p id="recetaAviso" class="text-xs text-slate-500 mt-0.5"></p>
+            </div>
+        </div>
+        <div class="p-5 grid grid-cols-2 gap-3">
+            <input type="hidden" id="recetaNivel" value="1">
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Paciente <span class="text-red-500">*</span></label><input type="text" id="recetaPaciente" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Documento del paciente <span class="receta-controlado text-red-500">*</span></label><input type="text" id="recetaDocPaciente" maxlength="15" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Médico <span class="text-red-500">*</span></label><input type="text" id="recetaMedico" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">N° colegiatura (CMP) <span class="text-red-500">*</span></label><input type="text" id="recetaCmp" maxlength="20" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">N° de receta <span class="receta-controlado text-red-500">*</span></label><input type="text" id="recetaNumero" maxlength="30" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Fecha de la receta <span class="text-red-500">*</span></label><input type="date" id="recetaFecha" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2"><label class="block text-xs font-medium text-slate-600 mb-1">Establecimiento de salud</label><input type="text" id="recetaEstablecimiento" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <p id="recetaError" class="hidden col-span-2 text-xs text-red-600"></p>
+        </div>
+        <div class="flex justify-end gap-3 px-5 py-4 border-t border-slate-100">
+            <button type="button" onclick="cerrarModalReceta()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg">Cancelar</button>
+            <button type="button" id="btnGuardarReceta" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">Guardar y confirmar venta</button>
+        </div>
+    </div>
+</div>
+
 {{-- ── Modal: seleccionar cantidad / presentación ──────────────── --}}
 <div id="modalAgregar" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-sm">
@@ -454,6 +498,12 @@
                 <p class="text-xs text-slate-400 mt-1.5 text-center">
                     Stock disponible: <span id="modalStock" class="font-semibold text-slate-600"></span>
                 </p>
+            </div>
+
+            {{-- Alternativas con el mismo principio activo --}}
+            <div id="altBox" class="hidden">
+                <button type="button" id="btnAlternativas" class="text-xs font-medium text-sky-600 hover:text-sky-700"><i class="fas fa-right-left mr-1"></i> Ver alternativas con el mismo principio activo</button>
+                <div id="altLista" class="mt-2 space-y-1"></div>
             </div>
 
             {{-- Precio + acción --}}
@@ -532,7 +582,8 @@ $(document).on('click', '.btn-pago', function() {
     const val = $(this).data('value');
     $('#tipoPago').val(val);
     // Mostrar Nro Operación solo para métodos no-efectivo
-    $('#seccionNroOp').toggleClass('hidden', val == 1);
+    $('#seccionNroOp').toggleClass('hidden', val == 1 || val == 5);
+    $('#seccionCredito').toggleClass('hidden', val != 5);
 });
 
 // ── Tipo de comprobante ───────────────────────────────────────
@@ -577,7 +628,12 @@ let carrito = {};
 const EDIT_ORDER = @json($editConfig);
 
 // Cliente predeterminado: ventas al público general (DNI 00000000)
-const PUBLIC_CLIENT = @json(['id' => $publicClient->id, 'name' => $publicClient->name, 'document' => $publicClient->document_number, 'doc_type_id' => $publicClient->document_type_id]);
+const PUBLIC_CLIENT = {!! json_encode([
+    'id'          => $publicClient->id,
+    'name'        => $publicClient->name,
+    'document'    => $publicClient->document_number,
+    'doc_type_id' => $publicClient->document_type_id,
+]) !!};
 
 const BTN_LABEL = EDIT_ORDER ? 'Guardar Cambios' : 'Confirmar Venta';
 
@@ -611,6 +667,29 @@ function filtrarProductos() {
     $('#contadorProductos').text(visible);
 }
 
+// ── Alternativas por principio activo ────────────────────────
+function pintarAlternativas($destino, lista) {
+    $destino.html(lista.length ? lista.map(p => `
+        <button type="button" class="alt-item w-full text-left px-3 py-2 rounded-lg border border-slate-200 hover:bg-emerald-50 hover:border-emerald-300 transition-colors" data-name="${$('<div>').text(p.name).html()}">
+            <span class="block text-xs font-medium text-slate-800">${$('<div>').text(p.name).html()}</span>
+            <span class="block text-[10px] text-slate-500">${$('<div>').text(p.laboratory || 'sin laboratorio').html()} · S/ ${p.price.toFixed(2)} · stock ${p.stock}</span>
+        </button>`).join('') : '<p class="text-xs text-slate-400">No hay otros productos con ese principio activo y stock.</p>');
+}
+
+$('#btnAlternativas').on('click', function () {
+    $.getJSON('{{ route("employee.pos.alternatives") }}', { code: modalProducto.code }, lista => pintarAlternativas($('#altLista'), lista));
+});
+
+$('#btnBuscarPrincipio').on('click', function () {
+    $.getJSON('{{ route("employee.pos.alternatives") }}', { q: $('#inputBusqueda').val().trim() }, lista => pintarAlternativas($('#altSinResultados'), lista));
+});
+
+// Elegir una alternativa: se cierra el modal y la lista se filtra a ese producto
+$(document).on('click', '.alt-item', function () {
+    cerrarModalAgregar();
+    $('#inputBusqueda').val($(this).data('name')).trigger('input');
+});
+
 // ── Modal de cantidad / presentación ─────────────────────────
 let modalProducto   = null;
 let modalPrecio     = 0;
@@ -621,9 +700,13 @@ $(document).on('click', '.btn-agregar', function() {
     const price         = parseFloat($(this).data('price'));
     const stock         = parseInt($(this).data('stock'));
     const afectacion    = String($(this).data('afectacion') || '20');
+    const receta        = parseInt($(this).data('receta')) || 0;
+    const ingredient    = String($(this).data('ingredient') || '');
     const presentations = $(this).data('presentations') || [];
 
-    modalProducto = { code, name, stock, afectacion };
+    modalProducto = { code, name, stock, afectacion, receta, ingredient };
+    $('#altLista').empty();
+    $('#altBox').toggleClass('hidden', !ingredient);
     modalPrecio   = price;
 
     $('#modalNombre').text(name);
@@ -688,7 +771,7 @@ $('#modalCantidad').on('keydown', function(e) {
 
 $('#modalBtnAgregar').on('click', function() {
     if (!modalProducto) return;
-    const { code, name, stock, afectacion } = modalProducto;
+    const { code, name, stock, afectacion, receta } = modalProducto;
     const price = modalPrecio;
     const qty   = Math.min(Math.max(parseInt($('#modalCantidad').val()) || 1, 1), stock);
 
@@ -696,7 +779,7 @@ $('#modalBtnAgregar').on('click', function() {
         carrito[code].qty   = Math.min(carrito[code].qty + qty, stock);
         carrito[code].price = price;
     } else {
-        carrito[code] = { name, price, stock, qty, afectacion };
+        carrito[code] = { name, price, stock, qty, afectacion, receta };
     }
 
     cerrarModalAgregar();
@@ -865,7 +948,49 @@ function nuevaVenta() {
 $('#btnNuevaVenta').on('click', nuevaVenta);
 
 // ── Confirmar venta (AJAX) ────────────────────────────────────
+// Receta médica: se pide al confirmar si el carrito tiene productos con receta (1) o controlados (2)
+let recetaDatos = null;
+function nivelReceta() {
+    return Object.values(carrito).reduce((max, i) => Math.max(max, i.receta || 0), 0);
+}
+function abrirModalReceta(nivel) {
+    $('#recetaNivel').val(nivel);
+    $('#recetaAviso').text(nivel === 2
+        ? 'La venta incluye productos CONTROLADOS: todos los datos de la receta son obligatorios y quedan en el libro de controlados.'
+        : 'La venta incluye productos que se venden con receta médica.');
+    $('.receta-controlado').toggleClass('hidden', nivel < 2);
+    $('#recetaError').addClass('hidden').text('');
+    if (!$('#recetaFecha').val()) $('#recetaFecha').val(new Date().toISOString().slice(0, 10));
+    document.getElementById('modalReceta').style.setProperty('display', 'flex', 'important');
+}
+function cerrarModalReceta() {
+    document.getElementById('modalReceta').style.setProperty('display', 'none', 'important');
+}
+$('#btnGuardarReceta').on('click', function () {
+    const nivel = parseInt($('#recetaNivel').val()) || 1;
+    const d = {
+        patient_name: $('#recetaPaciente').val().trim(), patient_document: $('#recetaDocPaciente').val().trim(),
+        doctor_name: $('#recetaMedico').val().trim(), doctor_license: $('#recetaCmp').val().trim(),
+        establishment: $('#recetaEstablecimiento').val().trim(), prescription_number: $('#recetaNumero').val().trim(),
+        prescription_date: $('#recetaFecha').val(),
+    };
+    const faltan = [];
+    if (!d.patient_name) faltan.push('paciente');
+    if (!d.doctor_name) faltan.push('médico');
+    if (!d.doctor_license) faltan.push('CMP');
+    if (!d.prescription_date) faltan.push('fecha');
+    if (nivel >= 2 && !d.patient_document) faltan.push('documento del paciente');
+    if (nivel >= 2 && !d.prescription_number) faltan.push('N° de receta');
+    if (faltan.length) { $('#recetaError').removeClass('hidden').text('Completa: ' + faltan.join(', ') + '.'); return; }
+    recetaDatos = d;
+    cerrarModalReceta();
+    $('#btnTerminarVenta').trigger('click');
+});
+
 $('#btnTerminarVenta').on('click', function() {
+    const nivelRx = nivelReceta();
+    if (nivelRx > 0 && !EDIT_ORDER && !recetaDatos) { abrirModalReceta(nivelRx); return; }
+
     const items = Object.entries(carrito).map(([code, item]) => ({
         code:  code,
         name:  item.name,
@@ -889,6 +1014,8 @@ $('#btnTerminarVenta').on('click', function() {
         igv:      igv,
         total:    total,
         discount_percent: porcentajeDescuento(),
+        prescription: nivelRx > 0 ? recetaDatos : null,
+        credit_due_date: $('#tipoPago').val() == 5 ? $('#creditDueDate').val() : null,
         historical: @json($historicalCaja?->id),   // caja histórica (null = caja normal)
     };
 
@@ -920,6 +1047,8 @@ $('#btnTerminarVenta').on('click', function() {
             openSaleSuccessModal(res.order_id, numComp);
 
             carrito = {};
+            recetaDatos = null;
+            $('#modalReceta input').not('#recetaNivel').val('');
             renderCarrito();
             $('#inputBusqueda').val('').trigger('input');
             $('#cliente, #documento, #nroOperacion').val('');

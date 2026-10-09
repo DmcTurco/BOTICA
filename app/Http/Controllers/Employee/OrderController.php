@@ -9,17 +9,20 @@ use App\Models\DocumentSeries;
 use App\Models\DocumentType;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Prescription;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Jobs\SendOrderToSunat;
 use App\Models\CompanySunatSetting;
 use App\Services\Sunat\Contracts\SunatGateway;
+use App\Services\BatchService;
 use App\Services\Sunat\TaxCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
@@ -145,6 +148,106 @@ class OrderController extends Controller
         return $setting && $setting->enabled && $setting->isReady();
     }
 
+    /**
+     * El POS ofrece solo stock vendible: a lo que hay en la sede se le restan las unidades de lotes
+     * vencidos, y los productos que quedan en 0 desaparecen de la lista. (Solo en memoria; no se guarda.)
+     */
+    private function withSellableStock(\Illuminate\Support\Collection $products, int $branchId): \Illuminate\Support\Collection
+    {
+        $expired = app(BatchService::class)->expiredMap($branchId, $products->pluck('code')->all());
+
+        return $products
+            ->each(function (Product $p) use ($expired) {
+                if ($stock = $p->branchStocks->first()) {
+                    $stock->stock_actual = max(0, (float) $stock->stock_actual - ($expired[$p->code] ?? 0));
+                }
+            })
+            ->filter(fn (Product $p) => (float) ($p->branchStocks->first()?->stock_actual ?? 0) > 0)
+            ->values();
+    }
+
+    /**
+     * Reglas del fiado: solo para un cliente registrado con línea de crédito disponible, y no en facturas
+     * (una factura al crédito exige declarar las cuotas a SUNAT, que este sistema aún no envía).
+     * Devuelve [cliente|null, mensaje de error|null].
+     */
+    private function creditClient(Request $request, int $companyId, float $total): array
+    {
+        if ((int) $request->voucher_type === 2) {
+            return [null, 'Las facturas no se emiten al crédito. Usa boleta o nota de venta para el fiado.'];
+        }
+
+        $client = $request->filled('client_id')
+            ? Client::where('company_id', $companyId)->activos()->find($request->client_id)
+            : null;
+
+        if (!$client || $client->isPublic()) {
+            return [null, 'Para vender a crédito debes seleccionar un cliente registrado (no el cliente público).'];
+        }
+        if ((float) $client->credit_limit <= 0) {
+            return [null, 'El cliente «' . $client->name . '» no tiene línea de crédito. Asígnala en su ficha de cliente.'];
+        }
+        if ($total > $client->creditAvailable()) {
+            return [null, 'Supera el crédito disponible de «' . $client->name . '»: puede usar S/ ' . number_format($client->creditAvailable(), 2) . ' y la venta es de S/ ' . number_format($total, 2) . '.'];
+        }
+
+        return [$client, null];
+    }
+
+    /** Cliente enviado por el POS solo si pertenece a la compañía (si no, la venta queda sin cliente enlazado) */
+    private function validClientId(Request $request, int $companyId): ?int
+    {
+        return $request->filled('client_id')
+            ? Client::where('company_id', $companyId)->whereKey($request->client_id)->value('id')
+            : null;
+    }
+
+    /**
+     * Nivel de receta más alto entre los productos vendidos: 0 libre · 1 exige receta · 2 controlado.
+     * Se lee de la base de datos, nunca del navegador.
+     */
+    private function recipeLevel(array $items, int $companyId): int
+    {
+        return (int) Product::where('company_id', $companyId)
+            ->whereIn('code', array_column($items, 'code'))
+            ->get(['code', 'requires_recipe', 'controlled_type'])
+            ->max(fn (Product $p) => $p->recipe_level);
+    }
+
+    /**
+     * Valida los datos de la receta que acompañan a la venta. En productos controlados también
+     * son obligatorios el documento del paciente y el número de receta.
+     * Devuelve [datos validados|null, mensaje de error|null].
+     */
+    private function prescriptionData(Request $request, int $level): array
+    {
+        $strict = $level >= 2;
+
+        $validator = Validator::make((array) $request->input('prescription'), [
+            'patient_name'        => 'required|string|max:150',
+            'patient_document'    => ($strict ? 'required' : 'nullable') . '|string|max:15',
+            'doctor_name'         => 'required|string|max:150',
+            'doctor_license'      => 'required|string|max:20',
+            'establishment'       => 'nullable|string|max:150',
+            'prescription_number' => ($strict ? 'required' : 'nullable') . '|string|max:30',
+            'prescription_date'   => 'required|date|before_or_equal:today',
+        ], [
+            'patient_name.required'        => 'falta el nombre del paciente.',
+            'patient_document.required'    => 'falta el documento del paciente.',
+            'doctor_name.required'         => 'falta el nombre del médico.',
+            'doctor_license.required'      => 'falta el N° de colegiatura (CMP) del médico.',
+            'prescription_number.required' => 'falta el número de receta.',
+            'prescription_date.required'   => 'falta la fecha de la receta.',
+            'prescription_date.before_or_equal' => 'la fecha de la receta no puede ser futura.',
+        ]);
+
+        if ($validator->fails()) {
+            return [null, 'Esta venta incluye productos ' . ($strict ? 'controlados' : 'con receta') . ': ' . $validator->errors()->first()];
+        }
+
+        return [$validator->validated(), null];
+    }
+
     /** Descuento máximo que se puede dar en una venta (%) */
     const MAX_DISCOUNT_PERCENT = 50;
 
@@ -244,7 +347,7 @@ class OrderController extends Controller
      * un mismo producto aparece en varias líneas.
      * Devuelve el nombre del primer producto sin stock suficiente, o null si todo alcanza.
      */
-    private function insufficientStock(array $items, \Illuminate\Support\Collection $stocks): ?string
+    private function insufficientStock(array $items, \Illuminate\Support\Collection $stocks, array $expired = []): ?string
     {
         $required = [];
         $names    = [];
@@ -258,7 +361,8 @@ class OrderController extends Controller
         foreach ($required as $code => $qty) {
             $stock = $stocks->get($code);
 
-            if (!$stock || (float) $stock->stock_actual < $qty) {
+            // Las unidades de lotes vencidos no se pueden vender
+            if (!$stock || (float) $stock->stock_actual - ($expired[$code] ?? 0) < $qty) {
                 return $names[$code];
             }
         }
@@ -327,6 +431,8 @@ class OrderController extends Controller
             ->orderBy('name')
             ->get();
 
+        $products = $this->withSellableStock($products, $branchId);
+
         $documentTypes = DocumentType::activos()->get();
 
         // Configuración de impresión de la sede (para el modal post-venta)
@@ -392,7 +498,9 @@ class OrderController extends Controller
             'items.*.qty'       => 'required|numeric|min:1',
             'items.*.price'     => 'required|numeric|min:0',
             'items.*.name'      => 'required|string',
-            'payment_type'      => 'required|in:1,2,3,4',
+            'payment_type'      => 'required|in:1,2,3,4,5',
+            'credit_due_date'   => 'nullable|date|after_or_equal:today',
+            'client_id'         => 'nullable|integer',
             'voucher_type'      => 'required|in:1,2,3',
             'document_type_id'  => 'nullable|exists:document_types,id',
             'subtotal'          => 'nullable|numeric|min:0',
@@ -464,6 +572,29 @@ class OrderController extends Controller
             }
         }
 
+        // Venta a crédito (fiado): cliente registrado con línea disponible
+        $creditClient = null;
+
+        if ((int) $request->payment_type === \App\Models\CashRegister::PAYMENT_CREDIT) {
+            [$creditClient, $creditError] = $this->creditClient($request, $employee->company_id, $tax['total']);
+
+            if ($creditError) {
+                return response()->json(['success' => false, 'message' => $creditError], 422);
+            }
+        }
+
+        // Productos con receta o controlados: la venta exige los datos de la receta
+        $rxLevel          = $this->recipeLevel($request->items, $employee->company_id);
+        $prescriptionData = null;
+
+        if ($rxLevel > 0) {
+            [$prescriptionData, $rxError] = $this->prescriptionData($request, $rxLevel);
+
+            if ($rxError) {
+                return response()->json(['success' => false, 'message' => $rxError, 'needs_prescription' => $rxLevel], 422);
+            }
+        }
+
         // Boleta o factura con facturación electrónica activa: queda pendiente de informar a SUNAT
         $sunatStatus = in_array((int) $request->voucher_type, [1, 2], true) && $this->sunatEnabled($employee->company_id)
             ? Order::SUNAT_PENDING
@@ -484,11 +615,13 @@ class OrderController extends Controller
             // cruzados entre ventas) y verificar que alcance antes de registrar nada
             $stocks = $this->lockStock($employee->branch_id, array_column($request->items, 'code'));
 
-            if ($faltante = $this->insufficientStock($request->items, $stocks)) {
+            $batches = app(BatchService::class);
+
+            if ($faltante = $this->insufficientStock($request->items, $stocks, $batches->expiredMap($employee->branch_id, array_column($request->items, 'code')))) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => 'Stock insuficiente para: ' . $faltante,
+                    'message' => 'Stock insuficiente (o lote vencido) para: ' . $faltante,
                 ], 422);
             }
 
@@ -502,6 +635,7 @@ class OrderController extends Controller
                 'branch_id'         => $employee->branch_id,
                 'employee_id'       => $employee->id,
                 'cash_register_id'  => $cashRegisterId,
+                'client_id'         => $creditClient?->id ?? $this->validClientId($request, $employee->company_id),
                 'customer_name'     => $request->customer_name ?: null,
                 'document_type_id'  => $documentTypeId,
                 'customer_document' => $request->customer_document ?: null,
@@ -517,6 +651,8 @@ class OrderController extends Controller
                 'discount_percent'  => $discountPercent,
                 'discount_amount'   => $tax['discount'],
                 'total'             => $tax['total'],
+                'credit_balance'    => $creditClient ? $tax['total'] : 0,
+                'credit_due_date'   => $creditClient ? ($request->credit_due_date ?: now()->addDays(30)->toDateString()) : null,
                 'status'            => 1,
                 'sunat_status'      => $sunatStatus,
             ]);
@@ -527,6 +663,15 @@ class OrderController extends Controller
             }
 
             $order->save();
+
+            if ($prescriptionData) {
+                Prescription::create($prescriptionData + [
+                    'company_id'  => $employee->company_id,
+                    'branch_id'   => $employee->branch_id,
+                    'order_id'    => $order->id,
+                    'employee_id' => $employee->id,
+                ]);
+            }
 
             // Registrar ítems, descontar stock en branch_stock y registrar kardex
             foreach ($request->items as $i => $item) {
@@ -571,9 +716,19 @@ class OrderController extends Controller
                 }
 
                 $movement->save();
+
+                // Sale del lote que vence primero (FEFO)
+                $batches->consume($employee->branch_id, $item['code'], (float) $item['qty'], 'order', $order->id);
             }
 
             DB::commit();
+
+            if ($discountPercent > 0) {
+                \App\Models\AuditLog::record('sale.discount', 'Aplicó ' . $discountPercent . '% de descuento (S/ ' . number_format($tax['discount'], 2) . ') en ' . $order->voucher_number, $order->voucher_number, ['total' => $tax['total']]);
+            }
+            if ($creditClient) {
+                \App\Models\AuditLog::record('sale.credit', 'Vendió a crédito S/ ' . number_format($tax['total'], 2) . ' a ' . $creditClient->name, $order->voucher_number, ['vence' => $order->credit_due_date?->toDateString()]);
+            }
 
             // Se informa a SUNAT después de responder al cajero (no lo hace esperar)
             if ($sunatStatus === Order::SUNAT_PENDING) {
@@ -649,6 +804,8 @@ class OrderController extends Controller
             ->orderBy('name')
             ->get();
 
+        $products = $this->withSellableStock($products, $branchId);
+
         $documentTypes = DocumentType::activos()->get();
 
         // Configuración de impresión de la sede (la vista del POS la necesita)
@@ -722,6 +879,11 @@ class OrderController extends Controller
             return response()->json(['success' => false, 'message' => $discountError], 422);
         }
 
+        // Las ventas a crédito no se editan (su deuda y abonos dependen del total)
+        if ((int) $order->payment_type === \App\Models\CashRegister::PAYMENT_CREDIT) {
+            return response()->json(['success' => false, 'message' => 'Las ventas a crédito no se pueden editar. Anúlalas con una nota de crédito y regístralas de nuevo.'], 422);
+        }
+
         // IGV y totales: se recalculan con la afectación real de cada producto
         $pricing = $this->pricing($request->items, $employee->company_id, $request->total, $discountPercent);
 
@@ -730,6 +892,14 @@ class OrderController extends Controller
         }
 
         ['tax' => $tax, 'units' => $units] = $pricing;
+
+        // Si la venta editada incluye productos con receta, ya debe tener su receta registrada
+        if ($this->recipeLevel($request->items, $employee->company_id) > 0 && !$order->prescription()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Esta venta incluye productos con receta pero no tiene receta registrada. Regístrala de nuevo desde el punto de venta con los datos de la receta.',
+            ], 422);
+        }
 
         // Si al editar la boleta supera S/ 700, el cliente que ya tiene la orden debe estar identificado
         if ($order->isBoleta()) {
@@ -753,7 +923,10 @@ class OrderController extends Controller
                 array_column($request->items, 'code')
             ));
 
-            // 1. Devolver stock de los ítems actuales de la orden
+            // 1. Devolver stock de los ítems actuales de la orden (y sus unidades a los lotes de origen)
+            $batches = app(BatchService::class);
+            $batches->restore('order', $order->id);
+
             foreach ($order->items as $oldItem) {
                 $branchStock = BranchStock::where('branch_id', $employee->branch_id)
                     ->where('product_code', $oldItem->product_code)
@@ -784,11 +957,11 @@ class OrderController extends Controller
                 ->get()
                 ->keyBy('product_code');
 
-            if ($faltante = $this->insufficientStock($request->items, $stocks)) {
+            if ($faltante = $this->insufficientStock($request->items, $stocks, $batches->expiredMap($employee->branch_id, array_column($request->items, 'code')))) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => 'Stock insuficiente para: ' . $faltante,
+                    'message' => 'Stock insuficiente (o lote vencido) para: ' . $faltante,
                 ], 422);
             }
 
@@ -828,6 +1001,8 @@ class OrderController extends Controller
                     'unit_cost'      => $item['price'],
                     'balance'        => (int) $nuevoStock,
                 ]);
+
+                $batches->consume($employee->branch_id, $item['code'], (float) $item['qty'], 'order', $order->id);
             }
 
             // 4. Actualizar totales de la orden

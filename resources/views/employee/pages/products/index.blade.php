@@ -3,6 +3,8 @@
 @section('title', 'Productos')
 @section('main-padding', 'p-2 md:p-3')
 
+@php $canManage = auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_CREAR_PRODUCTOS); @endphp
+
 @section('content-area')
 <div class="flex-1 flex flex-col gap-3 min-h-0">
 
@@ -12,10 +14,12 @@
             <h1 class="text-xl font-bold text-slate-800">Productos</h1>
             <p class="text-sm text-slate-500 mt-0.5">Administra el inventario de la farmacia</p>
         </div>
+        @if($canManage)
         <a href="{{ route('employee.products.create') }}"
            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i> Nuevo Producto
         </a>
+        @endif
     </div>
 
     {{-- Filtros --}}
@@ -138,6 +142,7 @@
                         </td>
                         <td class="px-5 py-3">
                             <div class="flex items-center justify-end gap-1">
+@if($canManage)
                                 <a href="{{ route('employee.products.edit', $producto->code) }}"
                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Editar">
                                     <i class="fas fa-pencil text-xs"></i>
@@ -147,6 +152,7 @@
                                         data-id="{{ $producto->code }}" data-nombre="{{ $producto->name }}" title="Eliminar">
                                     <i class="fas fa-trash text-xs"></i>
                                 </button>
+@endif
                             </div>
                         </td>
                     </tr>
@@ -156,7 +162,9 @@
                             <div class="flex flex-col items-center gap-2 text-slate-400">
                                 <i class="fas fa-pills text-3xl"></i>
                                 <p class="text-sm">No hay productos registrados</p>
+                                @if($canManage)
                                 <a href="{{ route('employee.products.create') }}" class="text-emerald-600 text-sm hover:underline">Agregar primer producto</a>
+                                @endif
                             </div>
                         </td>
                     </tr>
