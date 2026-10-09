@@ -6,6 +6,13 @@
 @section('main-class', 'overflow-hidden')
 
 @section('content-area')
+    {{-- La pestaña de presentaciones llena el alto del cuadro y solo su lista hace scroll (no empuja los botones) --}}
+    <style>
+        #tab-presentaciones:not(.hidden) { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; }
+        #presentaciones-container { flex: 1 1 0; min-height: 8rem; overflow-y: auto; }
+        /* Esta pantalla ocupa exactamente la ventana: solo las listas internas se desplazan */
+        html, body { overflow: hidden; }
+    </style>
     <div class="flex-1 flex flex-col gap-3 min-h-0">
 
         {{-- Header --}}
@@ -36,7 +43,7 @@
 
         <form id="productoForm"
             action="{{ isset($products) ? route('employee.products.update', $products->code) : route('employee.products.store') }}"
-            method="POST" class="flex-1 flex flex-col">
+            method="POST" class="flex-1 min-h-0 flex flex-col">
             @csrf
             @if (isset($products))
                 @method('PUT')
@@ -62,7 +69,7 @@
                     </button>
                 </div>
 
-                <div class="flex-1 overflow-auto p-6">
+                <div class="flex-1 min-h-0 overflow-auto p-6 flex flex-col">
 
                     {{-- Tab: Información General --}}
                     <div id="tab-general" class="tab-panel space-y-5">
@@ -226,6 +233,7 @@
                         {{-- Precios Unitarios --}}
                         <div>
                             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Precio Unitario
+                                <span class="font-normal text-slate-400 normal-case">(de una sola unidad: 1 tableta, 1 ampolla...)</span>
                             </p>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
@@ -399,22 +407,21 @@
                     {{-- Tab: Presentaciones --}}
                     <div id="tab-presentaciones" class="tab-panel hidden space-y-4">
 
-                        <div
-                            class="bg-sky-50 border border-sky-200 text-sky-800 rounded-lg p-3 text-sm flex items-start gap-2">
-                            <i class="fas fa-info-circle mt-0.5 text-sky-500 shrink-0"></i>
-                            <span>Las presentaciones permiten manejar distintas formas de venta del mismo producto (unidad,
-                                blister, caja, etc.)</span>
-                        </div>
-
-                        <div id="presentaciones-container" class="space-y-3">
-                            {{-- Presentaciones dinámicas aquí --}}
-                        </div>
-
-                        <div class="text-center pt-1">
+                        <div class="flex items-start justify-between gap-3">
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                <i class="fas fa-info-circle text-sky-500 mr-1"></i>
+                                Otra forma de vender el mismo producto (blíster, caja...): indica cuántas <strong>unidades</strong> contiene
+                                y el <strong>precio de venta de toda la presentación</strong> (caja de 10 → S/ 18.00).
+                                El precio de compra siempre es por unidad.
+                            </p>
                             <button type="button" id="btn-agregar-presentacion"
-                                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-600 border border-emerald-300 rounded-lg hover:bg-emerald-50 transition-colors">
-                                <i class="fas fa-plus text-xs"></i> Agregar Presentación
+                                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-600 border border-emerald-300 rounded-lg hover:bg-emerald-50 transition-colors">
+                                <i class="fas fa-plus text-[10px]"></i> Agregar
                             </button>
+                        </div>
+
+                        <div id="presentaciones-container" class="space-y-3 pr-1">
+                            {{-- Presentaciones dinámicas aquí --}}
                         </div>
 
                         {{-- Template --}}
@@ -502,11 +509,26 @@
         let contadorPresentaciones = 0;
 
         $(document).ready(function() {
+            // El navegador a veces desplaza el contenedor principal (foco, listas desplegables). Aquí nunca debe moverse.
+            const principal = document.querySelector('main');
+            if (principal) principal.addEventListener('scroll', () => { principal.scrollTop = 0; });
+            window.addEventListener('scroll', () => window.scrollTo(0, 0));
+
             inicializarTabs();
             inicializarSelect2();
             inicializarEventos();
 
-            @if (isset($products) && $products->presentations->count())
+            @if (old('presentaciones'))
+                {{-- El formulario volvió con errores: se restauran las presentaciones que se estaban escribiendo --}}
+                @foreach (old('presentaciones') as $presentacion)
+                    agregarPresentacion({
+                        unidad_medida_id: @json($presentacion['unidad_medida_id'] ?? ''),
+                        cantidad_equivalente: @json($presentacion['cantidad_equivalente'] ?? ''),
+                        precio_venta: @json($presentacion['precio_venta'] ?? ''),
+                        es_presentacion_principal: {{ !empty($presentacion['es_presentacion_principal']) ? 'true' : 'false' }}
+                    });
+                @endforeach
+            @elseif (isset($products) && $products->presentations->count())
                 @foreach ($products->presentations as $presentacion)
                     agregarPresentacion({
                         unidad_medida_id: '{{ $presentacion->unit_id }}',
@@ -594,7 +616,9 @@
                 esPrincipalCheck.checked = datos.es_presentacion_principal;
             }
 
-            document.querySelector('#presentaciones-container').appendChild(clone);
+            const contenedor = document.querySelector('#presentaciones-container');
+            contenedor.appendChild(clone);
+            if (!datos) contenedor.scrollTop = contenedor.scrollHeight;   // la nueva queda a la vista
 
             $(item).find('.select2').select2({
                 placeholder: "Seleccione una opción",
@@ -614,18 +638,20 @@
             $('#presentaciones-container').on('click', '.btn-eliminar-presentacion', function() {
                 $(this).closest('.presentacion-item').remove();
             });
-        }
 
-        function inicializarEventos() {
-            $('#precio_compra, #precio_venta_unidad, #precio_compra_paquete, #precio_venta_paquete').on('input',
-                calcularUtilidades);
+            // Si falta un dato en una pestaña que no se está viendo, el navegador bloqueaba el guardado sin avisar.
+            // Ahora se abre esa pestaña y se señala el campo que falta.
+            $('#productoForm').on('submit', function(e) {
+                if (this.checkValidity()) return;
 
-            $('#btn-agregar-presentacion').on('click', function() {
-                agregarPresentacion();
-            });
+                e.preventDefault();
+                const campo = this.querySelector(':invalid');
+                const panel = campo ? campo.closest('.tab-panel') : null;
 
-            $('#presentaciones-container').on('click', '.btn-eliminar-presentacion', function() {
-                $(this).closest('.presentacion-item').remove();
+                if (panel && panel.classList.contains('hidden')) {
+                    document.querySelector(`.tab-btn[data-target="${panel.id}"]`).click();
+                }
+                setTimeout(() => this.reportValidity(), 50);
             });
         }
 
