@@ -9,6 +9,7 @@ use App\Models\Formula;
 use App\Models\Product;
 use App\Models\Production;
 use App\Models\StockMovement;
+use App\Services\BatchService;
 use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -136,8 +137,11 @@ class ProductionController extends Controller
             $prices = Product::whereIn('code', array_keys($needs))->pluck('purchase_price', 'code');
 
             // Verificar que alcance el stock de todos los insumos
+            $batchService = app(BatchService::class);
+
             foreach ($needs as $code => $needed) {
-                $available = (float) ($stocks[$code]->stock_actual ?? 0);
+                // Los insumos vencidos no se usan: solo cuenta el stock vendible
+                $available = $batchService->sellable($employee->branch_id, $code);
                 if ($available < $needed) {
                     DB::rollBack();
                     $name = $formula->ingredients->firstWhere('product_code', $code)?->product?->name ?? $code;
@@ -199,6 +203,9 @@ class ProductionController extends Controller
                     'balance'        => $newBalance,
                     'notes'          => 'Insumo del lote ' . $production->batch,
                 ]);
+
+                // Sale de los lotes de insumo que vencen primero
+                $batchService->consume($employee->branch_id, $code, $needed, 'production', $production->id);
             }
 
             // Si se vende en el POS, el producto final ingresa al stock de la sede
@@ -232,6 +239,12 @@ class ProductionController extends Controller
                     'balance'        => $finalBalance,
                     'notes'          => 'Lote ' . $production->batch . ' · ' . $formula->name,
                 ]);
+
+                // El preparado entra como un lote propio con su vencimiento
+                $batchService->receive(
+                    $employee->company_id, $employee->branch_id, $formula->product_code, $quantity,
+                    $production->batch, $expiration, $unitCost, 'production', $production->id
+                );
             }
 
             DB::commit();
@@ -295,7 +308,13 @@ class ProductionController extends Controller
         DB::beginTransaction();
 
         try {
+            $batches = app(BatchService::class);
+
             // Primero se retira el producto final: si ya se vendió, se corta antes de tocar nada
+            if ($production->product_code && !$batches->isIntact('production', $production->id, $employee->branch_id)) {
+                throw new \RuntimeException('Parte de ese preparado ya se vendió.');
+            }
+
             if ($production->product_code) {
                 $stock->move(
                     $employee->company_id, $employee->branch_id, $production->product_code, -(float) $production->quantity_produced,
@@ -310,9 +329,18 @@ class ProductionController extends Controller
                 );
             }
 
+            // Insumos de vuelta a sus lotes; el preparado sale del control de lotes
+            $batches->restore('production', $production->id);
+            if ($production->product_code) {
+                $batches->discardSource('production', $production->id, $employee->branch_id);
+                $batches->reconcile($employee->branch_id, $production->product_code);
+            }
+
             $production->update(['status' => 0, 'voided_at' => now(), 'void_reason' => $request->void_reason]);
 
             DB::commit();
+
+            \App\Models\AuditLog::record('production.void', 'Anuló el lote ' . $production->batch, 'Lote ' . $production->batch, ['motivo' => $request->void_reason]);
 
             return redirect()->route('employee.productions.show', $production)
                 ->with('success', 'Preparación anulada. Los insumos volvieron al stock.');

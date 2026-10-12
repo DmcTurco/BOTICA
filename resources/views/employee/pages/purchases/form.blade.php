@@ -22,6 +22,13 @@
         <form action="{{ route('employee.purchases.store') }}" method="POST" id="formCompra"
             class="flex-1 flex flex-col min-h-0 gap-3">
             @csrf
+            @if ($order)
+                <input type="hidden" name="purchase_order_id" value="{{ $order->id }}">
+                <div class="shrink-0 bg-sky-50 border border-sky-200 text-sky-800 rounded-xl px-4 py-2.5 text-sm">
+                    <i class="fas fa-file-circle-check mr-1"></i> Recibiendo la orden <strong>{{ $order->number }}</strong>: revisa cantidades, costos, lotes y vencimientos antes de registrar.
+                </div>
+            @endif
+            @include('employee.partials.alerts')
 
             {{-- Datos del documento --}}
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 shrink-0">
@@ -49,9 +56,28 @@
 
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Proveedor</label>
-                        <input type="text" name="supplier" value="{{ old('supplier') }}"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                            placeholder="Nombre del proveedor">
+                        <select name="supplier_id" id="supplierId"
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            <option value="">— Sin registrar —</option>
+                            @foreach ($suppliers as $s)
+                                <option value="{{ $s->id }}" {{ (string) old('supplier_id', $order?->supplier_id) === (string) $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
+                            @endforeach
+                        </select>
+                        <input type="text" name="supplier" id="supplierText" value="{{ old('supplier') }}"
+                            class="mt-1 w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            placeholder="Nombre (si no está registrado)">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Condición de pago</label>
+                        <select name="payment_condition" id="paymentCondition"
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            <option value="cash" {{ old('payment_condition', 'cash') === 'cash' ? 'selected' : '' }}>Contado</option>
+                            <option value="credit" {{ old('payment_condition') === 'credit' ? 'selected' : '' }}>Crédito</option>
+                        </select>
+                        <input type="date" name="due_date" id="dueDate" value="{{ old('due_date', date('Y-m-d', strtotime('+30 days'))) }}"
+                            class="mt-1 w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent hidden"
+                            title="Fecha límite de pago">
                     </div>
 
                     <div>
@@ -246,6 +272,22 @@
             }
         });
 
+        // Condición de pago: la fecha límite solo aplica a compras a crédito
+        const condicion = document.getElementById('paymentCondition');
+        function actualizarCondicion() {
+            document.getElementById('dueDate').classList.toggle('hidden', condicion.value !== 'credit');
+        }
+        condicion.addEventListener('change', actualizarCondicion);
+        actualizarCondicion();
+
+        // Un proveedor registrado reemplaza al nombre escrito a mano
+        const proveedor = document.getElementById('supplierId');
+        function actualizarProveedor() {
+            document.getElementById('supplierText').classList.toggle('hidden', proveedor.value !== '');
+        }
+        proveedor.addEventListener('change', actualizarProveedor);
+        actualizarProveedor();
+
         // ── Estado de los ítems seleccionados ────────────────────────────────────────
         // Map<productCode, { name, quantity, unitCost, idx }>
         const seleccionados = new Map();
@@ -419,6 +461,23 @@
             document.getElementById('resumenSubtotal').textContent = 'S/. ' + subtotal.toFixed(2);
             document.getElementById('resumenTotal').textContent = 'S/. ' + total.toFixed(2);
         }
+
+        // ── Precarga de los productos de una orden de compra ─────────────────────────
+        const precarga = @json($preload);
+        document.addEventListener('DOMContentLoaded', () => {
+            precarga.forEach(p => {
+                const fila = document.querySelector(`.fila-producto[data-code="${CSS.escape(p.code)}"]`);
+                if (!fila) return;
+                fila.click();
+                const item = seleccionados.get(p.code);
+                item.quantity = p.qty;
+                item.unitCost = p.cost;
+                seleccionados.set(p.code, item);
+                actualizarFilaSeleccionada(p.code);
+                document.querySelector(`#filasSeleccionados tr[data-code="${CSS.escape(p.code)}"] input[data-field="unitCost"]`).value = p.cost.toFixed(2);
+                recalcularTotales();
+            });
+        });
 
         // ── Precarga del producto si llega desde la pantalla de edición ──────────────
         @if ($producto)

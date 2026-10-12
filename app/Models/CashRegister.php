@@ -32,7 +32,18 @@ class CashRegister extends Model
         2 => 'Tarjeta',
         3 => 'Transferencia',
         4 => 'Yape',
+        5 => 'Crédito',
     ];
+
+    // Medios con los que se puede pagar un abono, una compra o una deuda (el crédito no es un medio de pago)
+    const PAYMENT_METHODS = [
+        1 => 'Efectivo',
+        2 => 'Tarjeta',
+        3 => 'Transferencia',
+        4 => 'Yape',
+    ];
+
+    const PAYMENT_CREDIT = 5;
 
     protected $fillable = [
         'company_id',
@@ -182,7 +193,7 @@ class CashRegister extends Model
 
     /**
      * Ventas activas de la caja agrupadas por forma de pago.
-     * Devuelve [payment_type => total] con las 4 formas siempre presentes.
+     * Devuelve [payment_type => total] con todas las formas siempre presentes.
      */
     public function totalsByPaymentType(): array
     {
@@ -222,9 +233,15 @@ class CashRegister extends Model
         return (float) $this->movements()->active()->where('type', CashMovement::EXPENSE)->sum('amount');
     }
 
-    /** Efectivo que debería haber en el cajón: apertura + ventas en efectivo + otros ingresos − gastos */
+    /** Abonos de clientes (fiado) cobrados en efectivo en esta caja */
+    public function creditCollections(): float
+    {
+        return (float) CreditPayment::where('cash_register_id', $this->id)->where('method', self::PAYMENT_CASH)->sum('amount');
+    }
+
+    /** Efectivo que debería haber en el cajón: apertura + ventas en efectivo + abonos + otros ingresos − gastos */
     public function expectedCash(): float
     {
-        return round((float) $this->opening_amount + $this->totalCash() + $this->otherIncome() - $this->expenses(), 2);
+        return round((float) $this->opening_amount + $this->totalCash() + $this->creditCollections() + $this->otherIncome() - $this->expenses(), 2);
     }
 }

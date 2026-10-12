@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('phone', 20)->nullable();
             $table->string('email', 100)->nullable();
             $table->string('address', 200)->nullable();
+            $table->decimal('credit_limit', 10, 2)->default(0)->comment('Tope de fiado; 0 = no tiene crédito');
             $table->unsignedTinyInteger('status')->default(1)->comment('1=activo, 0=inactivo');
             $table->timestamps();
         });

@@ -61,6 +61,7 @@ class ApprovalController extends Controller
         ]);
 
         $dateLabel = $cashRegister->register_date->format('d/m/Y');
+        \App\Models\AuditLog::record('cash.approve', 'Aprobó la caja del ' . $dateLabel . ' de ' . $cashRegister->employee->name, 'Caja #' . $cashRegister->id);
         return back()->with('success', "Caja del {$dateLabel} ({$cashRegister->employee->name}) aprobada correctamente.");
     }
 
@@ -115,8 +116,11 @@ class ApprovalController extends Controller
                     }
                 }
 
-                // Anular la orden
-                $order->update(['status' => 0]);
+                // Las unidades vuelven a los lotes de los que salieron
+                app(\App\Services\BatchService::class)->restore('order', $order->id);
+
+                // Anular la orden (y su fiado pendiente, si lo había)
+                $order->update(['status' => 0, 'credit_balance' => 0]);
             }
 
             // Marcar la caja como rechazada
@@ -130,6 +134,7 @@ class ApprovalController extends Controller
             DB::commit();
 
             $dateLabel = $cashRegister->register_date->format('d/m/Y');
+            \App\Models\AuditLog::record('cash.reject', 'Rechazó la caja del ' . $dateLabel, 'Caja #' . $cashRegister->id, ['motivo' => $request->rejection_reason]);
             return back()->with('success', "Caja del {$dateLabel} rechazada. Stock revertido correctamente.");
 
         } catch (\Exception $e) {

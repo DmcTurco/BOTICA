@@ -74,6 +74,8 @@
                         <span class="text-right font-semibold">S/ {{ number_format($caja->opening_amount, 2) }}</span>
                         <span>+ Ventas en efectivo</span>
                         <span class="text-right font-semibold">S/ {{ number_format($cashTotal, 2) }}</span>
+                        <span>+ Abonos de clientes (fiado)</span>
+                        <span class="text-right font-semibold">S/ {{ number_format($caja->creditCollections(), 2) }}</span>
                         <span>+ Otros ingresos</span>
                         <span class="text-right font-semibold">S/ {{ number_format($caja->otherIncome(), 2) }}</span>
                         <span>− Gastos</span>

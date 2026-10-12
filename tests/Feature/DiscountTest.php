@@ -40,28 +40,6 @@ it('sin descuento el cálculo no cambia y rechaza porcentajes fuera de rango', f
 
 // ── Venta en el POS ───────────────────────────────────────────
 
-/** Deja lista una sede para vender: serie de nota de venta, caja abierta y un producto gravado de S/ 10 */
-function posSetup(Employee $employee): void
-{
-    // Correlativos globales (cliente público) y tipos de documento
-    test()->seed([Database\Seeders\DocumentSeriesSeeder::class, Database\Seeders\DocumentTypeSeeder::class]);
-    DocumentSeries::create([
-        'company_id' => 1, 'branch_id' => $employee->branch_id, 'type_code' => DocumentSeries::NOTA_VENTA,
-        'name' => 'Nota de Venta', 'series' => 'NV01', 'current_number' => 0, 'digits' => 8, 'active' => true,
-    ]);
-    openRegister($employee, 100, 0);
-    stockProduct('P1', 10, 4);
-    App\Models\Product::where('code', 'P1')->update(['igv_affectation' => '10', 'unit_sale_price' => 10]);
-}
-
-function posSale(array $extra = []): Illuminate\Testing\TestResponse
-{
-    return test()->postJson(route('employee.orders.store'), array_merge([
-        'items'        => [['code' => 'P1', 'name' => 'Producto P1', 'price' => 10, 'qty' => 2]],
-        'payment_type' => 1, 'voucher_type' => 3,
-    ], $extra));
-}
-
 it('registra la venta con descuento y guarda los montos en la orden y sus líneas', function () {
     $employee = loginEmployee();
     posSetup($employee);

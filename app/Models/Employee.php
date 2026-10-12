@@ -22,7 +22,6 @@ class Employee extends Authenticatable
     const PRIV_APLICAR_DESCUENTO        = 'aplicar_descuento';
     const PRIV_TIPO_CAMBIO              = 'tipo_cambio';
     const PRIV_ADMIN_CORRELATIVOS       = 'admin_correlativos';
-    const PRIV_PRODUCTOS_SIN_STOCK_VENTA= 'productos_sin_stock_venta';
     const PRIV_VENTA_PERDIDA_SIN_STOCK  = 'venta_perdida_sin_stock';
     const PRIV_OTROS_INGRESOS           = 'otros_ingresos';
     const PRIV_GASTOS_DIA               = 'gastos_dia';
@@ -45,6 +44,9 @@ class Employee extends Authenticatable
     // Inventario / Compras
     const PRIV_VER_COMPRAS              = 'ver_compras';
     const PRIV_VER_KARDEX               = 'ver_kardex';
+    const PRIV_PROVEEDORES              = 'proveedores';
+    const PRIV_CUENTAS_PAGAR            = 'cuentas_pagar';
+    const PRIV_CUENTAS_COBRAR           = 'cuentas_cobrar';
     const PRIV_AJUSTE_INVENTARIO        = 'ajuste_inventario';
     const PRIV_TRASPASO_SALIDA          = 'traspaso_salida';
     const PRIV_INVENTARIO_TOTAL_STOCK   = 'inventario_total_stock';
@@ -53,10 +55,16 @@ class Employee extends Authenticatable
     const PRIV_INV_LAB_TOTAL            = 'inv_por_laboratorio_total';
     const PRIV_REPORTE_INV_VALORIZADO   = 'reporte_inv_valorizado';
     const PRIV_REPORTE_VENCIMIENTOS     = 'reporte_vencimientos';
+    const PRIV_REGISTROS_CONTABLES      = 'registros_contables';
+    const PRIV_VER_BITACORA             = 'ver_bitacora';
 
     // Laboratorio (fórmulas magistrales)
     const PRIV_VER_FORMULAS             = 'ver_formulas';
     const PRIV_PRODUCIR_FORMULAS        = 'producir_formulas';
+
+    // Recetas y controlados
+    const PRIV_VER_RECETAS              = 'ver_recetas';
+    const PRIV_LIBRO_CONTROLADOS        = 'libro_controlados';
 
     // Reportes
     const PRIV_RECORD_MENSUAL_VENTAS = 'record_mensual_ventas';
@@ -69,13 +77,10 @@ class Employee extends Authenticatable
     const PRIV_IMPRIMIR_MOV_CAJA     = 'imprimir_mov_caja';
 
     // Seguridad
-    const PRIV_ADMIN_USUARIOS       = 'admin_usuarios';
     const PRIV_ACTUALIZACION_PRECIO = 'actualizacion_precio';
     const PRIV_ADMIN_COMISION       = 'admin_comision';
-    const PRIV_CAMBIAR_NOTA_VENTA   = 'cambiar_nota_venta';
     const PRIV_ELIMINAR_GUIA_ING    = 'eliminar_guia_ingreso';
     const PRIV_ELIMINAR_GUIA_SAL    = 'eliminar_guia_salida';
-    const PRIV_ASIGNAR_PRIVILEGIOS  = 'asignar_privilegios';
 
     // SUNAT
     const PRIV_ENVIAR_FE_SUNAT         = 'enviar_fe_sunat';
@@ -87,10 +92,6 @@ class Employee extends Authenticatable
 
     // Herramientas
     const PRIV_EDITAR_DATOS_LOCAL    = 'editar_datos_local';
-    const PRIV_EXPORTAR_BD           = 'exportar_bd';
-    const PRIV_IMPORTAR_BD           = 'importar_bd';
-    const PRIV_TRANSFERENCIA_ARCHIVOS= 'transferencia_archivos';
-    const PRIV_AJUSTE_INV_VALORIZADO = 'ajuste_inv_valorizado';
 
     /**
      * Privilegios agrupados por categoría.
@@ -105,15 +106,12 @@ class Employee extends Authenticatable
             'items' => [
                 self::PRIV_VER_VENTAS                => ['label' => 'Punto de Venta',                     'ready' => true],
                 self::PRIV_VER_HISTORIAL             => ['label' => 'Ver Comprobantes Emitidos',           'ready' => true],
+                self::PRIV_CUENTAS_COBRAR         => ['label' => 'Cuentas por Cobrar (fiado)',            'ready' => true],
+                self::PRIV_VER_RECETAS            => ['label' => 'Registro de Recetas Médicas',           'ready' => true],
                 self::PRIV_ANULAR_VENTA              => ['label' => 'Anular Comprobante de Venta',         'ready' => true],
                 self::PRIV_APLICAR_DESCUENTO         => ['label' => 'Aplicar Descuento en Venta',          'ready' => true],
-                self::PRIV_TIPO_CAMBIO               => ['label' => 'Tipo de Cambio',                      'ready' => true],
-                self::PRIV_ADMIN_CORRELATIVOS        => ['label' => 'Administrador de Correlativos',       'ready' => true],
-                self::PRIV_PRODUCTOS_SIN_STOCK_VENTA => ['label' => 'Productos sin Stock por Venta',       'ready' => false],
                 self::PRIV_VENTA_PERDIDA_SIN_STOCK   => ['label' => 'Venta Perdida sin Stock',             'ready' => true],
-                self::PRIV_OTROS_INGRESOS            => ['label' => 'Otros Ingresos',                      'ready' => true],
-                self::PRIV_GASTOS_DIA                => ['label' => 'Gastos del Día',                      'ready' => true],
-                self::PRIV_VER_CIERRES_CAJA          => ['label' => 'Ver Cierres de Caja',                 'ready' => true],
+                self::PRIV_GESTIONAR_CLIENTES     => ['label' => 'Crear y Editar Clientes',               'ready' => true],
             ],
         ],
         'Caja' => [
@@ -124,18 +122,20 @@ class Employee extends Authenticatable
                 self::PRIV_CERRAR_CAJA          => ['label' => 'Cerrar Caja',                 'ready' => true],
                 self::PRIV_EDITAR_APERTURA      => ['label' => 'Editar Apertura de Caja',     'ready' => true],
                 self::PRIV_VER_MOVIMIENTOS_CAJA => ['label' => 'Ver Movimientos de Caja',     'ready' => true],
+                self::PRIV_GASTOS_DIA                => ['label' => 'Gastos del Día',                      'ready' => true],
+                self::PRIV_OTROS_INGRESOS            => ['label' => 'Otros Ingresos',                      'ready' => true],
+                self::PRIV_VER_CIERRES_CAJA          => ['label' => 'Ver Cierres de Caja',                 'ready' => true],
+                self::PRIV_IMPRIMIR_MOV_CAJA     => ['label' => 'Imprimir Movimiento de Caja por Día',    'ready' => true],
             ],
         ],
         'Catálogo' => [
             'icon'  => 'fa-box-open',
             'color' => 'violet',
             'items' => [
-                self::PRIV_VER_INVENTARIO         => ['label' => 'Ver Productos / Catálogo',              'ready' => true],
-                self::PRIV_GESTIONAR_CLIENTES     => ['label' => 'Crear y Editar Clientes',               'ready' => true],
-                self::PRIV_CREAR_PRODUCTOS        => ['label' => 'Crear Nuevo Producto',                  'ready' => false],
-                self::PRIV_MANTENIMIENTO_FAMILIAS => ['label' => 'Mantenimiento de Familias',             'ready' => false],
-                self::PRIV_PRODUCTOS_SIN_ROTACION => ['label' => 'Productos sin Rotación',                'ready' => true],
-                self::PRIV_PRODUCTOS_REPOSICION   => ['label' => 'Productos para Reposición',             'ready' => true],
+                self::PRIV_VER_INVENTARIO         => ['label' => 'Ver Productos y Catálogo (solo consulta)',              'ready' => true],
+                self::PRIV_CREAR_PRODUCTOS        => ['label' => 'Crear y Editar Productos',                  'ready' => true],
+                self::PRIV_MANTENIMIENTO_FAMILIAS => ['label' => 'Mantener Categorías, Laboratorios y Unidades',             'ready' => true],
+                self::PRIV_ACTUALIZACION_PRECIO => ['label' => 'Actualización de Precio',                 'ready' => true],
             ],
         ],
         'Inventario' => [
@@ -143,15 +143,22 @@ class Employee extends Authenticatable
             'color' => 'amber',
             'items' => [
                 self::PRIV_VER_COMPRAS            => ['label' => 'Registro de Compras',                   'ready' => true],
+                self::PRIV_PROVEEDORES            => ['label' => 'Proveedores',                           'ready' => true],
+                self::PRIV_CUENTAS_PAGAR          => ['label' => 'Cuentas por Pagar',                     'ready' => true],
+                self::PRIV_ELIMINAR_GUIA_ING    => ['label' => 'Eliminar Guía de Ingreso',                'ready' => true],
                 self::PRIV_VER_KARDEX             => ['label' => 'Ver Kardex de Productos',               'ready' => true],
                 self::PRIV_AJUSTE_INVENTARIO      => ['label' => 'Ajuste de Inventario',                  'ready' => true],
+                self::PRIV_LIBRO_CONTROLADOS      => ['label' => 'Libro de Controlados (psicotrópicos)',  'ready' => true],
                 self::PRIV_TRASPASO_SALIDA        => ['label' => 'Traspaso de Salida',                    'ready' => true],
-                self::PRIV_INVENTARIO_TOTAL_STOCK => ['label' => 'Inventario Total con Stock',            'ready' => true],
-                self::PRIV_INVENTARIO_TOTAL       => ['label' => 'Inventario Total',                      'ready' => true],
-                self::PRIV_INV_LAB_STOCK          => ['label' => 'Inventario por Laboratorio con Stock',  'ready' => true],
-                self::PRIV_INV_LAB_TOTAL          => ['label' => 'Inventario por Laboratorio Total',      'ready' => true],
-                self::PRIV_REPORTE_INV_VALORIZADO => ['label' => 'Reporte de Inventario Valorizado',      'ready' => true],
+                self::PRIV_ELIMINAR_GUIA_SAL    => ['label' => 'Eliminar Guía de Salida',                 'ready' => true],
+                self::PRIV_PRODUCTOS_REPOSICION   => ['label' => 'Productos para Reposición',             'ready' => true],
+                self::PRIV_PRODUCTOS_SIN_ROTACION => ['label' => 'Productos sin Rotación',                'ready' => true],
                 self::PRIV_REPORTE_VENCIMIENTOS   => ['label' => 'Reporte de Lotes por Vencer',           'ready' => true],
+                self::PRIV_INVENTARIO_TOTAL       => ['label' => 'Inventario Total',                      'ready' => true],
+                self::PRIV_INVENTARIO_TOTAL_STOCK => ['label' => 'Inventario Total con Stock',            'ready' => true],
+                self::PRIV_INV_LAB_TOTAL          => ['label' => 'Inventario por Laboratorio Total',      'ready' => true],
+                self::PRIV_INV_LAB_STOCK          => ['label' => 'Inventario por Laboratorio con Stock',  'ready' => true],
+                self::PRIV_REPORTE_INV_VALORIZADO => ['label' => 'Reporte de Inventario Valorizado',      'ready' => true],
             ],
         ],
         'Laboratorio' => [
@@ -170,23 +177,12 @@ class Employee extends Authenticatable
                 self::PRIV_RECORD_GENERAL_VENTAS => ['label' => 'Record General de Ventas',               'ready' => true],
                 self::PRIV_VER_DOCS_MES          => ['label' => 'Ver Documentos por Mes',                 'ready' => true],
                 self::PRIV_REPORTES_POR_FECHA    => ['label' => 'Por Rangos de Fecha',                    'ready' => true],
-                self::PRIV_REPORTE_COMISIONES    => ['label' => 'Reporte de Comisiones por Vendedor',     'ready' => true],
                 self::PRIV_REPORTE_MAS_VENDIDOS  => ['label' => 'Reporte de Productos más Vendidos',      'ready' => true],
                 self::PRIV_REPORTE_UTILIDAD      => ['label' => 'Reporte de Utilidad',                    'ready' => true],
-                self::PRIV_IMPRIMIR_MOV_CAJA     => ['label' => 'Imprimir Movimiento de Caja por Día',    'ready' => true],
-            ],
-        ],
-        'Seguridad' => [
-            'icon'  => 'fa-shield-halved',
-            'color' => 'rose',
-            'items' => [
-                self::PRIV_ADMIN_USUARIOS       => ['label' => 'Administrador de Usuarios',               'ready' => false],
-                self::PRIV_ACTUALIZACION_PRECIO => ['label' => 'Actualización de Precio',                 'ready' => true],
+                self::PRIV_REGISTROS_CONTABLES    => ['label' => 'Registros de Ventas y Compras (contador)', 'ready' => true],
+                self::PRIV_VER_BITACORA           => ['label' => 'Bitácora de Actividad',                 'ready' => true],
+                self::PRIV_REPORTE_COMISIONES    => ['label' => 'Reporte de Comisiones por Vendedor',     'ready' => true],
                 self::PRIV_ADMIN_COMISION       => ['label' => 'Administrador de Comisión',               'ready' => true],
-                self::PRIV_CAMBIAR_NOTA_VENTA   => ['label' => 'Cambiar Nota de Venta',                   'ready' => false],
-                self::PRIV_ELIMINAR_GUIA_ING    => ['label' => 'Eliminar Guía de Ingreso',                'ready' => true],
-                self::PRIV_ELIMINAR_GUIA_SAL    => ['label' => 'Eliminar Guía de Salida',                 'ready' => true],
-                self::PRIV_ASIGNAR_PRIVILEGIOS  => ['label' => 'Asignar Privilegios',                     'ready' => false],
             ],
         ],
         'SUNAT' => [
@@ -206,10 +202,8 @@ class Employee extends Authenticatable
             'color' => 'slate',
             'items' => [
                 self::PRIV_EDITAR_DATOS_LOCAL     => ['label' => 'Editar Datos Local',                    'ready' => true],
-                self::PRIV_EXPORTAR_BD            => ['label' => 'Exportar Base de Datos',                'ready' => false],
-                self::PRIV_IMPORTAR_BD            => ['label' => 'Importar Base de Datos',                'ready' => false],
-                self::PRIV_TRANSFERENCIA_ARCHIVOS => ['label' => 'Transferencia de Archivos',             'ready' => false],
-                self::PRIV_AJUSTE_INV_VALORIZADO  => ['label' => 'Ajuste de Inventario Valorizado',       'ready' => false],
+                self::PRIV_TIPO_CAMBIO               => ['label' => 'Tipo de Cambio',                      'ready' => true],
+                self::PRIV_ADMIN_CORRELATIVOS        => ['label' => 'Administrador de Correlativos',       'ready' => true],
             ],
         ],
     ];
@@ -267,6 +261,15 @@ class Employee extends Authenticatable
         self::PRIV_ACTUALIZACION_PRECIO => 'Actualización de Precio',
         self::PRIV_ADMIN_COMISION => 'Administrador de Comisión',
         self::PRIV_EDITAR_DATOS_LOCAL => 'Editar Datos Local',
+        self::PRIV_CREAR_PRODUCTOS => 'Crear y Editar Productos',
+        self::PRIV_MANTENIMIENTO_FAMILIAS => 'Mantener Categorías, Laboratorios y Unidades',
+        self::PRIV_PROVEEDORES => 'Proveedores',
+        self::PRIV_CUENTAS_PAGAR => 'Cuentas por Pagar',
+        self::PRIV_VER_RECETAS => 'Registro de Recetas Médicas',
+        self::PRIV_LIBRO_CONTROLADOS => 'Libro de Controlados (psicotrópicos)',
+        self::PRIV_CUENTAS_COBRAR => 'Cuentas por Cobrar (fiado)',
+        self::PRIV_REGISTROS_CONTABLES => 'Registros de Ventas y Compras (contador)',
+        self::PRIV_VER_BITACORA => 'Bitácora de Actividad',
     ];
 
     protected $fillable = [

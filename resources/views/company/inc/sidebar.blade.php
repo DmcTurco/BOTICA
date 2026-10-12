@@ -30,6 +30,21 @@
             </ul>
         </div>
 
+        {{-- Reportes --}}
+        <div>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Reportes</p>
+            <ul class="space-y-0.5">
+                <li>
+                    <a href="{{ route('company.reports.branches') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('company.reports.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                        <i class="fas fa-chart-column w-4 text-center shrink-0"></i>
+                        Resumen por sedes
+                    </a>
+                </li>
+            </ul>
+        </div>
+
         {{-- Administración --}}
         <div>
             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Administración</p>

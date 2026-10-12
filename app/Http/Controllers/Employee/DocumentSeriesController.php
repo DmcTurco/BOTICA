@@ -70,6 +70,8 @@ class DocumentSeriesController extends Controller
             return back()->with('error', $error);
         }
 
+        \App\Models\AuditLog::record('series.update', 'Actualizó la serie ' . $series->series, $series->series, ['ultimo_numero' => $data['current_number'], 'activa' => (bool) $data['active']]);
+
         return redirect()->route('employee.series.index')->with('success', "Serie {$series->series} actualizada.");
     }
 }

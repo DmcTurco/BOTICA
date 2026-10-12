@@ -22,6 +22,7 @@
     </div>
 
     @include('employee.partials.alerts')
+    @include('employee.partials.export-button')
 
     <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-sm shrink-0">
         <form action="{{ route($routeName) }}" method="GET" class="flex flex-col sm:flex-row gap-3">

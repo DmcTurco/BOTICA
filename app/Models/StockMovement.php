@@ -67,6 +67,8 @@ class StockMovement extends Model
             'purchase' => 'Compra #' . $this->reference_id,
             'order'    => 'Venta #'  . $this->reference_id,
             'manual'   => 'Ajuste manual',
+            'order_edit'          => 'Venta editada #' . $this->reference_id,
+            'order_edit_reversal' => 'Reversión por edición #' . $this->reference_id,
             'production' => 'Preparación #' . $this->reference_id,
             'production_void' => 'Anulación de preparación #' . $this->reference_id,
             'purchase_void'   => 'Anulación de compra #' . $this->reference_id,

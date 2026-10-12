@@ -62,6 +62,8 @@
         @endif
     </div>
 
+    @include('employee.pages.purchases._payments')
+
     {{-- Ítems --}}
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-5 py-3 border-b border-slate-200">

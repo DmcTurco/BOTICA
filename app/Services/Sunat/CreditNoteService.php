@@ -69,7 +69,7 @@ class CreditNoteService
             $this->restoreStock($order, $note, $employee);
 
             // La venta queda anulada: ya no suma en el total de la caja
-            $order->update(['status' => 0]);
+            $order->update(['status' => 0, 'credit_balance' => 0]);
 
             return $note;
         });
@@ -81,6 +81,9 @@ class CreditNoteService
      */
     private function restoreStock(Order $order, CreditNote $note, Employee $employee): void
     {
+        // Las unidades vuelven a los lotes de los que salieron
+        app(\App\Services\BatchService::class)->restore('order', $order->id);
+
         $stocks = BranchStock::where('branch_id', $order->branch_id)
             ->whereIn('product_code', $order->items->pluck('product_code')->unique())
             ->orderBy('product_code')

@@ -51,6 +51,7 @@
                         <option value="2" {{ request('tipo_pago') == '2' ? 'selected' : '' }}>Tarjeta</option>
                         <option value="3" {{ request('tipo_pago') == '3' ? 'selected' : '' }}>Transferencia</option>
                         <option value="4" {{ request('tipo_pago') == '4' ? 'selected' : '' }}>Yape</option>
+                        <option value="5" {{ request('tipo_pago') == '5' ? 'selected' : '' }}>Crédito</option>
                     </select>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3">
@@ -111,8 +112,8 @@
                     @forelse($orders as $order)
                     @php
                         $comprobantes = [1 => 'Boleta', 2 => 'Factura', 3 => 'Nota de Venta'];
-                        $pagos        = [1 => 'Efectivo', 2 => 'Tarjeta', 3 => 'Transferencia', 4 => 'Yape'];
-                        $pagoIcons    = [1 => 'fa-money-bill-wave', 2 => 'fa-credit-card', 3 => 'fa-building-columns', 4 => 'fa-mobile-screen'];
+                        $pagos        = [1 => 'Efectivo', 2 => 'Tarjeta', 3 => 'Transferencia', 4 => 'Yape', 5 => 'Crédito'];
+                        $pagoIcons    = [1 => 'fa-money-bill-wave', 2 => 'fa-credit-card', 3 => 'fa-building-columns', 4 => 'fa-mobile-screen', 5 => 'fa-handshake'];
                     @endphp
                     <tr class="hover:bg-slate-50 transition-colors cursor-pointer fila-venta"
                         data-id="{{ $order->id }}">
@@ -422,7 +423,7 @@
 @section('scripts')
 <script>
 const VOUCHER_TYPES   = { 1: 'Boleta', 2: 'Factura', 3: 'Nota de Venta' };
-const PAYMENT_TYPES          = { 1: 'Efectivo', 2: 'Tarjeta', 3: 'Transferencia', 4: 'Yape' };
+const PAYMENT_TYPES          = { 1: 'Efectivo', 2: 'Tarjeta', 3: 'Transferencia', 4: 'Yape', 5: 'Crédito' };
 const PRINT_BASE_URL = '{{ url("employee/orders") }}';
 
 let currentOrderId = null; // ID de la orden activa en el modal

@@ -38,14 +38,18 @@
         </form>
     </div>
 
-    <div class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-5 py-3 border-b border-slate-200 shrink-0">
+    <form action="{{ route('employee.purchase-orders.create') }}" method="GET" class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-0">
+        <div class="px-5 py-3 border-b border-slate-200 shrink-0 flex items-center justify-between gap-3">
             <p class="text-sm font-semibold text-slate-800">Por reponer <span class="ml-2 text-xs font-normal text-slate-400">{{ $rows->total() }} productos</span></p>
+            @if($canBuy && $rows->count())
+            <button type="submit" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg"><i class="fas fa-file-circle-check text-[10px]"></i> Orden de compra con los marcados</button>
+            @endif
         </div>
         <div class="flex-1 min-h-0 overflow-auto">
             <table class="w-full text-sm">
                 <thead class="sticky top-0 z-10">
                     <tr class="bg-slate-50 border-b border-slate-200">
+                        @if($canBuy)<th class="px-5 py-3 w-10"><input type="checkbox" id="marcarTodos" class="rounded border-slate-300 text-emerald-600" checked></th>@endif
                         <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Producto</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Laboratorio</th>
                         <th class="text-center px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock</th>
@@ -57,6 +61,7 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($rows as $row)
                     <tr class="hover:bg-slate-50">
+                        @if($canBuy)<td class="px-5 py-3"><input type="checkbox" class="marcar rounded border-slate-300 text-emerald-600" name="products[{{ $row->product_code }}]" value="{{ $row->suggested }}" checked></td>@endif
                         <td class="px-5 py-3">
                             <p class="text-xs font-medium text-slate-800">{{ $row->product->name }}</p>
                             <p class="text-[10px] text-slate-400 font-mono">{{ $row->product_code }} @if($row->product->category) · {{ $row->product->category->name }} @endif</p>
@@ -79,7 +84,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" class="px-5 py-14 text-center text-slate-400">
+                    <tr><td colspan="7" class="px-5 py-14 text-center text-slate-400">
                         <i class="fas fa-circle-check text-3xl text-emerald-400 mb-2"></i>
                         <p class="text-sm">Todo el stock está por encima del mínimo</p>
                         <p class="text-xs mt-1">Define el stock mínimo de cada producto para recibir alertas aquí</p>
@@ -91,6 +96,13 @@
         @if($rows->hasPages())
         <div class="px-5 py-3 border-t border-slate-200 shrink-0 bg-slate-50">{{ $rows->links() }}</div>
         @endif
-    </div>
+    </form>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+const todos = document.getElementById('marcarTodos');
+if (todos) todos.addEventListener('change', () => document.querySelectorAll('.marcar').forEach(c => c.checked = todos.checked));
+</script>
 @endsection

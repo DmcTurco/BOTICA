@@ -21,6 +21,7 @@
     </div>
 
     @include('employee.partials.alerts')
+    @include('employee.partials.export-button')
 
     <div class="bg-emerald-600 rounded-xl p-4 text-white shrink-0 max-w-xs"><p class="text-xs text-emerald-200">Total de comisiones</p><p class="text-xl font-bold">{{ $money($totalCommission) }}</p></div>
 

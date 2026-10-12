@@ -27,6 +27,7 @@
     </div>
 
     @include('employee.partials.alerts')
+    @include('employee.partials.export-button')
 
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <table class="w-full text-sm">

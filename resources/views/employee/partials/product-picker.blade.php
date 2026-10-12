@@ -5,11 +5,13 @@
       $pickerName     : prefijo de los campos (por defecto "items") → items[0][product_code], items[0][quantity]
       $pickerInitial  : líneas iniciales [['product_code' => , 'quantity' => ]]
       $pickerLimit    : true = la cantidad no puede superar el stock del producto
+      $pickerCost     : true = agrega una columna de costo unitario (unit_cost)
 --}}
 @php
     $pickerName    = $pickerName ?? 'items';
     $pickerInitial = array_values($pickerInitial ?? []);
     $pickerLimit   = $pickerLimit ?? false;
+    $pickerCost    = $pickerCost ?? false;
 @endphp
 
 <div class="space-y-3">
@@ -27,6 +29,7 @@
                     <th class="text-left px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Producto</th>
                     <th class="text-center px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Stock</th>
                     <th class="text-center px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-36">Cantidad</th>
+                    @if($pickerCost)<th class="text-center px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider w-32">Costo unit.</th>@endif
                     <th class="w-10"></th>
                 </tr>
             </thead>
@@ -41,6 +44,7 @@
     const productos = @json($pickerProducts);
     const prefijo = @json($pickerName);
     const limitar = @json($pickerLimit);
+    const conCosto = @json($pickerCost);
     const filas = document.getElementById('pickerRows');
     const buscador = document.getElementById('pickerSearch');
     const resultados = document.getElementById('pickerResults');
@@ -48,7 +52,7 @@
 
     const esc = t => { const d = document.createElement('div'); d.textContent = t ?? ''; return d.innerHTML; };
 
-    function agregar(code, cantidad) {
+    function agregar(code, cantidad, costo) {
         if (filas.querySelector(`tr[data-code="${CSS.escape(code)}"]`)) return;
         const p = productos.find(x => x.code === code);
         if (!p) return;
@@ -70,6 +74,7 @@
                     <span class="text-xs text-slate-400 w-8">${esc(p.unit || '')}</span>
                 </div>
             </td>
+            ${conCosto ? `<td class="px-3 py-2"><input type="number" name="${prefijo}[${i}][unit_cost]" value="${costo ?? p.cost ?? ''}" min="0" step="0.01" class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-emerald-500"></td>` : ''}
             <td class="px-3 py-2 text-center">
                 <button type="button" class="picker-quitar w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 mx-auto">
                     <i class="fas fa-trash text-[10px] pointer-events-none"></i>
@@ -112,7 +117,7 @@
         if (!e.target.closest('#pickerSearch') && !e.target.closest('#pickerResults')) resultados.classList.add('hidden');
     });
 
-    @json($pickerInitial).forEach(l => agregar(l.product_code, l.quantity));
+    @json($pickerInitial).forEach(l => agregar(l.product_code, l.quantity, l.unit_cost));
     actualizar();
 })();
 </script>

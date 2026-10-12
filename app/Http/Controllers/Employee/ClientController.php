@@ -63,6 +63,7 @@ class ClientController extends Controller
             'phone'            => 'nullable|string|max:20',
             'email'            => 'nullable|email|max:100',
             'address'          => 'nullable|string|max:200',
+            'credit_limit'     => 'nullable|numeric|min:0|max:99999999',
         ], [
             'name.required' => 'El nombre del cliente es obligatorio.',
             'email.email'   => 'El correo electrónico no tiene un formato válido.',
@@ -83,6 +84,7 @@ class ClientController extends Controller
                     'phone'            => $request->phone ?: null,
                     'email'            => $request->email ?: null,
                     'address'          => $request->address ?: null,
+                    'credit_limit'     => $request->credit_limit ?: 0,
                     'status'           => 1,
                 ]);
             });
@@ -128,6 +130,7 @@ class ClientController extends Controller
             'phone'            => 'nullable|string|max:20',
             'email'            => 'nullable|email|max:100',
             'address'          => 'nullable|string|max:200',
+            'credit_limit'     => 'nullable|numeric|min:0|max:99999999',
             'status'           => 'required|in:0,1',
         ]);
 
@@ -139,6 +142,7 @@ class ClientController extends Controller
                 'phone'            => $request->phone ?: null,
                 'email'            => $request->email ?: null,
                 'address'          => $request->address ?: null,
+                'credit_limit'     => $request->credit_limit ?: 0,
                 'status'           => $request->status,
             ]);
 
