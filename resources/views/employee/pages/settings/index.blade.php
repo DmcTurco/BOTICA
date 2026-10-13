@@ -15,6 +15,55 @@
     <form method="POST" action="{{ route('employee.settings.update') }}">
         @csrf
 
+        {{-- ── Sección: Ventas ── --}}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-4">
+            <div class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
+                <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center shrink-0">
+                    <i class="fas fa-cash-register text-emerald-600 text-sm"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-800">Ventas y cobro</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Opciones del punto de venta para esta sede</p>
+                </div>
+            </div>
+            <div class="p-6 space-y-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-700">Redondeo en pagos en efectivo</p>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            El total se cobra hacia abajo al múltiplo de S/ 0.10 (ej: S/ 44.37 → S/ 44.30). Solo con pago en efectivo;
+                            el comprobante conserva su total y el redondeo se muestra aparte.
+                        </p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                        <input type="checkbox" name="cash_rounding" value="1" class="sr-only peer" {{ $salesConfig['cash_rounding'] ? 'checked' : '' }}>
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-sky-400 rounded-full peer
+                                    peer-checked:bg-sky-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                    after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
+                                    peer-checked:after:translate-x-full"></div>
+                    </label>
+                </div>
+
+                <div class="border-t border-slate-100"></div>
+
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-700">Descuento por monto (S/)</p>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Además del porcentaje, permite descontar un monto fijo en soles (ej: S/ 1.00 menos). Mismo permiso y mismo tope del 50% que el descuento por porcentaje.
+                        </p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                        <input type="checkbox" name="amount_discount" value="1" class="sr-only peer" {{ $salesConfig['amount_discount'] ? 'checked' : '' }}>
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-sky-400 rounded-full peer
+                                    peer-checked:bg-sky-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                    after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
+                                    peer-checked:after:translate-x-full"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
         {{-- ── Sección: Impresión ── --}}
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 

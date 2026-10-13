@@ -9,6 +9,12 @@
     $editOrder = $editOrder ?? null;
     $canDiscount = auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_APLICAR_DESCUENTO);
 
+    // Ajustes de venta de la sede (Configuración): redondeo en efectivo y descuento por monto
+    $salesCfg = array_merge(
+        ['cash_rounding' => false, 'amount_discount' => false],
+        auth()->guard('employee')->user()->branch()->with('config')->first()?->getSettingGroup('sales') ?? []
+    );
+
     // Datos para el modo edición (null al registrar una venta nueva)
     $editConfig = $editOrder ? [
         'payment_type'      => $editOrder->payment_type,
@@ -18,6 +24,7 @@
         'customer_document' => $editOrder->customer_document,
         'document_type_id'  => $editOrder->document_type_id,
         'discount_percent'  => (float) $editOrder->discount_percent,
+        'discount_amount'   => (float) $editOrder->discount_amount,
         'update_url'        => route('employee.orders.update-historical', $editOrder),
         'back_url'          => route('employee.cash-register.historical', $historicalCaja),
         'items'             => $editItems,
@@ -404,7 +411,18 @@
                 <label for="descuentoPct" class="text-xs font-medium text-slate-500">Desc. %</label>
                 <input type="number" id="descuentoPct" min="0" max="50" step="1" inputmode="numeric" value="0"
                        class="w-16 px-2 py-1.5 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <span class="text-xs text-slate-400 leading-tight">Número entero.<br>Ej: 10 = 10% menos en toda la venta</span>
+                @if($salesCfg['amount_discount'])
+                <span class="text-xs text-slate-400">ó S/</span>
+                <input type="number" id="descuentoMonto" min="0" step="0.10" inputmode="decimal" value="0" title="Descuento en soles sobre toda la venta (antes de IGV)"
+                       class="w-20 px-2 py-1.5 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                @endif
+                <span class="text-xs text-slate-400 leading-tight">
+                    @if($salesCfg['amount_discount'])
+                        Usa uno solo.<br>Ej: 10 = 10% menos, o S/ 1.00 menos
+                    @else
+                        Número entero.<br>Ej: 10 = 10% menos en toda la venta
+                    @endif
+                </span>
             </div>
             @endif
 
@@ -415,6 +433,8 @@
                     <p class="text-xs text-slate-400">Descuento</p>
                     <p class="text-xs text-slate-400">IGV (18%)</p>
                     <p class="text-sm font-bold text-emerald-600">Total</p>
+                    <p id="lblRedondeo" class="text-xs text-slate-400 hidden">Redondeo</p>
+                    <p id="lblCobrar" class="text-sm font-bold text-slate-800 hidden">A cobrar</p>
                 </div>
                 <div class="text-right min-w-20 space-y-0.5">
                     <p id="opGravada"   class="text-xs text-slate-600">S/ 0.00</p>
@@ -422,6 +442,8 @@
                     <p id="descuento"  class="text-xs text-slate-600">S/ 0.00</p>
                     <p id="igv"         class="text-xs text-slate-600">S/ 0.00</p>
                     <p id="total"       class="text-xl font-bold text-slate-800">S/ 0.00</p>
+                    <p id="redondeo"    class="text-xs text-slate-600 hidden">S/ 0.00</p>
+                    <p id="cobrar"      class="text-lg font-bold text-slate-800 hidden">S/ 0.00</p>
                 </div>
             </div>
         </div>
@@ -585,6 +607,7 @@ $(document).on('click', '.btn-pago', function() {
     // Mostrar Nro Operación solo para métodos no-efectivo
     $('#seccionNroOp').toggleClass('hidden', val == 1 || val == 5);
     $('#seccionCredito').toggleClass('hidden', val != 5);
+    actualizarTotales();
 });
 
 // ── Tipo de comprobante ───────────────────────────────────────
@@ -885,10 +908,22 @@ function porcentajeDescuento() {
     return isNaN(v) ? 0 : Math.min(Math.max(v, 0), 50);
 }
 
-// Solo enteros: se quita cualquier decimal que se escriba (10.5 → 10)
+// Descuento en soles ingresado (0 si no hay campo o el valor no es válido)
+function montoDescuento() {
+    const v = parseFloat($('#descuentoMonto').val());
+    return isNaN(v) ? 0 : Math.max(redondear(v), 0);
+}
+
+// Solo enteros en el porcentaje: se quita cualquier decimal que se escriba (10.5 → 10)
 $('#descuentoPct').on('input', function () {
     const limpio = String(this.value).replace(/[^0-9]/g, '');
     if (limpio !== this.value) this.value = limpio;
+    if (limpio !== '' && parseInt(limpio, 10) > 0) $('#descuentoMonto').val(0);   // porcentaje o monto, no ambos
+    actualizarTotales();
+});
+
+$('#descuentoMonto').on('input', function () {
+    if (montoDescuento() > 0) $('#descuentoPct').val(0);
     actualizarTotales();
 });
 
@@ -900,16 +935,30 @@ function redondear(n) {
 // Totales de la última actualización (se envían al servidor, que los vuelve a calcular)
 let totalesVenta = { sub: 0, igv: 0, total: 0 };
 
+// Ajuste de la sede: redondeo en efectivo (hacia abajo al múltiplo de S/ 0.10)
+const REDONDEO_EFECTIVO = @json((bool) $salesCfg['cash_rounding']);
+
 // 10 = gravado (IGV 18%) · 20 = exonerado · 30 = inafecto
 function actualizarTotales() {
     let gravada = 0, exonerada = 0, igv = 0, descuento = 0;
-    const pct = porcentajeDescuento();
+    const pct   = porcentajeDescuento();
+    const monto = Math.min(montoDescuento(), 999999999);
+    const lineas = Object.values(carrito);
+    const brutoTotal = lineas.reduce((s, i) => s + redondear(i.price * i.qty), 0);
+    let repartido = 0;
 
-    Object.values(carrito).forEach(i => {
+    lineas.forEach((i, idx) => {
         const bruto = redondear(i.price * i.qty);
-        const desc  = redondear(bruto * pct / 100);
-        const base  = redondear(bruto - desc);
-        descuento  += desc;
+        let desc;
+        if (monto > 0 && brutoTotal > 0) {
+            // Descuento por monto: proporcional al importe de cada línea; la última absorbe el centavo que sobre
+            desc = idx === lineas.length - 1 ? redondear(monto - repartido) : redondear(monto * bruto / brutoTotal);
+            repartido += desc;
+        } else {
+            desc = redondear(bruto * pct / 100);
+        }
+        const base = redondear(bruto - desc);
+        descuento += desc;
 
         if (i.afectacion === '10') {
             gravada += base;
@@ -930,6 +979,13 @@ function actualizarTotales() {
     $('#opExonerada').text('S/ ' + redondear(exonerada).toFixed(2));
     $('#igv').text('S/ ' + redondear(igv).toFixed(2));
     $('#total').text('S/ ' + total.toFixed(2));
+
+    // Redondeo en efectivo: solo si la sede lo activó, el pago es en efectivo y hay céntimos que perdonar
+    const redondeo = (REDONDEO_EFECTIVO && $('#tipoPago').val() == 1) ? (Math.round(total * 100) % 10) / 100 : 0;
+    $('#lblRedondeo, #redondeo').toggleClass('hidden', redondeo === 0);
+    $('#lblCobrar, #cobrar').toggleClass('hidden', redondeo === 0);
+    $('#redondeo').text('− S/ ' + redondeo.toFixed(2));
+    $('#cobrar').text('S/ ' + redondear(total - redondeo).toFixed(2));
 }
 
 function actualizarContadorCarrito() {
@@ -1024,6 +1080,7 @@ $('#btnTerminarVenta').on('click', function() {
         igv:      igv,
         total:    total,
         discount_percent: porcentajeDescuento(),
+        discount_value:   montoDescuento(),
         prescription: nivelRx > 0 ? recetaDatos : null,
         credit_due_date: $('#tipoPago').val() == 5 ? $('#creditDueDate').val() : null,
         historical: @json($historicalCaja?->id),   // caja histórica (null = caja normal)
@@ -1099,7 +1156,12 @@ if (EDIT_ORDER) {
     // Pago
     $('.btn-pago[data-value="' + EDIT_ORDER.payment_type + '"]').trigger('click');
     $('#nroOperacion').val(EDIT_ORDER.operation_number ?? '');
-    if (EDIT_ORDER.discount_percent) { $('#descuentoPct').val(EDIT_ORDER.discount_percent); actualizarTotales(); }
+    // Un descuento con decimales (ej: 3.57%) solo puede venir de un descuento por monto
+    if (EDIT_ORDER.discount_percent) {
+        if (Number.isInteger(EDIT_ORDER.discount_percent)) $('#descuentoPct').val(EDIT_ORDER.discount_percent);
+        else $('#descuentoMonto').val(EDIT_ORDER.discount_amount);
+        actualizarTotales();
+    }
 
     // Comprobante y cliente: se muestran pero no se pueden modificar
     $('.btn-comprobante[data-value="' + EDIT_ORDER.voucher_type + '"]').trigger('click');

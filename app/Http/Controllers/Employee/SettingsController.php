@@ -24,9 +24,15 @@ class SettingsController extends Controller
             'printer_name'     => '',
         ], $branch->getSettingGroup('printing'));
 
+        // Ajustes de venta (apagados por defecto)
+        $salesConfig = array_merge([
+            'cash_rounding'   => false,
+            'amount_discount' => false,
+        ], $branch->getSettingGroup('sales'));
+
         $templates = PrintController::TEMPLATES;
 
-        return view('employee.pages.settings.index', compact('branch', 'printConfig', 'templates'));
+        return view('employee.pages.settings.index', compact('branch', 'printConfig', 'salesConfig', 'templates'));
     }
 
     /**
@@ -39,6 +45,8 @@ class SettingsController extends Controller
             'auto_print'       => 'boolean',
             'copies'           => 'required|integer|min:1|max:5',
             'printer_name'     => 'nullable|string|max:100',
+            'cash_rounding'    => 'nullable|boolean',
+            'amount_discount'  => 'nullable|boolean',
         ]);
 
         $employee = auth()->guard('employee')->user();
@@ -49,6 +57,11 @@ class SettingsController extends Controller
             'auto_print'       => $request->boolean('auto_print'),
             'copies'           => (int) $request->copies,
             'printer_name'     => $request->printer_name ?? '',
+        ]);
+
+        $branch->setSettingGroup('sales', [
+            'cash_rounding'   => $request->boolean('cash_rounding'),
+            'amount_discount' => $request->boolean('amount_discount'),
         ]);
 
         return back()->with('success', 'Configuración guardada correctamente.');

@@ -201,7 +201,7 @@ class CashRegister extends Model
 
         $rows = $this->orders()
             ->where('status', 1)
-            ->selectRaw('payment_type, SUM(total) as total')
+            ->selectRaw('payment_type, SUM(total - rounding_amount) as total')
             ->groupBy('payment_type')
             ->get();
 

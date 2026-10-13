@@ -32,12 +32,26 @@ class TaxCalculator
      *     subtotal: float, discount: float, igv: float, total: float
      * }
      */
-    public function calculate(array $items, array $affectations, float $discountPercent = 0): array
+    public function calculate(array $items, array $affectations, float $discountPercent = 0, ?float $discountAmount = null): array
     {
         if ($discountPercent < 0 || $discountPercent > 100) {
             throw new InvalidArgumentException('El descuento debe estar entre 0 y 100%.');
         }
 
+        // Importe bruto de cada línea (precio × cantidad), necesario para repartir un descuento por monto
+        $grosses = [];
+        foreach ($items as $index => $item) {
+            $grosses[$index] = round((float) $item['price'] * (float) $item['qty'], 2);
+        }
+        $grossSum   = array_sum($grosses);
+        $amountMode = $discountAmount !== null && $discountAmount > 0;
+
+        if ($amountMode && $discountAmount > $grossSum) {
+            throw new InvalidArgumentException('El descuento no puede superar el importe de la venta.');
+        }
+
+        $lastKey   = array_key_last($items);
+        $allocated = 0.0;
         $lines = [];
         $taxable = $exonerated = $unaffected = $igv = $discountTotal = 0.0;
 
@@ -49,8 +63,17 @@ class TaxCalculator
             }
 
             $affectation = $affectations[$code];
-            $gross       = round((float) $item['price'] * (float) $item['qty'], 2);
-            $discount    = round($gross * $discountPercent / 100, 2);
+            $gross       = $grosses[$index];
+
+            // Descuento por monto: se reparte proporcional al importe de cada línea y la última absorbe el centavo que sobre
+            if ($amountMode) {
+                $discount  = $index === $lastKey
+                    ? round($discountAmount - $allocated, 2)
+                    : round($discountAmount * $gross / $grossSum, 2);
+                $allocated += $discount;
+            } else {
+                $discount = round($gross * $discountPercent / 100, 2);
+            }
             $base        = round($gross - $discount, 2);
             $lineIgv     = $affectation === self::GRAVADO ? round($base * self::IGV_RATE, 2) : 0.0;
 

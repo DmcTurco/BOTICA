@@ -345,6 +345,10 @@
             <span>IMPORTE TOTAL</span>
             <span>S/ {{ number_format($order->total, 2) }}</span>
         </div>
+        @if((float) $order->rounding_amount > 0)
+        <div class="totals-row"><span>Redondeo</span><span>- S/ {{ number_format($order->rounding_amount, 2) }}</span></div>
+        <div class="totals-row"><span><strong>A COBRAR</strong></span><span><strong>S/ {{ number_format($order->total - $order->rounding_amount, 2) }}</strong></span></div>
+        @endif
     </div>
 
 </div>

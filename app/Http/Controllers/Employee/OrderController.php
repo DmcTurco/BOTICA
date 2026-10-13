@@ -251,28 +251,72 @@ class OrderController extends Controller
     /** Descuento máximo que se puede dar en una venta (%) */
     const MAX_DISCOUNT_PERCENT = 50;
 
+    /** Ajustes de venta de la sede (apagados por defecto): redondeo en efectivo y descuento por monto */
+    private function salesSettings(): array
+    {
+        $branch = auth()->guard('employee')->user()->branch()->with('config')->first();
+
+        return array_merge(['cash_rounding' => false, 'amount_discount' => false], $branch?->getSettingGroup('sales') ?? []);
+    }
+
     /**
-     * Porcentaje de descuento pedido por el cajero. Solo lo aplica quien tiene el privilegio
-     * de descuentos; sin él se ignora el valor enviado (nunca se confía en el navegador).
-     * Devuelve [porcentaje, mensaje de error|null].
+     * Redondeo en efectivo: el total se cobra hacia abajo al múltiplo de S/ 0.10 más cercano
+     * (la moneda más pequeña que circula). Solo con pago en efectivo y si la sede lo activó.
+     * Devuelve los céntimos que se perdonan al cliente (0.00 a 0.09).
      */
-    private function discountPercent(Request $request): array
+    private function cashRounding(float $total, int $paymentType): float
+    {
+        if ($paymentType !== \App\Models\CashRegister::PAYMENT_CASH || !$this->salesSettings()['cash_rounding']) {
+            return 0.0;
+        }
+
+        return round(((int) round($total * 100) % 10) / 100, 2);
+    }
+
+    /**
+     * Descuento pedido por el cajero: porcentaje entero o monto en soles (no ambos).
+     * Solo lo aplica quien tiene el privilegio de descuentos; sin él se ignora lo enviado
+     * (nunca se confía en el navegador). El monto además debe estar activado en la configuración.
+     * Devuelve [porcentaje equivalente, monto fijo|null, mensaje de error|null].
+     */
+    private function discountInput(Request $request, array $items): array
     {
         $percent = (float) (int) $request->input('discount_percent', 0);
+        $value   = round((float) $request->input('discount_value', 0), 2);
 
-        if ($percent <= 0) {
-            return [0.0, null];
+        if ($percent <= 0 && $value <= 0) {
+            return [0.0, null, null];
         }
 
         if (!auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_APLICAR_DESCUENTO)) {
-            return [0.0, 'No tienes permiso para aplicar descuentos.'];
+            return [0.0, null, 'No tienes permiso para aplicar descuentos.'];
+        }
+
+        if ($percent > 0 && $value > 0) {
+            return [0.0, null, 'Elige el descuento en porcentaje o en monto, no los dos a la vez.'];
+        }
+
+        if ($value > 0) {
+            if (!$this->salesSettings()['amount_discount']) {
+                return [0.0, null, 'El descuento por monto no está activado en la configuración de la sede.'];
+            }
+
+            $gross = array_sum(array_map(fn ($i) => round((float) $i['price'] * (float) $i['qty'], 2), $items));
+            $max   = round($gross * self::MAX_DISCOUNT_PERCENT / 100, 2);
+
+            if ($gross <= 0 || $value > $max) {
+                return [0.0, null, 'El descuento máximo permitido es ' . self::MAX_DISCOUNT_PERCENT . '% de la venta (S/ ' . number_format($max, 2) . ').'];
+            }
+
+            // Se guarda también el porcentaje equivalente (para reportes y comprobantes)
+            return [round($value / $gross * 100, 2), $value, null];
         }
 
         if ($percent > self::MAX_DISCOUNT_PERCENT) {
-            return [0.0, 'El descuento máximo permitido es ' . self::MAX_DISCOUNT_PERCENT . '%.'];
+            return [0.0, null, 'El descuento máximo permitido es ' . self::MAX_DISCOUNT_PERCENT . '%.'];
         }
 
-        return [$percent, null];
+        return [$percent, null, null];
     }
 
     /**
@@ -281,7 +325,7 @@ class OrderController extends Controller
      * Devuelve ['tax' => cálculo, 'units' => código SUNAT de unidad por producto]
      * o ['error' => mensaje] si algún producto no es de la compañía o los totales no coinciden.
      */
-    private function pricing(array $items, int $companyId, mixed $clientTotal, float $discountPercent = 0): array
+    private function pricing(array $items, int $companyId, mixed $clientTotal, float $discountPercent = 0, ?float $discountAmount = null): array
     {
         $codes    = array_unique(array_column($items, 'code'));
         $products = Product::with(['unit:id,sunat_code', 'presentations'])
@@ -312,7 +356,8 @@ class OrderController extends Controller
         $tax = app(TaxCalculator::class)->calculate(
             $items,
             $products->map(fn ($p) => $p->igv_affectation)->all(),
-            $discountPercent
+            $discountPercent,
+            $discountAmount
         );
 
         // El total que vio el cajero debe coincidir con el del servidor (tolerancia por redondeo)
@@ -507,6 +552,7 @@ class OrderController extends Controller
             'igv'               => 'nullable|numeric|min:0',
             'total'             => 'nullable|numeric|min:0',
             'discount_percent'  => 'nullable|integer|min:0|max:100',
+            'discount_value'    => 'nullable|numeric|min:0|max:99999999',
         ]);
 
         // Factura requiere RUC (document_type_id = 3)
@@ -546,14 +592,14 @@ class OrderController extends Controller
 
         $employee = auth()->guard('employee')->user();
 
-        [$discountPercent, $discountError] = $this->discountPercent($request);
+        [$discountPercent, $discountAmount, $discountError] = $this->discountInput($request, $request->items);
 
         if ($discountError) {
             return response()->json(['success' => false, 'message' => $discountError], 422);
         }
 
         // IGV y totales: se calculan aquí con la afectación real de cada producto
-        $pricing = $this->pricing($request->items, $employee->company_id, $request->total, $discountPercent);
+        $pricing = $this->pricing($request->items, $employee->company_id, $request->total, $discountPercent, $discountAmount);
 
         if (isset($pricing['error'])) {
             return response()->json(['success' => false, 'message' => $pricing['error']], 422);
@@ -650,6 +696,7 @@ class OrderController extends Controller
                 'igv'               => $tax['igv'],
                 'discount_percent'  => $discountPercent,
                 'discount_amount'   => $tax['discount'],
+                'rounding_amount'   => $this->cashRounding($tax['total'], (int) $request->payment_type),
                 'total'             => $tax['total'],
                 'credit_balance'    => $creditClient ? $tax['total'] : 0,
                 'credit_due_date'   => $creditClient ? ($request->credit_due_date ?: now()->addDays(30)->toDateString()) : null,
@@ -724,7 +771,7 @@ class OrderController extends Controller
             DB::commit();
 
             if ($discountPercent > 0) {
-                \App\Models\AuditLog::record('sale.discount', 'Aplicó ' . $discountPercent . '% de descuento (S/ ' . number_format($tax['discount'], 2) . ') en ' . $order->voucher_number, $order->voucher_number, ['total' => $tax['total']]);
+                \App\Models\AuditLog::record('sale.discount', 'Aplicó ' . ($discountAmount ? 'un descuento de S/ ' . number_format($discountAmount, 2) . ' (' . $discountPercent . '%)' : $discountPercent . '% de descuento (S/ ' . number_format($tax['discount'], 2) . ')') . ' en ' . $order->voucher_number, $order->voucher_number, ['total' => $tax['total']]);
             }
             if ($creditClient) {
                 \App\Models\AuditLog::record('sale.credit', 'Vendió a crédito S/ ' . number_format($tax['total'], 2) . ' a ' . $creditClient->name, $order->voucher_number, ['vence' => $order->credit_due_date?->toDateString()]);
@@ -862,6 +909,7 @@ class OrderController extends Controller
             'igv'               => 'nullable|numeric|min:0',
             'total'             => 'nullable|numeric|min:0',
             'discount_percent'  => 'nullable|integer|min:0|max:100',
+            'discount_value'    => 'nullable|numeric|min:0|max:99999999',
         ]);
 
         $employee     = auth()->guard('employee')->user();
@@ -873,7 +921,7 @@ class OrderController extends Controller
         abort_if($order->sunat_status === Order::SUNAT_ACCEPTED, 403,
             'Este comprobante ya fue aceptado por SUNAT y no se puede editar. Emite una nota de crédito.');
 
-        [$discountPercent, $discountError] = $this->discountPercent($request);
+        [$discountPercent, $discountAmount, $discountError] = $this->discountInput($request, $request->items);
 
         if ($discountError) {
             return response()->json(['success' => false, 'message' => $discountError], 422);
@@ -885,7 +933,7 @@ class OrderController extends Controller
         }
 
         // IGV y totales: se recalculan con la afectación real de cada producto
-        $pricing = $this->pricing($request->items, $employee->company_id, $request->total, $discountPercent);
+        $pricing = $this->pricing($request->items, $employee->company_id, $request->total, $discountPercent, $discountAmount);
 
         if (isset($pricing['error'])) {
             return response()->json(['success' => false, 'message' => $pricing['error']], 422);
@@ -1016,6 +1064,7 @@ class OrderController extends Controller
                 'igv'               => $tax['igv'],
                 'discount_percent'  => $discountPercent,
                 'discount_amount'   => $tax['discount'],
+                'rounding_amount'   => $this->cashRounding($tax['total'], (int) $request->payment_type),
                 'total'             => $tax['total'],
             ] + ($resendSunat ? [
                 'sunat_status'  => Order::SUNAT_PENDING,
