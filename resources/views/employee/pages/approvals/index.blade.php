@@ -18,13 +18,6 @@
     </div>
 
     {{-- ── Alertas ──────────────────────────────────────────────── --}}
-    @if(session('success'))
-    <div class="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 flex items-center gap-2 shrink-0">
-        <i class="fas fa-circle-check text-emerald-500"></i>
-        {{ session('success') }}
-    </div>
-    @endif
-
     {{-- ── CAJAS PENDIENTES ─────────────────────────────────────── --}}
     <div class="shrink-0">
         <h2 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-3 flex items-center gap-2">

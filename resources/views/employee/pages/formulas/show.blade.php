@@ -42,12 +42,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-    <div class="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 flex items-center gap-2 shrink-0">
-        <i class="fas fa-circle-check text-emerald-500"></i> {{ session('success') }}
-    </div>
-    @endif
-
     {{-- Resultado final --}}
     <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
         <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-3">Resultado final de la fórmula base</p>

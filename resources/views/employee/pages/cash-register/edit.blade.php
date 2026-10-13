@@ -9,7 +9,7 @@
     {{-- ── Encabezado ──────────────────────────────────── --}}
     <div class="mb-5 flex items-start justify-between gap-4">
         <div>
-            <h1 class="text-lg font-bold text-slate-800">Editar Apertura de Caja</h1>
+            <h1 class="text-lg font-bold text-slate-800">Editar Apertura de Caja @isset($owner)<span class="text-slate-400 font-normal">—</span> <span class="text-emerald-700">{{ $owner->name }}</span> @endisset</h1>
             <p class="text-sm text-slate-400 mt-0.5">
                 Abierta el {{ $caja->opened_at->locale('es')->isoFormat('dddd D [de] MMMM · HH:mm') }}
             </p>
@@ -21,18 +21,13 @@
     </div>
 
     {{-- ── Flash messages ───────────────────────────────── --}}
-    @if(session('success'))
-    <div class="mb-5 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
-        <i class="fas fa-circle-check mr-1.5"></i>{{ session('success') }}
-    </div>
-    @endif
     @php
         // Indexar las denominaciones guardadas para precargar los inputs
         $denGuardadas = collect($caja->opening_denominations ?? [])
             ->keyBy(fn($d) => 'den_' . str_replace('.', '_', $d['valor']));
     @endphp
 
-    <form id="formEditar" action="{{ route('employee.cash-register.update') }}" method="POST">
+    <form id="formEditar" action="{{ $formAction ?? route('employee.cash-register.update') }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -149,9 +144,9 @@
                             <i class="fas fa-floppy-disk"></i>
                             Guardar Cambios
                         </button>
-                        <a href="{{ route('employee.orders.index') }}"
+                        <a href="{{ $backUrl ?? route('employee.orders.index') }}"
                            class="block w-full py-2.5 text-center text-sm text-slate-400 hover:text-slate-600 transition-colors">
-                            Volver a Ventas
+                            {{ $backLabel ?? 'Volver a Ventas' }}
                         </a>
                     </div>
 

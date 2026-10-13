@@ -27,11 +27,15 @@ class CashMovement extends Model
         'amount',
         'notes',
         'status',
+        'void_reason',
+        'voided_at',
+        'voided_by',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'status' => 'integer',
+        'status'    => 'integer',
+        'voided_at' => 'datetime',
     ];
 
     /** Caja en la que se registró */
@@ -44,6 +48,12 @@ class CashMovement extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    /** Empleado que lo anuló */
+    public function voidedBy(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'voided_by');
     }
 
     /** Solo movimientos vigentes (no anulados) */

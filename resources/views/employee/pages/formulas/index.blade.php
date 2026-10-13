@@ -18,11 +18,6 @@
         </a>
     </div>
 
-    @if(session('success'))
-    <div class="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 flex items-center gap-2 shrink-0">
-        <i class="fas fa-circle-check text-emerald-500"></i> {{ session('success') }}
-    </div>
-    @endif
     {{-- Filtros --}}
     <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-sm shrink-0">
         <form action="{{ route('employee.formulas.index') }}" method="GET">

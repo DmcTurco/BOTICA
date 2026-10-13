@@ -182,6 +182,9 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
     });
     Route::get('cash-closures/print', [Employee\CashClosureController::class, 'print'])
         ->middleware('privilege:imprimir_mov_caja')->name('cash-closures.print');
+    // El administrador de sede corrige la apertura de la caja abierta de un empleado (la autorización se valida en el controlador)
+    Route::get('cash-closures/{cashRegister}/opening', [Employee\CashRegisterController::class, 'editOpening'])->name('cash-closures.opening.edit');
+    Route::put('cash-closures/{cashRegister}/opening', [Employee\CashRegisterController::class, 'updateOpening'])->name('cash-closures.opening.update');
     Route::middleware('privilege:ver_cierres_caja')->group(function () {
         Route::get('cash-closures', [Employee\CashClosureController::class, 'index'])->name('cash-closures.index');
         Route::get('cash-closures/{cashRegister}', [Employee\CashClosureController::class, 'show'])->name('cash-closures.show');

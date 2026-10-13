@@ -258,7 +258,7 @@ class OrderController extends Controller
      */
     private function discountPercent(Request $request): array
     {
-        $percent = round((float) $request->input('discount_percent', 0), 2);
+        $percent = (float) (int) $request->input('discount_percent', 0);
 
         if ($percent <= 0) {
             return [0.0, null];
@@ -506,7 +506,7 @@ class OrderController extends Controller
             'subtotal'          => 'nullable|numeric|min:0',
             'igv'               => 'nullable|numeric|min:0',
             'total'             => 'nullable|numeric|min:0',
-            'discount_percent'  => 'nullable|numeric|min:0|max:100',
+            'discount_percent'  => 'nullable|integer|min:0|max:100',
         ]);
 
         // Factura requiere RUC (document_type_id = 3)
@@ -861,7 +861,7 @@ class OrderController extends Controller
             'subtotal'          => 'nullable|numeric|min:0',
             'igv'               => 'nullable|numeric|min:0',
             'total'             => 'nullable|numeric|min:0',
-            'discount_percent'  => 'nullable|numeric|min:0|max:100',
+            'discount_percent'  => 'nullable|integer|min:0|max:100',
         ]);
 
         $employee     = auth()->guard('employee')->user();

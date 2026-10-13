@@ -21,11 +21,6 @@
     </div>
 
     {{-- Mensajes --}}
-    @if(session('success'))
-    <div class="shrink-0 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
-        <i class="fas fa-circle-check mr-1.5"></i>{{ session('success') }}
-    </div>
-    @endif
     <form method="POST" action="{{ route('company.sunat.update') }}" enctype="multipart/form-data"
           class="flex-1 flex flex-col min-h-0">
         @csrf

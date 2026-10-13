@@ -26,6 +26,9 @@ return new class extends Migration
             $table->text('notes')->nullable();
 
             $table->unsignedTinyInteger('status')->default(1)->comment('1=vigente, 0=anulado');
+            $table->string('void_reason', 255)->nullable();            // motivo de la anulación
+            $table->timestamp('voided_at')->nullable();
+            $table->unsignedBigInteger('voided_by')->nullable()->index();   // quién lo anuló
             $table->timestamps();
         });
     }

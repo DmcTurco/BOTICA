@@ -48,9 +48,16 @@ it('anular un movimiento lo saca del efectivo esperado', function () {
     $this->post(route('employee.cash-movements.store'), ['type' => 'expense', 'concept' => 'Taxi', 'amount' => 30]);
     expect($register->expectedCash())->toBe(70.0);
 
-    $this->post(route('employee.cash-movements.void', CashMovement::first()))->assertSessionHasNoErrors();
+    // Sin motivo no se anula
+    $this->post(route('employee.cash-movements.void', CashMovement::first()))->assertSessionHasErrors('void_reason');
+    expect($register->expectedCash())->toBe(70.0);
 
-    expect($register->expectedCash())->toBe(100.0);
+    $this->post(route('employee.cash-movements.void', CashMovement::first()), ['void_reason' => 'Se registró dos veces'])->assertSessionHasNoErrors();
+
+    expect($register->expectedCash())->toBe(100.0)
+        ->and(CashMovement::first()->void_reason)->toBe('Se registró dos veces')
+        ->and(CashMovement::first()->voided_by)->toBe($employee->id)
+        ->and(App\Models\AuditLog::where('action', 'cash.movement_void')->count())->toBe(1);
 });
 
 it('cada tipo de movimiento exige su privilegio', function () {

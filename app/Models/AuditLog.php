@@ -14,7 +14,7 @@ class AuditLog extends Model
     /** Acciones que se registran, agrupadas para filtrar en la pantalla */
     const GROUPS = [
         'Compras y stock' => ['purchase.void', 'transfer.void', 'production.void', 'stock.adjust', 'batch.write_off'],
-        'Ventas y caja'   => ['sale.discount', 'sale.credit', 'credit_note.issue', 'cash.approve', 'cash.reject', 'receivable.pay', 'payable.pay'],
+        'Ventas y caja'   => ['sale.discount', 'sale.credit', 'credit_note.issue', 'cash.approve', 'cash.reject', 'cash.opening_edit', 'cash.movement_void', 'receivable.pay', 'payable.pay'],
         'Precios'         => ['price.update', 'price.bulk'],
         'Configuración'   => ['series.update', 'commission.update', 'local.update', 'employee.create', 'employee.update', 'employee.delete'],
     ];

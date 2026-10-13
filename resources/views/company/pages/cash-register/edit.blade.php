@@ -21,11 +21,6 @@
     </div>
 
     {{-- ── Flash messages ───────────────────────────────── --}}
-    @if(session('success'))
-    <div class="mb-5 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
-        <i class="fas fa-circle-check mr-1.5"></i>{{ session('success') }}
-    </div>
-    @endif
     @php
         // Indexar las denominaciones guardadas para precargar los inputs
         $denGuardadas = collect($caja->opening_denominations ?? [])

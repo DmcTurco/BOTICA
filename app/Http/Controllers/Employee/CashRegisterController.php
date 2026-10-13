@@ -289,6 +289,68 @@ class CashRegisterController extends Controller
     }
 
     /**
+     * Formulario para que el administrador de sede corrija la apertura de la caja abierta de un empleado.
+     */
+    public function editOpening(CashRegister $cashRegister)
+    {
+        $this->authorizeOpeningEdit($cashRegister);
+
+        $cashRegister->load('employee:id,name');
+
+        return view('employee.pages.cash-register.edit', [
+            'caja'       => $cashRegister,
+            'formAction' => route('employee.cash-closures.opening.update', $cashRegister),
+            'backUrl'    => route('employee.cash-closures.show', $cashRegister),
+            'backLabel'  => 'Volver al detalle de la caja',
+            'owner'      => $cashRegister->employee,
+        ]);
+    }
+
+    /**
+     * Actualiza la apertura de la caja de un empleado y deja el cambio en la bitácora.
+     */
+    public function updateOpening(Request $request, CashRegister $cashRegister)
+    {
+        $this->authorizeOpeningEdit($cashRegister);
+
+        $request->validate(['notes' => 'nullable|string|max:500']);
+
+        [$denominaciones, $total] = $this->parsearDenominaciones($request);
+        $anterior = (float) $cashRegister->opening_amount;
+
+        $cashRegister->update([
+            'opening_amount'        => $total,
+            'opening_denominations' => $denominaciones,
+            'notes'                 => $request->notes,
+        ]);
+
+        \App\Models\AuditLog::record(
+            'cash.opening_edit',
+            'Corrigió la apertura de la caja de ' . $cashRegister->employee?->name . ': S/ ' . number_format($anterior, 2) . ' → S/ ' . number_format($total, 2),
+            'Caja #' . $cashRegister->id,
+            ['anterior' => $anterior, 'nuevo' => $total]
+        );
+
+        return redirect()->route('employee.cash-closures.show', $cashRegister)
+            ->with('success', 'Apertura actualizada. Nuevo total: S/ ' . number_format($total, 2));
+    }
+
+    /**
+     * Solo el administrador de sede, sobre cajas abiertas de su misma sede.
+     */
+    private function authorizeOpeningEdit(CashRegister $cashRegister): void
+    {
+        $employee = auth()->guard('employee')->user();
+
+        abort_unless($employee->isBranchAdmin(), 403);
+        abort_if(
+            $cashRegister->company_id !== $employee->company_id || $cashRegister->branch_id !== $employee->branch_id,
+            403
+        );
+        abort_if(!$cashRegister->status, 403, 'La caja ya está cerrada y no se puede modificar su apertura.');
+    }
+
+    /**
      * Pantalla de cierre de caja: resumen de ventas por forma de pago,
      * efectivo esperado y formulario con el efectivo contado.
      */

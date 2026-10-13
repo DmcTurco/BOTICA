@@ -12,13 +12,6 @@
         <p class="text-sm text-slate-500 mt-0.5">Ajustes de la sede: <strong>{{ $branch->name }}</strong></p>
     </div>
 
-    @if(session('success'))
-    <div class="shrink-0 flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
-        <i class="fas fa-circle-check shrink-0"></i>
-        {{ session('success') }}
-    </div>
-    @endif
-
     <form method="POST" action="{{ route('employee.settings.update') }}">
         @csrf
 

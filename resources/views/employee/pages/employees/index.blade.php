@@ -20,12 +20,6 @@
     </div>
 
     {{-- Mensajes flash --}}
-    @if(session('success'))
-    <div class="shrink-0 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm">
-        <i class="fas fa-circle-check shrink-0"></i>
-        {{ session('success') }}
-    </div>
-    @endif
     {{-- Tabla --}}
     <div class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 

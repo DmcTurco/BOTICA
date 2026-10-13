@@ -17,6 +17,12 @@
             <h1 class="text-xl font-bold text-slate-800">Caja del {{ $caja->register_date->format('d/m/Y') }}</h1>
             <p class="text-sm text-slate-500 mt-0.5">#{{ $caja->id }} · {{ $caja->employee?->name }} · {{ $caja->status ? 'Abierta' : 'Cerrada' }}</p>
         </div>
+        @if($caja->status && auth()->guard('employee')->user()->isBranchAdmin())
+        <a href="{{ route('employee.cash-closures.opening.edit', $caja) }}"
+           class="ml-auto inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition-colors">
+            <i class="fas fa-pen text-xs"></i> Editar apertura
+        </a>
+        @endif
     </div>
 
     @include('employee.partials.alerts')

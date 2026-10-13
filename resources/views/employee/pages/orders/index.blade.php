@@ -402,8 +402,9 @@
             @if($canDiscount)
             <div class="flex items-center gap-2" title="Descuento porcentual aplicado a todos los productos (máx. 50%)">
                 <label for="descuentoPct" class="text-xs font-medium text-slate-500">Desc. %</label>
-                <input type="number" id="descuentoPct" min="0" max="50" step="0.5" value="0"
+                <input type="number" id="descuentoPct" min="0" max="50" step="1" inputmode="numeric" value="0"
                        class="w-16 px-2 py-1.5 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <span class="text-xs text-slate-400 leading-tight">Número entero.<br>Ej: 10 = 10% menos en toda la venta</span>
             </div>
             @endif
 
@@ -880,11 +881,16 @@ function renderCarrito() {
 
 // Porcentaje de descuento ingresado (0 si no hay campo o el valor no es válido)
 function porcentajeDescuento() {
-    const v = parseFloat($('#descuentoPct').val());
+    const v = parseInt($('#descuentoPct').val(), 10);
     return isNaN(v) ? 0 : Math.min(Math.max(v, 0), 50);
 }
 
-$('#descuentoPct').on('input', actualizarTotales);
+// Solo enteros: se quita cualquier decimal que se escriba (10.5 → 10)
+$('#descuentoPct').on('input', function () {
+    const limpio = String(this.value).replace(/[^0-9]/g, '');
+    if (limpio !== this.value) this.value = limpio;
+    actualizarTotales();
+});
 
 // Redondeo a 2 decimales (igual que el servidor)
 function redondear(n) {

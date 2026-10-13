@@ -93,3 +93,12 @@ it('el descuento aparece en el comprobante impreso', function () {
         $this->get(route('employee.orders.print', [Order::first(), $template]))->assertOk()->assertSee('10%', false);
     }
 });
+
+it('el porcentaje de descuento debe ser un número entero', function () {
+    $employee = loginEmployee();
+    posSetup($employee);
+
+    posSale(['discount_percent' => 10.5, 'total' => 21.24])->assertStatus(422);
+
+    expect(Order::count())->toBe(0);
+});

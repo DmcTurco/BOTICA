@@ -12,23 +12,9 @@
         @include('company/inc/navbar')
 
         {{-- ── Mensajes flash globales ─────────────────────────────── --}}
-        {{-- Los errores (session 'error' y validación) se muestran en el modal de alerta --}}
-        @if(session('success') || session('info') || session('warning'))
+        {{-- Éxito, errores y validación se muestran en el modal de alerta --}}
+        @if(session('info') || session('warning'))
         <div id="flashContainer" class="fixed top-5 right-5 z-[100] flex flex-col gap-2 w-80">
-
-            @if(session('success'))
-            <div class="flash-msg flex items-start gap-3 px-4 py-3 bg-white border border-emerald-200 rounded-xl shadow-lg">
-                <div class="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-                    <i class="fas fa-check text-emerald-600 text-xs"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-slate-800">{{ session('success') }}</p>
-                </div>
-                <button onclick="this.closest('.flash-msg').remove()" class="text-slate-300 hover:text-slate-500 shrink-0 mt-0.5">
-                    <i class="fas fa-xmark text-xs"></i>
-                </button>
-            </div>
-            @endif
 
             @if(session('info'))
             <div class="flash-msg flex items-start gap-3 px-4 py-3 bg-white border border-sky-200 rounded-xl shadow-lg">

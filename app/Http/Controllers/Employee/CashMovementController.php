@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Company\CashMovementRequest;
+use App\Http\Requests\Company\VoidCashMovementRequest;
+use App\Models\AuditLog;
 use App\Models\CashMovement;
 use App\Models\CashRegister;
 use Illuminate\Http\Request;
@@ -85,8 +87,9 @@ class CashMovementController extends Controller
 
     /**
      * Anula un movimiento mientras su caja siga abierta (solo quien la tiene abierta).
+     * Exige el motivo y deja el registro en la bitácora.
      */
-    public function void(CashMovement $movement)
+    public function void(VoidCashMovementRequest $request, CashMovement $movement)
     {
         $employee = auth()->guard('employee')->user();
 
@@ -98,7 +101,23 @@ class CashMovementController extends Controller
             'Solo puedes anular movimientos de tu caja abierta.'
         );
 
-        $movement->update(['status' => 0]);
+        if (!$movement->status) {
+            return back()->with('error', 'Ese movimiento ya estaba anulado.');
+        }
+
+        $movement->update([
+            'status'      => 0,
+            'void_reason' => $request->void_reason,
+            'voided_at'   => now(),
+            'voided_by'   => $employee->id,
+        ]);
+
+        AuditLog::record(
+            'cash.movement_void',
+            'Anuló ' . strtolower(CashMovement::TYPE_LABELS[$movement->type]) . ' «' . $movement->concept . '» de S/ ' . number_format((float) $movement->amount, 2),
+            'Caja #' . $movement->cash_register_id,
+            ['motivo' => $request->void_reason, 'monto' => (float) $movement->amount]
+        );
 
         return redirect()->route('employee.cash-movements.index')->with('success', 'Movimiento anulado.');
     }
