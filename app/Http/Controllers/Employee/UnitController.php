@@ -30,6 +30,24 @@ class UnitController extends Controller
     }
 
     /**
+     * Muestra el formulario para crear una unidad de medida.
+     */
+    public function create()
+    {
+        return view('employee.pages.units.form', ['sunatCodes' => UnitRequest::SUNAT_CODES]);
+    }
+
+    /**
+     * Muestra el formulario para editar una unidad, con cuántos productos y presentaciones la usan.
+     */
+    public function edit(Unit $unit)
+    {
+        $unit->loadCount(['productos', 'presentaciones']);
+
+        return view('employee.pages.units.form', ['unit' => $unit, 'sunatCodes' => UnitRequest::SUNAT_CODES]);
+    }
+
+    /**
      * Crea una unidad de medida.
      */
     public function store(UnitRequest $request)

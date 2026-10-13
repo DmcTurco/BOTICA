@@ -15,7 +15,7 @@ it('registra quién anuló una compra, ajustó stock y cambió precios', functio
     stockProduct('P1', 0, 2);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(),
+        'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
         'items' => [['product_code' => 'P1', 'quantity' => 5, 'unit_cost' => 2]],
     ]);
     $this->post(route('employee.purchases.void', Purchase::firstOrFail()), ['void_reason' => 'Se duplicó']);
@@ -87,7 +87,7 @@ it('arma el comando de pg_dump con la conexión y sin la contraseña en la líne
 });
 
 it('respalda una base SQLite copiando el archivo y borra los respaldos viejos', function () {
-    $dir = sys_get_temp_dir() . '/botica-backup-test-' . uniqid();
+    $dir = sys_get_temp_dir() . '/botica-backup-test-' . random_int(100000, 99999999);
     $db  = $dir . '/live.sqlite';
     mkdir($dir);
     file_put_contents($db, 'datos');

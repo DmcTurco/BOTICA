@@ -6,7 +6,7 @@
 @php $money = fn ($n) => 'S/ ' . number_format($n, 2); @endphp
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3 max-w-4xl mx-auto w-full overflow-auto">
+<div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
 
     <div class="flex items-center gap-3 shrink-0">
         <a href="{{ route('employee.receivables.index') }}" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200 transition-colors"><i class="fas fa-arrow-left text-sm"></i></a>

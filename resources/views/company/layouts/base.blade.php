@@ -87,6 +87,7 @@
     }
     </script>
     @include('partials/alert-modal')
+    @include('partials/search-select')
     @include('company/inc/foot')
 </body>
 </html>

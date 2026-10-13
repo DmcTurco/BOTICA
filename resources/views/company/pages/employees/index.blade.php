@@ -32,7 +32,7 @@
         </div>
         <div class="min-w-40">
             <label class="block text-xs font-semibold text-slate-500 mb-1">Sede</label>
-            <select name="sede" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+            <select data-search name="sede" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                 <option value="">Todas las sedes</option>
                 @foreach($branches as $branch)
                 <option value="{{ $branch->id }}" {{ request('sede') == $branch->id ? 'selected' : '' }}>

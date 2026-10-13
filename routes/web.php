@@ -128,7 +128,7 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
     Route::middleware('privilege:mantenimiento_familias')->group(function () {
         Route::resource('laboratories', Employee\LaboratoryController::class)->except(['index', 'show']);
         Route::resource('categories', Employee\CategoryController::class)->except(['index', 'show']);
-        Route::resource('units', Employee\UnitController::class)->only(['store', 'update', 'destroy']);
+        Route::resource('units', Employee\UnitController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
     });
 
     // Compras (ingreso de stock)
@@ -253,7 +253,7 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
 
     // Proveedores, órdenes de compra y cuentas por pagar
     Route::middleware('privilege:proveedores')->group(function () {
-        Route::resource('suppliers', Employee\SupplierController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('suppliers', Employee\SupplierController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     });
     Route::middleware('privilege:ver_compras')->group(function () {
         Route::get('purchase-orders', [Employee\PurchaseOrderController::class, 'index'])->name('purchase-orders.index');

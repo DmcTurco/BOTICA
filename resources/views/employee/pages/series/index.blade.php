@@ -4,7 +4,7 @@
 @section('main-padding', 'p-2 md:p-3')
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto max-w-5xl w-full mx-auto">
+<div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
 
     <div class="shrink-0">
         <h1 class="text-xl font-bold text-slate-800">Series y Correlativos</h1>

@@ -4,7 +4,7 @@
 @section('main-padding', 'p-2 md:p-3')
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3 max-w-4xl mx-auto w-full">
+<div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
 
     {{-- Header --}}
     <div class="flex items-center gap-3 shrink-0">

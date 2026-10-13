@@ -157,7 +157,7 @@ it('muestra los lotes comprados que vencen pronto y los ya vencidos', function (
     stockProduct('B', 5, 2);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(),
+        'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
         'items' => [
             ['product_code' => 'A', 'quantity' => 1, 'unit_cost' => 1, 'expiration_date' => today()->addDays(20)->toDateString(), 'batch' => 'L-A'],
             ['product_code' => 'B', 'quantity' => 1, 'unit_cost' => 1, 'expiration_date' => today()->addDays(5)->toDateString(), 'batch' => 'L-B'],

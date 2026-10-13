@@ -11,7 +11,7 @@
 @endphp
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3 max-w-5xl mx-auto w-full">
+<div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
 
     {{-- Header --}}
     <div class="flex items-center justify-between gap-3 shrink-0">

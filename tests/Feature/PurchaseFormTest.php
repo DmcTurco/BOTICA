@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 function purchasePayload(array $override = []): array
 {
     return array_merge([
-        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(),
+        'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
         'items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => 2]],
     ], $override);
 }

@@ -28,7 +28,7 @@
                            class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                            placeholder="Código, nombre o principio activo...">
                 </div>
-                <select name="categoria"
+                <select data-search name="categoria"
                         class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                     <option value="">Todas las categorías</option>
                     @foreach($categorias as $categoria)
@@ -37,7 +37,7 @@
                         </option>
                     @endforeach
                 </select>
-                <select name="laboratorio"
+                <select data-search name="laboratorio"
                         class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                     <option value="">Todos los laboratorios</option>
                     @foreach($laboratorios as $lab)

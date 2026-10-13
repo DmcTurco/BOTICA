@@ -161,12 +161,9 @@
 <script>
 const esperadoCierre = {{ json_encode((float) $expectedCash) }};
 
-// Abre el modal de confirmación (primero valida que el monto contado sea válido)
+// Abre el modal de confirmación (la validación del monto la hace el servidor al confirmar)
 function abrirModalConfirmar() {
-    const form  = document.getElementById('formCierre');
     const campo = document.getElementById('closing_amount');
-
-    if (!form.reportValidity()) return;
 
     const contado = parseFloat(campo.value) || 0;
     const dif     = Math.round((contado - esperadoCierre) * 100) / 100;

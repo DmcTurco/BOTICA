@@ -37,6 +37,27 @@ class SupplierController extends Controller
     }
 
     /**
+     * Muestra el formulario para registrar un proveedor.
+     */
+    public function create()
+    {
+        return view('employee.pages.suppliers.form');
+    }
+
+    /**
+     * Muestra el formulario para editar un proveedor, con su resumen de compras y deuda.
+     */
+    public function edit(Supplier $supplier)
+    {
+        abort_if($supplier->company_id !== auth()->guard('employee')->user()->company_id, 403);
+
+        $purchasesCount = $supplier->purchases()->count();
+        $debt = $supplier->purchases()->where('payment_condition', 'credit')->where('status', 1)->get()->sum->balance;
+
+        return view('employee.pages.suppliers.form', compact('supplier', 'purchasesCount', 'debt'));
+    }
+
+    /**
      * Registra un proveedor.
      */
     public function store(SupplierRequest $request)

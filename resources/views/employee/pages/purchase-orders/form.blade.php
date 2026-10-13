@@ -24,7 +24,7 @@
             <div class="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Proveedor <span class="text-red-500">*</span></label>
-                    <select name="supplier_id" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <select data-search name="supplier_id" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <option value="">— Selecciona —</option>
                         @foreach($suppliers as $s)<option value="{{ $s->id }}" {{ old('supplier_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>@endforeach
                     </select>

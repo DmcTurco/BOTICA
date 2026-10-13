@@ -16,6 +16,7 @@
     </div>
 
     @include('partials/alert-modal')
+    @include('partials/search-select')
     @include('employee/inc/foot')
 
     <script>

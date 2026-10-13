@@ -81,7 +81,7 @@
 
                 <div class="sm:col-span-2">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Unidad del resultado</label>
-                    <select name="yield_unit_id"
+                    <select data-search name="yield_unit_id"
                             class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                         <option value="">— Sin unidad —</option>
                         @foreach($units as $unit)
@@ -145,7 +145,7 @@
 
                 <div id="bloqueProducto" class="{{ $sellInPos ? '' : 'hidden' }} max-w-xl">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Producto del catálogo que recibe el stock <span class="text-red-500">*</span></label>
-                    <select name="product_code" id="productCode"
+                    <select data-search name="product_code" id="productCode"
                             class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                         <option value="">— Selecciona un producto —</option>
                         @foreach($products as $p)

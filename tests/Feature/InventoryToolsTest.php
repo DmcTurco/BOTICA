@@ -127,7 +127,7 @@ it('anula una compra descontando lo que ingresó', function () {
     stockProduct('P1', 0);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(),
+        'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
         'items' => [['product_code' => 'P1', 'quantity' => 20, 'unit_cost' => 1]],
     ])->assertSessionHasNoErrors();
     expect(stockOf('P1'))->toBe(20.0);
@@ -143,7 +143,7 @@ it('no anula una compra cuya mercadería ya se vendió', function () {
     stockProduct('P1', 0);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(),
+        'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
         'items' => [['product_code' => 'P1', 'quantity' => 20, 'unit_cost' => 1]],
     ]);
     App\Models\BranchStock::where('product_code', 'P1')->update(['stock_actual' => 5]); // se vendieron 15
@@ -158,7 +158,7 @@ it('exige el privilegio de eliminar guía de ingreso para anular compras', funct
     stockProduct('P1', 0);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(),
+        'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
         'items' => [['product_code' => 'P1', 'quantity' => 5, 'unit_cost' => 1]],
     ]);
 

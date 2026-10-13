@@ -23,7 +23,7 @@
                 <option value="">Todas las acciones</option>
                 @foreach($groups as $g)<option value="{{ $g }}" {{ request('grupo') === $g ? 'selected' : '' }}>{{ $g }}</option>@endforeach
             </select>
-            <select name="empleado" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
+            <select data-search name="empleado" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                 <option value="">Todos los empleados</option>
                 @foreach($employees as $e)<option value="{{ $e->id }}" {{ request('empleado') == $e->id ? 'selected' : '' }}>{{ $e->name }}</option>@endforeach
             </select>

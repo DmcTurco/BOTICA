@@ -73,7 +73,7 @@
                             <label for="categoria_id" class="block text-sm font-medium text-slate-700 mb-1.5">
                                 Categoría <span class="text-red-500">*</span>
                             </label>
-                            <select id="categoria_id" name="categoria_id" required
+                            <select data-search id="categoria_id" name="categoria_id" required
                                     class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                 <option value="">Seleccionar categoría</option>
                                 @foreach ($categorias as $categoria)
@@ -108,7 +108,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
                             <label for="laboratorio_id" class="block text-sm font-medium text-slate-700 mb-1.5">Laboratorio</label>
-                            <select id="laboratorio_id" name="laboratorio_id"
+                            <select data-search id="laboratorio_id" name="laboratorio_id"
                                     class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                 <option value="">Seleccionar laboratorio</option>
                                 @foreach ($laboratorios as $laboratorio)
@@ -134,8 +134,8 @@
                             <label for="unidad_medida_id" class="block text-sm font-medium text-slate-700 mb-1.5">
                                 Unidad de Medida <span class="text-red-500">*</span>
                             </label>
-                            <select id="unidad_medida_id" name="unidad_medida_id" required
-                                    class="select2 w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            <select data-search id="unidad_medida_id" name="unidad_medida_id" required
+                                    class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                                 <option value="">Seleccionar unidad</option>
                                 @foreach ($unidades as $unidad)
                                     <option value="{{ $unidad->id }}" {{ old('unidad_medida_id', $producto->unit_id ?? '') == $unidad->id ? 'selected' : '' }}>
@@ -340,7 +340,7 @@
                                     <label class="block text-xs font-medium text-slate-700 mb-1.5">
                                         Unidad de Medida <span class="text-red-500">*</span>
                                     </label>
-                                    <select class="select2 unidad-medida-select w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required>
+                                    <select data-search class="unidad-medida-select w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required>
                                         <option value="">Seleccione</option>
                                         @foreach ($unidades as $unidad)
                                             <option value="{{ $unidad->id }}">{{ $unidad->name }}</option>
@@ -443,11 +443,7 @@ function inicializarTabs() {
 }
 
 function inicializarSelect2() {
-    $('.select2').select2({
-        placeholder: "Seleccione una opción",
-        allowClear: true,
-        width: '100%'
-    });
+    // Los selects con data-search se inicializan solos (partials/search-select)
 }
 
 function agregarPresentacion(datos = null) {
@@ -486,11 +482,7 @@ function agregarPresentacion(datos = null) {
 
     document.querySelector('#presentaciones-container').appendChild(clone);
 
-    $(item).find('.select2').select2({
-        placeholder: "Seleccione una opción",
-        allowClear: true,
-        width: '100%'
-    });
+    window.initSearchSelects(item);   // buscador de la unidad
 }
 
 function inicializarEventos() {

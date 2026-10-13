@@ -22,7 +22,7 @@
                 {{-- Selector de producto --}}
                 <div class="flex-1 relative">
                     <i class="fas fa-pills absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                    <select name="producto" id="selectProducto"
+                    <select data-search name="producto" id="selectProducto"
                             class="w-full pl-8 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                         <option value="">— Seleccionar producto —</option>
                         @foreach($productos as $p)

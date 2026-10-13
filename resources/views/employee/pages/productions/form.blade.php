@@ -32,7 +32,7 @@
 
                 <div class="sm:col-span-3">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Fórmula <span class="text-red-500">*</span></label>
-                    <select name="formula_id" id="formulaId" required
+                    <select data-search name="formula_id" id="formulaId" required
                             class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                         <option value="">— Selecciona una fórmula —</option>
                         @foreach($formulasData as $f)

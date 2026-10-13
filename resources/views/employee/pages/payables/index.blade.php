@@ -23,7 +23,7 @@
 
     <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-sm shrink-0">
         <form action="{{ route('employee.payables.index') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
-            <select name="proveedor" class="sm:w-64 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
+            <select data-search name="proveedor" class="sm:w-64 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                 <option value="">Todos los proveedores</option>
                 @foreach($suppliers as $s)<option value="{{ $s->id }}" {{ request('proveedor') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>@endforeach
             </select>

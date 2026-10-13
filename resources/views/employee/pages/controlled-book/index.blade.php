@@ -15,7 +15,7 @@
         </div>
         <form action="{{ route('employee.controlled-book.index') }}" method="GET" class="flex items-center gap-2 flex-wrap">
             <input type="month" name="mes" value="{{ $month->format('Y-m') }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
-            <select name="producto" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
+            <select data-search name="producto" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                 <option value="">Todos los controlados</option>
                 @foreach($controlled as $c)<option value="{{ $c->code }}" {{ $selected === $c->code ? 'selected' : '' }}>{{ $c->name }}</option>@endforeach
             </select>

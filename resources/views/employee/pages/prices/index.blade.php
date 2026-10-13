@@ -22,11 +22,11 @@
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                 <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Nombre o código..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
             </div>
-            <select name="category" class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
+            <select data-search name="category" class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                 <option value="">Todas las categorías</option>
                 @foreach($categories as $c)<option value="{{ $c->id }}" {{ request('category') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>@endforeach
             </select>
-            <select name="laboratory" class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
+            <select data-search name="laboratory" class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                 <option value="">Todos los laboratorios</option>
                 @foreach($laboratories as $l)<option value="{{ $l->id }}" {{ request('laboratory') == $l->id ? 'selected' : '' }}>{{ $l->name }}</option>@endforeach
             </select>
@@ -134,10 +134,9 @@ document.addEventListener('input', e => { if (e.target.matches('.precio-compra, 
 
 document.getElementById('btnBulk').addEventListener('click', function () {
     const f = document.getElementById('formBulk');
-    if (!f.reportValidity()) return;
     const objetivo = f.target.options[f.target.selectedIndex].text.toLowerCase();
     document.getElementById('textoBulk').innerHTML =
-        `Se aplicará <strong>${f.percent.value}%</strong> al <strong>${objetivo}</strong> de <strong>{{ $products->total() }} productos</strong>. Cada cambio queda registrado.`;
+        `Se aplicará <strong>${f.percent.value || '—'}%</strong> al <strong>${objetivo}</strong> de <strong>{{ $products->total() }} productos</strong>. Cada cambio queda registrado.`;
     document.getElementById('modalBulk').style.setProperty('display', 'flex', 'important');
 });
 </script>

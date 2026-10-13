@@ -34,7 +34,7 @@
             <div><label class="block text-xs text-slate-500 mb-1">Hasta</label><input type="date" name="fecha_hasta" value="{{ $hasta }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg"></div>
             <div>
                 <label class="block text-xs text-slate-500 mb-1">Cajero</label>
-                <select name="empleado" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
+                <select data-search name="empleado" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                     <option value="">Todos</option>
                     @foreach($employees as $e)<option value="{{ $e->id }}" {{ request('empleado') == $e->id ? 'selected' : '' }}>{{ $e->name }}</option>@endforeach
                 </select>
