@@ -19,6 +19,7 @@
     $editConfig = $editOrder ? [
         'payment_type'      => $editOrder->payment_type,
         'operation_number'  => $editOrder->operation_number,
+        'amount_received'   => $editOrder->amount_received,
         'voucher_type'      => $editOrder->voucher_type,
         'customer_name'     => $editOrder->customer_name,
         'customer_document' => $editOrder->customer_document,
@@ -475,6 +476,39 @@
         <div class="flex justify-end gap-3 px-5 py-4 border-t border-slate-100">
             <button type="button" onclick="cerrarModalReceta()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg">Cancelar</button>
             <button type="button" id="btnGuardarReceta" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">Guardar y confirmar venta</button>
+        </div>
+    </div>
+</div>
+
+{{-- ── Modal: cobro en efectivo (con cuánto paga y vuelto) ───── --}}
+<div id="modalCobro" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm">
+        <div class="flex items-center gap-3 p-5 border-b border-slate-100">
+            <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center shrink-0"><i class="fas fa-money-bill-wave text-emerald-600 text-sm"></i></div>
+            <p class="text-sm font-bold text-slate-800">Cobro en efectivo</p>
+        </div>
+        <div class="p-5 space-y-4">
+            <div class="text-center">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total a cobrar</p>
+                <p id="cobroTotal" class="text-3xl font-bold text-slate-800 mt-0.5">S/ 0.00</p>
+            </div>
+            <div>
+                <label for="cobroPagaCon" class="block text-xs font-medium text-slate-600 mb-1">Paga con (S/)</label>
+                <input type="number" id="cobroPagaCon" min="0" step="0.10" inputmode="decimal" autocomplete="off"
+                       class="w-full px-3 py-2.5 text-lg font-semibold text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                       placeholder="0.00">
+                <div id="cobroRapidos" class="flex flex-wrap justify-center gap-1.5 mt-2"></div>
+            </div>
+            <div class="text-center bg-slate-50 rounded-xl py-3">
+                <p id="cobroVueltoLbl" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vuelto</p>
+                <p id="cobroVuelto" class="text-3xl font-bold text-slate-300 mt-0.5">S/ 0.00</p>
+            </div>
+            <p id="cobroError" class="hidden text-xs text-red-600 text-center"></p>
+            <p class="text-[11px] text-slate-400 text-center">Puedes dejar «Paga con» vacío si no quieres registrar el monto.</p>
+        </div>
+        <div class="flex justify-end gap-3 px-5 py-4 border-t border-slate-100">
+            <button type="button" onclick="cerrarModalCobro()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg">Cancelar</button>
+            <button type="button" id="btnConfirmarCobro" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">Confirmar venta</button>
         </div>
     </div>
 </div>
@@ -986,7 +1020,79 @@ function actualizarTotales() {
     $('#lblCobrar, #cobrar').toggleClass('hidden', redondeo === 0);
     $('#redondeo').text('− S/ ' + redondeo.toFixed(2));
     $('#cobrar').text('S/ ' + redondear(total - redondeo).toFixed(2));
+
+    totalACobrar = redondear(total - redondeo);
+    actualizarVuelto();
 }
+
+// ── Cobro en efectivo: modal "Paga con" + vuelto ──────────────
+// totalACobrar = total menos el redondeo; montoRecibido/cobroListo se reinician al terminar la venta
+let totalACobrar  = 0;
+let montoRecibido = null;
+let cobroListo    = false;
+
+function abrirModalCobro() {
+    $('#cobroTotal').text('S/ ' + totalACobrar.toFixed(2));
+    $('#cobroError').addClass('hidden').text('');
+
+    // Billetes rápidos: solo los que cubren el total
+    const billetes = [10, 20, 50, 100, 200].filter(b => b >= totalACobrar);
+    $('#cobroRapidos').html(
+        '<button type="button" class="cobro-rapido px-3 py-1.5 text-xs font-semibold rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-700" data-monto="' + totalACobrar.toFixed(2) + '">Exacto</button>' +
+        billetes.map(b => '<button type="button" class="cobro-rapido px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100" data-monto="' + b + '">S/ ' + b + '</button>').join('')
+    );
+
+    $('#cobroPagaCon').val(EDIT_ORDER && EDIT_ORDER.amount_received ? EDIT_ORDER.amount_received : '');
+    actualizarVuelto();
+    document.getElementById('modalCobro').style.setProperty('display', 'flex', 'important');
+    setTimeout(() => $('#cobroPagaCon').trigger('focus'), 50);
+}
+function cerrarModalCobro() {
+    document.getElementById('modalCobro').style.setProperty('display', 'none', 'important');
+}
+
+// Vuelto = efectivo recibido − lo que se cobra
+function actualizarVuelto() {
+    const recibido = parseFloat($('#cobroPagaCon').val());
+    const $vuelto  = $('#cobroVuelto');
+
+    if (isNaN(recibido) || recibido <= 0) {
+        $vuelto.removeClass('text-emerald-600 text-red-500').addClass('text-slate-300').text('S/ 0.00');
+        $('#cobroVueltoLbl').text('Vuelto');
+        return;
+    }
+
+    const vuelto = redondear(recibido - totalACobrar);
+    const falta  = vuelto < 0;
+
+    $('#cobroVueltoLbl').text(falta ? 'Falta' : 'Vuelto');
+    $vuelto.removeClass('text-slate-300 text-emerald-600 text-red-500')
+           .addClass(falta ? 'text-red-500' : 'text-emerald-600')
+           .text('S/ ' + Math.abs(vuelto).toFixed(2));
+}
+
+$('#cobroPagaCon').on('input', actualizarVuelto);
+$(document).on('click', '.cobro-rapido', function () {
+    $('#cobroPagaCon').val($(this).data('monto'));
+    actualizarVuelto();
+});
+
+function confirmarCobro() {
+    const recibido = parseFloat($('#cobroPagaCon').val());
+
+    if (!isNaN(recibido) && recibido > 0 && redondear(recibido - totalACobrar) < 0) {
+        $('#cobroError').removeClass('hidden').text('El efectivo recibido no alcanza para cubrir el total.');
+        return;
+    }
+
+    montoRecibido = (!isNaN(recibido) && recibido > 0) ? recibido : null;
+    cobroListo    = true;
+    cerrarModalCobro();
+    $('#btnTerminarVenta').trigger('click');
+}
+$('#btnConfirmarCobro').on('click', confirmarCobro);
+$('#cobroPagaCon').on('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); confirmarCobro(); } });
+$('#modalCobro').on('keydown', function (e) { if (e.key === 'Escape') cerrarModalCobro(); });
 
 function actualizarContadorCarrito() {
     const total = Object.values(carrito).reduce((s, i) => s + i.qty, 0);
@@ -1057,6 +1163,9 @@ $('#btnTerminarVenta').on('click', function() {
     const nivelRx = nivelReceta();
     if (nivelRx > 0 && !EDIT_ORDER && !recetaDatos) { abrirModalReceta(nivelRx); return; }
 
+    // Pago en efectivo: preguntar con cuánto paga y mostrar el vuelto antes de cerrar la venta
+    if ($('#tipoPago').val() == 1 && !cobroListo) { abrirModalCobro(); return; }
+
     const items = Object.entries(carrito).map(([code, item]) => ({
         code:  code,
         name:  item.name,
@@ -1076,6 +1185,7 @@ $('#btnTerminarVenta').on('click', function() {
         voucher_type:      $('#tipoComprobante').val(),
         voucher_number:    $('#nroComprobante').val(),
         operation_number:  $('#nroOperacion').val(),
+        amount_received:   $('#tipoPago').val() == 1 ? montoRecibido : null,
         subtotal: sub,
         igv:      igv,
         total:    total,
@@ -1139,6 +1249,8 @@ $('#btnTerminarVenta').on('click', function() {
             mostrarToast('error', msg);
         },
         complete: function() {
+            cobroListo    = false;
+            montoRecibido = null;
             const hasItems = Object.keys(carrito).length > 0;
             $btn.prop('disabled', !hasItems)
                 .html('<i class="fas fa-circle-check text-sm"></i> ' + BTN_LABEL + ' <kbd class="text-emerald-200 text-xs font-normal bg-white/10 px-1.5 py-0.5 rounded ml-1">F5</kbd>');

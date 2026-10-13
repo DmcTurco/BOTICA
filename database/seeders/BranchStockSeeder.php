@@ -33,6 +33,18 @@ class BranchStockSeeder extends Seeder
             ['name' => 'Loratadina 10mg',           'stock_actual' => 400, 'stock_minimum' =>  40, 'stock_maximum' =>  800],
             ['name' => 'Albendazol 400mg',          'stock_actual' => 250, 'stock_minimum' =>  30, 'stock_maximum' =>  500],
             ['name' => 'Cloranfenicol Colirio 0.5%','stock_actual' => 100, 'stock_minimum' =>  15, 'stock_maximum' =>  200],
+            ['name' => 'Paracetamol 500mg Genérico', 'stock_actual' => 900, 'stock_minimum' => 100, 'stock_maximum' => 1800],
+            ['name' => 'Paracetamol 1g Forte', 'stock_actual' => 250, 'stock_minimum' => 30, 'stock_maximum' => 500],
+            ['name' => 'Ibuprofeno 400mg Genérico', 'stock_actual' => 0, 'stock_minimum' => 40, 'stock_maximum' => 800],
+            ['name' => 'Ibuprofeno 600mg', 'stock_actual' => 180, 'stock_minimum' => 20, 'stock_maximum' => 400],
+            ['name' => 'Naproxeno 275mg Genérico', 'stock_actual' => 320, 'stock_minimum' => 30, 'stock_maximum' => 600],
+            ['name' => 'Amoxicilina 500mg Genérico', 'stock_actual' => 500, 'stock_minimum' => 50, 'stock_maximum' => 1000],
+            ['name' => 'Amoxicilina 875mg', 'stock_actual' => 120, 'stock_minimum' => 20, 'stock_maximum' => 300],
+            ['name' => 'Omeprazol 20mg Genérico', 'stock_actual' => 700, 'stock_minimum' => 70, 'stock_maximum' => 1400],
+            ['name' => 'Omeprazol 40mg', 'stock_actual' => 150, 'stock_minimum' => 20, 'stock_maximum' => 300],
+            ['name' => 'Loratadina 10mg Genérico', 'stock_actual' => 600, 'stock_minimum' => 60, 'stock_maximum' => 1200],
+            ['name' => 'Metformina 850mg', 'stock_actual' => 260, 'stock_minimum' => 30, 'stock_maximum' => 500],
+            ['name' => 'Diclofenaco Gel 1% 30g Genérico', 'stock_actual' => 60, 'stock_minimum' => 10, 'stock_maximum' => 150],
         ];
 
         foreach ($stock as $item) {

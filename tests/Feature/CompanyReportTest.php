@@ -5,6 +5,7 @@ use App\Models\BranchStock;
 use App\Models\Company;
 use App\Models\Order;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\ViewErrorBag;
 
 uses(RefreshDatabase::class);
 
@@ -47,4 +48,22 @@ it('descarga el resumen por sedes en CSV', function () {
     $response = $this->get(route('company.reports.branches', ['export' => 'csv']))->assertOk();
 
     expect($response->streamedContent())->toContain('Sede,Documentos')->toContain('Sede Norte');
+});
+
+it('la empresa edita sus datos y el nombre sale en la barra lateral del empleado', function () {
+    $company = loginCompany();
+
+    $this->get(route('company.profile.edit'))->assertOk()->assertSee('Datos de la empresa');
+
+    $this->put(route('company.profile.update'), ['name' => 'Botica Salud y Vida', 'ruc' => '20123456789', 'email' => 'botica@example.com'])
+        ->assertRedirect(route('company.profile.edit'))->assertSessionHasNoErrors();
+    expect($company->fresh()->name)->toBe('Botica Salud y Vida');
+
+    // Validación: nombre obligatorio y RUC de 11 dígitos
+    $this->put(route('company.profile.update'), ['name' => '', 'ruc' => '123', 'email' => 'botica@example.com'])
+        ->assertSessionHasErrors(['name', 'ruc']);
+
+    // El nombre aparece en el panel del empleado
+    loginEmployee();
+    $this->get(route('employee.home'))->assertOk()->assertSee('Botica Salud y Vida');
 });

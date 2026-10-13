@@ -193,3 +193,27 @@ it('el comprobante impreso muestra el redondeo y el monto a cobrar', function ()
         $this->get(route('employee.orders.print', [Order::first(), $template]))->assertOk()->assertSee('Redondeo')->assertSee('22.90');
     }
 });
+
+it('guarda con cuánto pagó el cliente en efectivo, rechaza si no alcanza y lo imprime con el vuelto', function () {
+    $employee = loginEmployee();
+    posSetup($employee);
+
+    // Efectivo insuficiente: no se registra la venta
+    posSale(['amount_received' => 10])->assertStatus(422);
+    expect(Order::count())->toBe(0);
+
+    // Efectivo suficiente: queda guardado y el comprobante muestra "Paga con" y el vuelto
+    posSale(['amount_received' => 30])->assertOk();
+    $order = Order::first();
+    expect((float) $order->amount_received)->toBe(30.0);
+
+    foreach (['ticket_80mm', 'ticket_58mm', 'boleta_a4', 'nota_venta'] as $template) {
+        $this->get(route('employee.orders.print', [$order, $template]))
+            ->assertOk()->assertSee('Paga con', false)->assertSee('VUELTO', false)
+            ->assertSee(number_format(30 - (float) $order->total, 2), false);
+    }
+
+    // Con tarjeta el monto recibido se ignora
+    posSale(['payment_type' => 2, 'operation_number' => '123', 'amount_received' => 30])->assertOk();
+    expect(Order::latest('id')->first()->amount_received)->toBeNull();
+});

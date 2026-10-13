@@ -33,6 +33,10 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
     Route::resource('branches',  Company\BranchController::class)->except(['show']);
     Route::resource('employees', Company\EmployeeController::class)->except(['show']);
 
+    // Datos generales de la empresa (el nombre se muestra en la barra lateral)
+    Route::get('profile', [Company\CompanyProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile', [Company\CompanyProfileController::class, 'update'])->name('profile.update');
+
     // Facturación electrónica (SUNAT): datos fiscales, credenciales SOL y certificado
     Route::get('sunat', [Company\SunatSettingController::class, 'edit'])->name('sunat.edit');
     Route::put('sunat', [Company\SunatSettingController::class, 'update'])->name('sunat.update');
@@ -301,6 +305,9 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employ
         Route::resource('employees', Employee\EmployeeManagementController::class)->except(['show']);
         Route::get('settings',  [Employee\SettingsController::class, 'index'])->name('settings.index');
         Route::post('settings', [Employee\SettingsController::class, 'update'])->name('settings.update');
+        Route::get('settings/format',  [Employee\SettingsController::class, 'format'])->name('settings.format');
+        Route::post('settings/format', [Employee\SettingsController::class, 'updateFormat'])->name('settings.format.update');
+        Route::get('settings/preview/{template}', [Employee\PrintController::class, 'preview'])->name('settings.preview');
 
         // Aprobación de cajas históricas
         Route::get('approvals',                                              [Employee\ApprovalController::class, 'index'])->name('approvals.index');

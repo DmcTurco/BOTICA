@@ -78,7 +78,7 @@
 
 {{-- Tipo y número de comprobante --}}
 <div class="center">
-    <div class="voucher-tipo">{{ strtoupper($voucherLabel) }}</div>
+    <div class="voucher-tipo">{{ strtoupper($voucherTitle) }}</div>
     @if($order->voucher_number)
     <div class="bold">N° {{ $order->voucher_number }}</div>
     @endif
@@ -172,7 +172,12 @@
     <tr><td>Redondeo</td><td>- S/ {{ number_format($order->rounding_amount, 2) }}</td></tr>
     <tr><td><strong>A COBRAR</strong></td><td><strong>S/ {{ number_format($order->total - $order->rounding_amount, 2) }}</strong></td></tr>
     @endif
+    @if(!is_null($order->amount_received))
+    <tr><td>Paga con</td><td>S/ {{ number_format($order->amount_received, 2) }}</td></tr>
+    <tr><td><strong>VUELTO</strong></td><td><strong>S/ {{ number_format($order->amount_received - ($order->total - $order->rounding_amount), 2) }}</strong></td></tr>
+    @endif
 </table>
+<div class="small bold" style="margin-top:4px;">{{ $amountInWords }}</div>
 
 <div class="divider"></div>
 

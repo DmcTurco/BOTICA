@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Models\CompanySunatSetting;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Services\Sunat\VoucherQr;
+use App\Support\NumberToWords;
 
 class PrintController extends Controller
 {
@@ -58,9 +60,63 @@ class PrintController extends Controller
             'order'         => $order,
             'paymentLabel'  => $paymentLabels[$order->payment_type] ?? 'Otro',
             'voucherLabel'  => $voucherLabels[$order->voucher_type] ?? 'Comprobante',
+            // Boleta/factura electrónica lleva "Electrónica" en el título
+            'voucherTitle'  => ($voucherLabels[$order->voucher_type] ?? 'Comprobante') . ($isSunat ? ' Electrónica' : ''),
+            'amountInWords' => NumberToWords::soles((float) $order->total),
             'issuerName'    => $setting?->legal_name ?: $order->company->name,
             'issuerAddress' => $setting?->fiscal_address ?: ($order->company->address ?: $order->branch->address),
             'qrSvg'         => $isSunat ? app(VoucherQr::class)->svg($order) : null,
+        ]);
+    }
+
+    /**
+     * Vista previa de una plantilla con una venta de ejemplo (no se guarda nada).
+     * Se usa en Configuración para ver cómo saldrá el ticket o la boleta.
+     */
+    public function preview(string $template)
+    {
+        abort_unless(array_key_exists($template, self::TEMPLATES), 404);
+
+        $employee = auth()->guard('employee')->user();
+        $branch   = $employee->branch()->first();
+        $company  = $employee->company;
+
+        // Venta de ejemplo en memoria
+        $order = new Order([
+            'voucher_type'      => 1,
+            'voucher_number'    => 'B001-00000123',
+            'customer_name'     => 'Cliente de ejemplo',
+            'customer_document' => '12345678',
+            'payment_type'      => 1,
+            'taxable_amount'    => 33.05,
+            'igv'               => 5.95,
+            'discount_amount'   => 0,
+            'total'             => 39.00,
+            'amount_received'   => 50.00,
+            'sunat_status'      => Order::SUNAT_ACCEPTED,
+            'sunat_hash'        => 'dGVzdGhhc2hkZWVqZW1wbG9wYXJhdmlzdGFwcmV2aWE=',
+        ]);
+        $order->id         = 123;
+        $order->created_at = now();
+        $order->setRelation('company', $company);
+        $order->setRelation('branch', $branch);
+        $order->setRelation('employee', $employee);
+        $order->setRelation('documentType', null);
+        $order->setRelation('items', collect([
+            new OrderItem(['product_code' => 'P001', 'product_name' => 'Paracetamol 500 mg x 10 tab', 'quantity' => 2, 'unit_price' => 4.50, 'subtotal' => 9.00]),
+            new OrderItem(['product_code' => 'P002', 'product_name' => 'Amoxicilina 500 mg x 12 cáps', 'quantity' => 1, 'unit_price' => 18.00, 'subtotal' => 18.00]),
+            new OrderItem(['product_code' => 'P003', 'product_name' => 'Jarabe para la tos 120 ml', 'quantity' => 1, 'unit_price' => 12.00, 'subtotal' => 12.00]),
+        ]));
+
+        return view(self::TEMPLATES[$template], [
+            'order'         => $order,
+            'paymentLabel'  => 'Efectivo',
+            'voucherLabel'  => 'Boleta de Venta',
+            'voucherTitle'  => 'Boleta de Venta Electrónica',
+            'amountInWords' => NumberToWords::soles((float) $order->total),
+            'issuerName'    => $company->name,
+            'issuerAddress' => $company->address ?: $branch->address,
+            'qrSvg'         => app(VoucherQr::class)->svg($order),
         ]);
     }
 

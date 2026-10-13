@@ -274,6 +274,28 @@ class OrderController extends Controller
     }
 
     /**
+     * Efectivo con el que pagó el cliente. Solo aplica al pago en efectivo y es opcional.
+     * Debe cubrir lo que se cobra (total menos el redondeo). Devuelve [monto|null, mensaje de error|null].
+     */
+    private function cashReceived(Request $request, float $total): array
+    {
+        $paymentType = (int) $request->payment_type;
+
+        if ($paymentType !== \App\Models\CashRegister::PAYMENT_CASH || !is_numeric($request->amount_received) || (float) $request->amount_received <= 0) {
+            return [null, null];
+        }
+
+        $received = round((float) $request->amount_received, 2);
+        $due      = round($total - $this->cashRounding($total, $paymentType), 2);
+
+        if ($received < $due) {
+            return [null, 'El efectivo recibido (S/ ' . number_format($received, 2) . ') es menor al total a cobrar (S/ ' . number_format($due, 2) . ').'];
+        }
+
+        return [$received, null];
+    }
+
+    /**
      * Descuento pedido por el cajero: porcentaje entero o monto en soles (no ambos).
      * Solo lo aplica quien tiene el privilegio de descuentos; sin él se ignora lo enviado
      * (nunca se confía en el navegador). El monto además debe estar activado en la configuración.
@@ -553,6 +575,7 @@ class OrderController extends Controller
             'total'             => 'nullable|numeric|min:0',
             'discount_percent'  => 'nullable|integer|min:0|max:100',
             'discount_value'    => 'nullable|numeric|min:0|max:99999999',
+            'amount_received'   => 'nullable|numeric|min:0|max:99999999',
         ]);
 
         // Factura requiere RUC (document_type_id = 3)
@@ -606,6 +629,13 @@ class OrderController extends Controller
         }
 
         ['tax' => $tax, 'units' => $units] = $pricing;
+
+        // Efectivo recibido (solo pago en efectivo): debe cubrir lo que se cobra
+        [$amountReceived, $receivedError] = $this->cashReceived($request, $tax['total']);
+
+        if ($receivedError) {
+            return response()->json(['success' => false, 'message' => $receivedError], 422);
+        }
 
         // Boleta de más de S/ 700: el cliente debe estar identificado
         if ((int) $request->voucher_type === 1) {
@@ -697,6 +727,7 @@ class OrderController extends Controller
                 'discount_percent'  => $discountPercent,
                 'discount_amount'   => $tax['discount'],
                 'rounding_amount'   => $this->cashRounding($tax['total'], (int) $request->payment_type),
+                'amount_received'   => $amountReceived,
                 'total'             => $tax['total'],
                 'credit_balance'    => $creditClient ? $tax['total'] : 0,
                 'credit_due_date'   => $creditClient ? ($request->credit_due_date ?: now()->addDays(30)->toDateString()) : null,
@@ -910,6 +941,7 @@ class OrderController extends Controller
             'total'             => 'nullable|numeric|min:0',
             'discount_percent'  => 'nullable|integer|min:0|max:100',
             'discount_value'    => 'nullable|numeric|min:0|max:99999999',
+            'amount_received'   => 'nullable|numeric|min:0|max:99999999',
         ]);
 
         $employee     = auth()->guard('employee')->user();
@@ -940,6 +972,13 @@ class OrderController extends Controller
         }
 
         ['tax' => $tax, 'units' => $units] = $pricing;
+
+        // Efectivo recibido (solo pago en efectivo): debe cubrir lo que se cobra
+        [$amountReceived, $receivedError] = $this->cashReceived($request, $tax['total']);
+
+        if ($receivedError) {
+            return response()->json(['success' => false, 'message' => $receivedError], 422);
+        }
 
         // Si la venta editada incluye productos con receta, ya debe tener su receta registrada
         if ($this->recipeLevel($request->items, $employee->company_id) > 0 && !$order->prescription()->exists()) {
@@ -1065,6 +1104,7 @@ class OrderController extends Controller
                 'discount_percent'  => $discountPercent,
                 'discount_amount'   => $tax['discount'],
                 'rounding_amount'   => $this->cashRounding($tax['total'], (int) $request->payment_type),
+                'amount_received'   => $amountReceived,
                 'total'             => $tax['total'],
             ] + ($resendSunat ? [
                 'sunat_status'  => Order::SUNAT_PENDING,

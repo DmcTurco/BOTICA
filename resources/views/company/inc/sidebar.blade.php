@@ -66,6 +66,14 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('company.profile.edit') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('company.profile.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">
+                        <i class="fas fa-store w-4 text-center shrink-0"></i>
+                        Datos de la empresa
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('company.sunat.edit') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                               {{ request()->routeIs('company.sunat.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-900 hover:text-white' }}">

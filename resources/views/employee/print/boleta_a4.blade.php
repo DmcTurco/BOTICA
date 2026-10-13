@@ -234,7 +234,7 @@
         @if($order->company->ruc)
         <div class="ruc-emisor">RUC {{ $order->company->ruc }}</div>
         @endif
-        <div class="tipo">{{ $voucherLabel }}</div>
+        <div class="tipo">{{ $voucherTitle }}</div>
         @if($order->voucher_number)
         <div class="nro">{{ $order->voucher_number }}</div>
         @else
@@ -349,9 +349,16 @@
         <div class="totals-row"><span>Redondeo</span><span>- S/ {{ number_format($order->rounding_amount, 2) }}</span></div>
         <div class="totals-row"><span><strong>A COBRAR</strong></span><span><strong>S/ {{ number_format($order->total - $order->rounding_amount, 2) }}</strong></span></div>
         @endif
+        @if(!is_null($order->amount_received))
+        <div class="totals-row"><span>Paga con</span><span>S/ {{ number_format($order->amount_received, 2) }}</span></div>
+        <div class="totals-row"><span><strong>VUELTO</strong></span><span><strong>S/ {{ number_format($order->amount_received - ($order->total - $order->rounding_amount), 2) }}</strong></span></div>
+        @endif
     </div>
 
 </div>
+
+{{-- Importe en letras (leyenda 1000 de SUNAT) --}}
+<div style="font-size:11px; font-weight:700; margin-bottom:12px;">{{ $amountInWords }}</div>
 
 {{-- ── Pago ── --}}
 <div class="pago-section">

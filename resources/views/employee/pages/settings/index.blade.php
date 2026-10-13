@@ -80,41 +80,33 @@
 
             <div class="p-6 space-y-6">
 
-                {{-- Plantilla por defecto --}}
+                {{-- Plantilla por defecto: solo se muestra la seleccionada; se cambia en su propia pantalla --}}
+                @php
+                    $templateLabels = [
+                        'ticket_80mm' => ['icon' => 'fa-receipt',    'title' => 'Ticket 80mm',          'desc' => 'Impresora térmica estándar — papel de 80mm'],
+                        'ticket_58mm' => ['icon' => 'fa-receipt',    'title' => 'Ticket 58mm',          'desc' => 'Impresora térmica compacta — papel de 58mm'],
+                        'boleta_a4'   => ['icon' => 'fa-file-lines', 'title' => 'Boleta / Factura A4',  'desc' => 'Hoja completa A4 — diseño formal'],
+                        'nota_venta'  => ['icon' => 'fa-file-alt',   'title' => 'Nota de Venta',        'desc' => 'Comprobante interno — tamaño A5'],
+                    ];
+                    $current = $templateLabels[$printConfig['default_template']] ?? $templateLabels['ticket_80mm'];
+                @endphp
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-3">
                         Formato de impresión por defecto
                     </label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-                        @php
-                            $templateLabels = [
-                                'ticket_80mm' => ['icon' => 'fa-receipt',    'title' => 'Ticket 80mm',    'desc' => 'Impresora térmica estándar — papel de 80mm'],
-                                'ticket_58mm' => ['icon' => 'fa-receipt',    'title' => 'Ticket 58mm',    'desc' => 'Impresora térmica compacta — papel de 58mm'],
-                                'boleta_a4'   => ['icon' => 'fa-file-lines', 'title' => 'Boleta / Factura A4', 'desc' => 'Hoja completa A4 — diseño formal'],
-                                'nota_venta'  => ['icon' => 'fa-file-alt',   'title' => 'Nota de Venta',  'desc' => 'Comprobante interno — tamaño A5'],
-                            ];
-                        @endphp
-
-                        @foreach($templateLabels as $key => $info)
-                        @php $selected = $printConfig['default_template'] === $key; @endphp
-                        <label class="flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all
-                                      {{ $selected ? 'border-sky-500 bg-sky-50' : 'border-slate-200 hover:border-sky-200 hover:bg-slate-50' }}"
-                               id="tpl-label-{{ $key }}">
-                            <input type="radio" name="default_template" value="{{ $key }}"
-                                   class="mt-0.5 text-sky-600 focus:ring-sky-500"
-                                   {{ $selected ? 'checked' : '' }}
-                                   onchange="selectTemplate(this)">
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fas {{ $info['icon'] }} text-sky-500 text-xs"></i>
-                                    <span class="text-sm font-semibold text-slate-700">{{ $info['title'] }}</span>
-                                </div>
-                                <p class="text-xs text-slate-400 mt-0.5">{{ $info['desc'] }}</p>
+                    <input type="hidden" name="default_template" value="{{ $printConfig['default_template'] }}">
+                    <div class="flex items-center justify-between gap-4 p-4 border-2 border-sky-500 bg-sky-50 rounded-xl">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas {{ $current['icon'] }} text-sky-500 text-xs"></i>
+                                <span class="text-sm font-semibold text-slate-700">{{ $current['title'] }}</span>
                             </div>
-                        </label>
-                        @endforeach
-
+                            <p class="text-xs text-slate-400 mt-0.5">{{ $current['desc'] }}</p>
+                        </div>
+                        <a href="{{ route('employee.settings.format') }}"
+                           class="shrink-0 px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors">
+                            <i class="fas fa-eye text-sky-500 mr-1"></i> Ver y cambiar formato
+                        </a>
                     </div>
                     @error('default_template')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -189,20 +181,3 @@
 </div>
 @endsection
 
-@section('scripts')
-<script>
-    function selectTemplate(radio) {
-        // Resetear estilos de todos los labels
-        document.querySelectorAll('[id^="tpl-label-"]').forEach(label => {
-            label.classList.remove('border-sky-500', 'bg-sky-50');
-            label.classList.add('border-slate-200');
-        });
-        // Activar el seleccionado
-        const selected = document.getElementById('tpl-label-' + radio.value);
-        if (selected) {
-            selected.classList.add('border-sky-500', 'bg-sky-50');
-            selected.classList.remove('border-slate-200');
-        }
-    }
-</script>
-@endsection
