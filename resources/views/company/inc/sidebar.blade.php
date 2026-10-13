@@ -6,9 +6,9 @@
         <div class="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shrink-0">
             <i class="fas fa-plus text-white text-sm"></i>
         </div>
-        <div>
-            <p class="text-sm font-bold text-white leading-none">BOTICA</p>
-            <p class="text-xs text-slate-400 mt-0.5">Sistema Farmacéutico</p>
+        <div class="min-w-0">
+            <p class="text-sm font-bold text-white leading-tight truncate" title="{{ auth()->guard('company')->user()?->name }}">{{ auth()->guard('company')->user()?->name ?? 'BOTICA' }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">Panel de la Empresa</p>
         </div>
     </div>
 

@@ -4,8 +4,8 @@
         <div class="w-8 h-8 bg-sky-600 rounded-lg flex items-center justify-center shrink-0">
             <i class="fas fa-plus text-white text-sm"></i>
         </div>
-        <div>
-            <p class="font-bold text-slate-800 text-sm leading-none">BOTICA</p>
+        <div class="min-w-0">
+            <p class="font-bold text-slate-800 text-sm leading-tight truncate" title="{{ auth()->guard('employee')->user()?->company?->name }}">{{ auth()->guard('employee')->user()?->company?->name ?? 'BOTICA' }}</p>
             <p class="text-xs text-slate-400 mt-0.5">Panel Empleado</p>
         </div>
     </div>
