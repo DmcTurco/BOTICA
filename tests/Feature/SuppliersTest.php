@@ -21,7 +21,7 @@ function makeSupplier(array $data = []): Supplier
 function creditPurchase(Supplier $supplier, string $due = null): Purchase
 {
     test()->post(route('employee.purchases.store'), [
-        'document_type' => 2, 'document_number' => 'F001-1', 'purchased_at' => today()->toDateString(),
+        'document_type' => 2, 'document_number' => 'F001-' . uniqid(), 'purchased_at' => today()->toDateString(),
         'supplier_id' => $supplier->id, 'payment_condition' => 'credit', 'due_date' => $due ?? today()->addDays(30)->toDateString(),
         'items' => [['product_code' => 'P1', 'quantity' => 10, 'unit_cost' => 10]],
     ])->assertSessionHasNoErrors();
@@ -70,7 +70,7 @@ it('una compra a crédito queda con saldo y una al contado queda pagada', functi
     expect($credit->payment_condition)->toBe('credit')->and($credit->balance)->toBe(100.0)->and($credit->supplier)->toBe($supplier->name);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'purchased_at' => today()->toDateString(),
+        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(),
         'items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => 5]],
     ])->assertSessionHasNoErrors();
     $cash = Purchase::latest('id')->first();
@@ -82,7 +82,7 @@ it('exige fecha de vencimiento en una compra a crédito', function () {
     stockProduct('P1', 0);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'purchased_at' => today()->toDateString(), 'payment_condition' => 'credit',
+        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(), 'payment_condition' => 'credit',
         'items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => 5]],
     ])->assertSessionHasErrors('due_date');
 
@@ -151,14 +151,14 @@ it('emite una orden de compra y la recibe como compra', function () {
     expect($form->viewData('preload'))->toBe([['code' => 'P1', 'qty' => 12.0, 'cost' => 2.5]]);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'purchased_at' => today()->toDateString(), 'supplier_id' => $supplier->id, 'purchase_order_id' => $order->id,
+        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(), 'supplier_id' => $supplier->id, 'purchase_order_id' => $order->id,
         'items' => [['product_code' => 'P1', 'quantity' => 12, 'unit_cost' => 2.5]],
     ])->assertSessionHasNoErrors();
 
     expect($order->fresh()->status)->toBe('received')->and(stockOf('P1'))->toBe(12.0);
     // Una orden ya recibida no se puede volver a usar
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'purchased_at' => today()->toDateString(), 'purchase_order_id' => $order->id,
+        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(), 'purchase_order_id' => $order->id,
         'items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => 2.5]],
     ])->assertSessionHasErrors('purchase_order_id');
 });

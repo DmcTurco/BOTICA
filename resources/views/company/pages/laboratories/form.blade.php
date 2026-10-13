@@ -23,14 +23,6 @@
     </div>
 
     {{-- Errores --}}
-    @if ($errors->any())
-    <div class="shrink-0 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm space-y-1">
-        @foreach ($errors->all() as $error)
-            <p class="flex items-center gap-2"><i class="fas fa-circle-exclamation text-xs"></i> {{ $error }}</p>
-        @endforeach
-    </div>
-    @endif
-
     {{-- Formulario --}}
     <form action="{{ isset($laboratorio) ? route('company.laboratories.update', $laboratorio->id) : route('company.laboratories.store') }}"
           method="POST"

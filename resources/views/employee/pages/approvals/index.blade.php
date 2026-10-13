@@ -25,21 +25,6 @@
     </div>
     @endif
 
-    @if(session('error'))
-    <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 flex items-center gap-2 shrink-0">
-        <i class="fas fa-circle-exclamation text-red-400"></i>
-        {{ session('error') }}
-    </div>
-    @endif
-
-    @if($errors->any())
-    <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 space-y-1 shrink-0">
-        @foreach($errors->all() as $error)
-            <p><i class="fas fa-circle-exclamation mr-1.5 text-red-400"></i>{{ $error }}</p>
-        @endforeach
-    </div>
-    @endif
-
     {{-- ── CAJAS PENDIENTES ─────────────────────────────────────── --}}
     <div class="shrink-0">
         <h2 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-3 flex items-center gap-2">

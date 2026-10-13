@@ -15,6 +15,7 @@
         </main>
     </div>
 
+    @include('partials/alert-modal')
     @include('employee/inc/foot')
 
     <script>

@@ -56,6 +56,20 @@ class ProductRequest extends FormRequest
     }
 
     /**
+     * Nombres legibles de los campos para el modal de alerta.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'presentaciones.*.unidad_medida_id'     => 'unidad de la presentación',
+            'presentaciones.*.cantidad_equivalente' => 'cantidad equivalente de la presentación',
+            'presentaciones.*.precio_venta'         => 'precio de venta de la presentación',
+        ];
+    }
+
+    /**
      * Mensajes de error personalizados.
      *
      * @return array<string, string>

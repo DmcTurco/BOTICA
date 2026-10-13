@@ -44,13 +44,6 @@
     </div>
     @endif
 
-    @if(session('error'))
-    <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 flex items-center gap-2 shrink-0">
-        <i class="fas fa-circle-exclamation text-red-400"></i>
-        {{ session('error') }}
-    </div>
-    @endif
-
     {{-- ── Aviso informativo ────────────────────────────────────── --}}
     @if($cashRegister->status === 1)
     <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800 shrink-0">

@@ -24,6 +24,11 @@
             <div>
                 <h1 class="text-xl font-bold text-slate-800">
                     {{ isset($products) ? 'Editar Producto' : 'Nuevo Producto' }}
+                    @if(isset($products))
+                        <span class="text-slate-400 font-normal">—</span>
+                        <span class="text-emerald-700">{{ $products->name }}</span>
+                        <span class="text-sm font-mono text-slate-400 font-normal">{{ $products->code }}</span>
+                    @endif
                 </h1>
                 <p class="text-sm text-slate-500 mt-0.5">
                     {{ isset($products) ? 'Modifica los datos del producto' : 'Completa los datos para registrar un producto' }}
@@ -32,15 +37,6 @@
         </div>
 
         {{-- Errores --}}
-        @if ($errors->any())
-            <div class="shrink-0 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm space-y-1">
-                @foreach ($errors->all() as $error)
-                    <p class="flex items-center gap-2"><i class="fas fa-circle-exclamation text-xs"></i> {{ $error }}
-                    </p>
-                @endforeach
-            </div>
-        @endif
-
         <form id="productoForm"
             action="{{ isset($products) ? route('employee.products.update', $products->code) : route('employee.products.store') }}"
             method="POST" class="flex-1 min-h-0 flex flex-col">

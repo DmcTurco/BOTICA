@@ -718,8 +718,12 @@ $(document).on('click', '.btn-agregar', function() {
     const $lista = $('#listaPresentaciones').empty();
     if (presentations.length > 0) {
         $('#seccionPresentaciones').removeClass('hidden');
-        $lista.append(opcionPresentacion('base', 'Unidad', '', price, true));
+        // Si hay una presentación de 1 unidad al mismo precio que la base, es la misma opción:
+        // se muestra una sola vez con el nombre de la presentación (ej: Tableta)
+        const duplicada = presentations.find(p => parseFloat(p.amount) === 1 && Math.abs(parseFloat(p.price) - price) < 0.005);
+        $lista.append(opcionPresentacion('base', duplicada ? duplicada.label : 'Unidad', '', price, true));
         presentations.forEach(p => {
+            if (p === duplicada) return;
             $lista.append(opcionPresentacion(p.id, p.label, 'x' + p.amount + ' uds', p.price, false));
         });
     } else {

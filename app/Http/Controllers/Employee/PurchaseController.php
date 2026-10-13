@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Company\PurchaseRequest;
 use App\Models\BranchStock;
+use App\Models\Presentation;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseDetail;
@@ -64,9 +65,13 @@ class PurchaseController extends Controller
         $branchId  = $employee->branch_id;
         $productos = Product::where('company_id', $employee->company_id)
             ->where('status', 1)
-            ->with(['branchStocks' => fn ($q) => $q->where('branch_id', $branchId)])
+            ->with([
+                'branchStocks' => fn ($q) => $q->where('branch_id', $branchId),
+                'unit:id,name',
+                'presentations' => fn ($q) => $q->where('status', 1)->with('unit:id,name'),
+            ])
             ->orderBy('name')
-            ->get(['code', 'name', 'purchase_price']);
+            ->get(['code', 'name', 'purchase_price', 'unit_id']);
 
         $suppliers = Supplier::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get(['id', 'name', 'ruc']);
 
@@ -90,17 +95,27 @@ class PurchaseController extends Controller
         DB::beginTransaction();
 
         try {
+            // Las cantidades vienen en la presentación elegida (caja, blíster...): se pasan a unidades base
+            $items = $this->normalizeItems($request->items);
+
             // Calcular totales
             $subtotal = 0;
-            foreach ($request->items as $item) {
-                $subtotal += $item['quantity'] * $item['unit_cost'];
+            foreach ($items as $item) {
+                $subtotal += $item['subtotal'];
             }
 
             $tax   = (float) ($request->tax ?? 0);
             $total = $subtotal + $tax;
 
-            // Proveedor registrado (su nombre se copia al documento) y condición de pago
-            $supplier         = $request->filled('supplier_id') ? Supplier::find($request->supplier_id) : null;
+            // Proveedor: el registrado, o uno nuevo con el nombre escrito (se crea para futuras compras)
+            $supplier = $request->filled('supplier_id') ? Supplier::find($request->supplier_id) : null;
+            if (!$supplier && $request->filled('supplier')) {
+                $name     = trim($request->supplier);
+                $supplier = Supplier::where('company_id', $employee->company_id)
+                    ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+                    ->first()
+                    ?? Supplier::create(['company_id' => $employee->company_id, 'name' => $name, 'status' => 1]);
+            }
             $paymentCondition = $request->input('payment_condition', 'cash');
 
             // Crear cabecera de compra
@@ -125,15 +140,13 @@ class PurchaseController extends Controller
             ]);
 
             // Registrar cada ítem e incrementar stock en branch_stock
-            foreach ($request->items as $item) {
-                $itemSubtotal = $item['quantity'] * $item['unit_cost'];
-
+            foreach ($items as $item) {
                 PurchaseDetail::create([
                     'purchase_id'     => $compra->id,
                     'product_code'    => $item['product_code'],
                     'quantity'        => $item['quantity'],
                     'unit_cost'       => $item['unit_cost'],
-                    'subtotal'        => $itemSubtotal,
+                    'subtotal'        => $item['subtotal'],
                     'expiration_date' => $item['expiration_date'] ?? null,
                     'batch'           => $item['batch'] ?? null,
                 ]);
@@ -192,6 +205,32 @@ class PurchaseController extends Controller
             return redirect()->back()->withInput()
                 ->with('error', 'Error al registrar la compra. Por favor, inténtelo de nuevo.');
         }
+    }
+
+    /**
+     * Convierte los ítems del formulario a unidades base: la cantidad y el costo se ingresan
+     * por presentación (ej: 5 cajas a S/ 18.00) y el stock y el kardex trabajan en unidades.
+     *
+     * @param  array<int, array<string, mixed>>  $rawItems
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeItems(array $rawItems): array
+    {
+        $presentations = Presentation::whereIn('id', collect($rawItems)->pluck('presentation_id')->filter())->get()->keyBy('id');
+
+        return collect($rawItems)->map(function ($item) use ($presentations) {
+            $presentation = !empty($item['presentation_id']) ? $presentations->get($item['presentation_id']) : null;
+            $factor       = $presentation ? max((float) $presentation->equivalent_amount, 0.01) : 1;
+
+            return [
+                'product_code'    => $item['product_code'],
+                'quantity'        => (int) round($item['quantity'] * $factor),
+                'unit_cost'       => round($item['unit_cost'] / $factor, 2),
+                'subtotal'        => round($item['quantity'] * $item['unit_cost'], 2),
+                'expiration_date' => $item['expiration_date'] ?? null,
+                'batch'           => $item['batch'] ?? null,
+            ];
+        })->all();
     }
 
     /**

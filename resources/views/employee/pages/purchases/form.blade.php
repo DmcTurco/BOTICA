@@ -54,18 +54,20 @@
                             placeholder="Ej: B001-00123">
                     </div>
 
-                    <div>
+                    {{-- Proveedor: un solo campo que busca entre los registrados; si no existe, se crea con el nombre escrito --}}
+                    @php
+                        $selectedSupplierId = old('supplier_id', $order?->supplier_id);
+                        $supplierName = old('supplier', $suppliers->firstWhere('id', $selectedSupplierId)?->name);
+                    @endphp
+                    <div class="relative">
                         <label class="block text-xs font-medium text-slate-600 mb-1">Proveedor</label>
-                        <select name="supplier_id" id="supplierId"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            <option value="">— Sin registrar —</option>
-                            @foreach ($suppliers as $s)
-                                <option value="{{ $s->id }}" {{ (string) old('supplier_id', $order?->supplier_id) === (string) $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
-                            @endforeach
-                        </select>
-                        <input type="text" name="supplier" id="supplierText" value="{{ old('supplier') }}"
-                            class="mt-1 w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                            placeholder="Nombre (si no está registrado)">
+                        <input type="hidden" name="supplier_id" id="supplierId" value="{{ $selectedSupplierId }}">
+                        <input type="text" name="supplier" id="supplierText" value="{{ $supplierName }}" autocomplete="off"
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            placeholder="Buscar o escribir un proveedor nuevo">
+                        <div id="supplierList"
+                            class="absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-auto hidden"></div>
+                        <p id="supplierHint" class="text-[11px] mt-1 text-slate-400">Opcional</p>
                     </div>
 
                     <div>
@@ -136,8 +138,18 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100" id="cuerpoProductos">
                                 @foreach ($productos as $p)
+                                    @php
+                                        // Presentaciones distintas a la unidad base (las de 1 unidad son la misma opción)
+                                        $presData = $p->presentations->filter(fn ($x) => (float) $x->equivalent_amount != 1.0)->map(fn ($x) => [
+                                            'id'     => $x->id,
+                                            'label'  => $x->unit?->name ?? 'Presentación',
+                                            'amount' => (float) $x->equivalent_amount,
+                                        ])->values();
+                                    @endphp
                                     <tr class="hover:bg-emerald-50 transition-colors cursor-pointer fila-producto"
                                         data-code="{{ $p->code }}" data-name="{{ $p->name }}"
+                                        data-unit="{{ $p->unit?->name ?? 'Unidad' }}"
+                                        data-presentations="{{ json_encode($presData) }}"
                                         data-cost="{{ $p->purchase_price ?? 0 }}">
                                         <td class="px-4 py-2.5">
                                             <p class="font-medium text-slate-800 text-xs">{{ $p->name }}</p>
@@ -214,7 +226,7 @@
                                     <th class="text-center px-3 py-2.5 text-xs font-semibold text-slate-500 w-20">Cant.
                                     </th>
                                     <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 w-28">Costo
-                                        Unit.</th>
+                                        c/u</th>
                                     <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 w-24">Subtotal
                                     </th>
                                     <th class="text-center px-3 py-2.5 text-xs font-semibold text-slate-500 w-32">
@@ -280,13 +292,68 @@
         condicion.addEventListener('change', actualizarCondicion);
         actualizarCondicion();
 
-        // Un proveedor registrado reemplaza al nombre escrito a mano
-        const proveedor = document.getElementById('supplierId');
-        function actualizarProveedor() {
-            document.getElementById('supplierText').classList.toggle('hidden', proveedor.value !== '');
+        // ── Proveedor: buscador único ────────────────────────────────────────────────
+        // Si se elige uno de la lista queda vinculado (supplier_id); si no existe, se registra con el nombre escrito.
+        const proveedores = @json($suppliers->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'ruc' => $s->ruc])->values());
+        const provId = document.getElementById('supplierId');
+        const provTexto = document.getElementById('supplierText');
+        const provLista = document.getElementById('supplierList');
+        const provHint = document.getElementById('supplierHint');
+
+        function pintarHintProveedor() {
+            const nombre = provTexto.value.trim();
+            if (provId.value) {
+                provHint.innerHTML = '<i class="fas fa-circle-check text-emerald-500"></i> Proveedor registrado';
+                provHint.className = 'text-[11px] mt-1 text-emerald-600';
+            } else if (nombre) {
+                provHint.innerHTML = '<i class="fas fa-circle-plus text-sky-500"></i> Se registrará como proveedor nuevo';
+                provHint.className = 'text-[11px] mt-1 text-sky-600';
+            } else {
+                provHint.textContent = 'Opcional';
+                provHint.className = 'text-[11px] mt-1 text-slate-400';
+            }
         }
-        proveedor.addEventListener('change', actualizarProveedor);
-        actualizarProveedor();
+
+        function mostrarProveedores() {
+            const q = provTexto.value.toLowerCase().trim();
+            const coincidencias = proveedores.filter(p => !q || p.name.toLowerCase().includes(q) || (p.ruc || '').includes(q)).slice(0, 8);
+            provLista.innerHTML = '';
+            coincidencias.forEach(p => {
+                const op = document.createElement('div');
+                op.className = 'px-3 py-2 text-sm cursor-pointer hover:bg-emerald-50 flex justify-between gap-2';
+                op.innerHTML = '<span></span><span class="text-xs text-slate-400 font-mono"></span>';
+                op.children[0].textContent = p.name;
+                op.children[1].textContent = p.ruc || '';
+                op.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    provId.value = p.id;
+                    provTexto.value = p.name;
+                    provLista.classList.add('hidden');
+                    pintarHintProveedor();
+                });
+                provLista.appendChild(op);
+            });
+            if (q && !proveedores.some(p => p.name.toLowerCase() === q)) {
+                const nuevo = document.createElement('div');
+                nuevo.className = 'px-3 py-2 text-sm text-sky-700 bg-sky-50 border-t border-slate-100';
+                nuevo.innerHTML = '<i class="fas fa-plus text-xs mr-1"></i> Usar como proveedor nuevo: <strong></strong>';
+                nuevo.querySelector('strong').textContent = provTexto.value.trim();
+                provLista.appendChild(nuevo);
+            }
+            provLista.classList.toggle('hidden', provLista.children.length === 0);
+        }
+
+        // Al escribir se desvincula el proveedor elegido: lo escrito manda
+        provTexto.addEventListener('input', () => { provId.value = ''; mostrarProveedores(); pintarHintProveedor(); });
+        provTexto.addEventListener('focus', mostrarProveedores);
+        provTexto.addEventListener('blur', () => {
+            provLista.classList.add('hidden');
+            // Si lo escrito coincide exactamente con uno registrado, se vincula
+            const igual = proveedores.find(p => p.name.toLowerCase() === provTexto.value.trim().toLowerCase());
+            if (igual) { provId.value = igual.id; provTexto.value = igual.name; }
+            pintarHintProveedor();
+        });
+        pintarHintProveedor();
 
         // ── Estado de los ítems seleccionados ────────────────────────────────────────
         // Map<productCode, { name, quantity, unitCost, idx }>
@@ -314,6 +381,8 @@
             const code = fila.dataset.code;
             const name = fila.dataset.name;
             const cost = parseFloat(fila.dataset.cost) || 0;
+            const unit = fila.dataset.unit || 'Unidad';
+            const presentations = JSON.parse(fila.dataset.presentations || '[]');
 
             if (seleccionados.has(code)) {
                 // Si ya está, incrementar cantidad
@@ -325,8 +394,12 @@
                 // Agregar nuevo ítem
                 seleccionados.set(code, {
                     name,
+                    unit,
+                    presentations,
+                    baseCost: cost,       // costo por unidad base del producto
+                    factor: 1,            // unidades base que trae la presentación elegida
                     quantity: 1,
-                    unitCost: cost,
+                    unitCost: cost,       // costo por presentación elegida
                     idx: itemIdx++
                 });
                 renderizarFilaSeleccionada(code);
@@ -349,6 +422,13 @@
                 <input type="hidden" name="items[${idx}][product_code]" value="${code}">
                 <p class="font-medium text-slate-800 text-xs leading-tight">${item.name}</p>
                 <p class="text-[10px] text-slate-400 font-mono">${code}</p>
+                ${item.presentations.length ? `
+                <select name="items[${idx}][presentation_id]" data-code="${code}" data-field="presentation"
+                    class="input-seleccionado mt-1 w-full px-1.5 py-1 text-[11px] border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="" data-factor="1">${item.unit} (1 unidad)</option>
+                    ${item.presentations.map(p => `<option value="${p.id}" data-factor="${p.amount}">${p.label} (${p.amount} unid.)</option>`).join('')}
+                </select>` : ''}
+                <p class="text-[10px] text-emerald-700 mt-1 hint-unidades" data-code="${code}"></p>
             </td>
             <td class="px-3 py-2.5">
                 <input type="number" name="items[${idx}][quantity]"
@@ -386,6 +466,18 @@
             `;
 
             tbody.appendChild(tr);
+            pintarHintUnidades(code);
+        }
+
+        // ── Resumen en unidades: "= 50 unidades · S/ 0.15 c/u" (solo si hay otra presentación) ──
+        function pintarHintUnidades(code) {
+            const item = seleccionados.get(code);
+            const hint = document.querySelector(`.hint-unidades[data-code="${CSS.escape(code)}"]`);
+            if (!item || !hint) return;
+            if (item.factor === 1) { hint.textContent = ''; return; }
+            const unidades = Math.round(item.quantity * item.factor * 100) / 100;
+            const costoUnidad = item.factor ? item.unitCost / item.factor : 0;
+            hint.textContent = `= ${unidades} ${item.unit.toLowerCase()}(s) · S/. ${costoUnidad.toFixed(2)} c/u`;
         }
 
         // ── Actualiza los inputs de una fila ya existente ───────────────────────────
@@ -396,6 +488,7 @@
             fila.querySelector(`input[data-field="quantity"]`).value = item.quantity;
             const subtotal = item.quantity * item.unitCost;
             fila.querySelector(`.celda-subtotal`).textContent = 'S/. ' + subtotal.toFixed(2);
+            pintarHintUnidades(code);
         }
 
         // ── Delegación de eventos en la tabla de seleccionados ──────────────────────
@@ -407,13 +500,21 @@
             const item = seleccionados.get(code);
             if (!item) return;
 
+            const fila = document.querySelector(`#filasSeleccionados tr[data-code="${code}"]`);
+
             if (field === 'quantity') item.quantity = parseInt(input.value) || 1;
             if (field === 'unitCost') item.unitCost = parseFloat(input.value) || 0;
+            if (field === 'presentation') {
+                // Al cambiar de presentación el costo se recalcula: costo por unidad × unidades que trae
+                item.factor = parseFloat(input.selectedOptions[0].dataset.factor) || 1;
+                item.unitCost = Math.round(item.baseCost * item.factor * 100) / 100;
+                fila.querySelector('input[data-field="unitCost"]').value = item.unitCost.toFixed(2);
+            }
             seleccionados.set(code, item);
 
-            const fila = document.querySelector(`#filasSeleccionados tr[data-code="${code}"]`);
             fila.querySelector('.celda-subtotal').textContent =
                 'S/. ' + (item.quantity * item.unitCost).toFixed(2);
+            pintarHintUnidades(code);
 
             recalcularTotales();
         });

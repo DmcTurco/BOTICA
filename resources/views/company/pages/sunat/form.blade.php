@@ -26,20 +26,6 @@
         <i class="fas fa-circle-check mr-1.5"></i>{{ session('success') }}
     </div>
     @endif
-    @if(session('error'))
-    <div class="shrink-0 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-        <i class="fas fa-circle-exclamation mr-1.5"></i>{{ session('error') }}
-    </div>
-    @endif
-    @if($errors->any())
-    <div class="shrink-0 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 space-y-1">
-        <p class="font-semibold">Revisa los datos:</p>
-        @foreach($errors->all() as $error)
-            <p><i class="fas fa-circle-exclamation mr-1.5"></i>{{ $error }}</p>
-        @endforeach
-    </div>
-    @endif
-
     <form method="POST" action="{{ route('company.sunat.update') }}" enctype="multipart/form-data"
           class="flex-1 flex flex-col min-h-0">
         @csrf

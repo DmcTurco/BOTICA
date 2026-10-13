@@ -92,7 +92,7 @@ it('una compra crea su lote y no se anula si ya se vendió parte', function () {
     BranchStock::where('product_code', 'P1')->update(['stock_actual' => 0]);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'purchased_at' => today()->toDateString(),
+        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(),
         'items' => [['product_code' => 'P1', 'quantity' => 10, 'unit_cost' => 2, 'expiration_date' => today()->addDays(60)->toDateString(), 'batch' => 'C-1']],
     ])->assertSessionHasNoErrors();
     expect(remaining('C-1'))->toBe(10.0);
@@ -108,7 +108,7 @@ it('anular una compra intacta retira su lote', function () {
     stockProduct('P1', 0);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'purchased_at' => today()->toDateString(),
+        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(),
         'items' => [['product_code' => 'P1', 'quantity' => 10, 'unit_cost' => 2, 'expiration_date' => today()->addDays(60)->toDateString(), 'batch' => 'C-1']],
     ]);
     $this->post(route('employee.purchases.void', Purchase::firstOrFail()), ['void_reason' => 'duplicada'])->assertSessionHasNoErrors();

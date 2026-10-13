@@ -15,7 +15,7 @@ it('registra quién anuló una compra, ajustó stock y cambió precios', functio
     stockProduct('P1', 0, 2);
 
     $this->post(route('employee.purchases.store'), [
-        'document_type' => 1, 'purchased_at' => today()->toDateString(),
+        'document_type' => 1, 'document_number' => 'B001-' . uniqid(), 'purchased_at' => today()->toDateString(),
         'items' => [['product_code' => 'P1', 'quantity' => 5, 'unit_cost' => 2]],
     ]);
     $this->post(route('employee.purchases.void', Purchase::firstOrFail()), ['void_reason' => 'Se duplicó']);

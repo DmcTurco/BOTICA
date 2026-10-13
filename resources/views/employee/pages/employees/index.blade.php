@@ -26,13 +26,6 @@
         {{ session('success') }}
     </div>
     @endif
-    @if(session('error'))
-    <div class="shrink-0 flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
-        <i class="fas fa-circle-exclamation shrink-0"></i>
-        {{ session('error') }}
-    </div>
-    @endif
-
     {{-- Tabla --}}
     <div class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 

@@ -21,19 +21,6 @@
     </div>
 
     {{-- ── Mensajes ─────────────────────────────────────── --}}
-    @if(session('error'))
-    <div class="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-        <i class="fas fa-circle-exclamation mr-1.5"></i>{{ session('error') }}
-    </div>
-    @endif
-    @if($errors->any())
-    <div class="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 space-y-1">
-        @foreach($errors->all() as $error)
-            <p><i class="fas fa-circle-exclamation mr-1.5"></i>{{ $error }}</p>
-        @endforeach
-    </div>
-    @endif
-
     <form id="formCierre" action="{{ route('employee.cash-register.close') }}" method="POST">
         @csrf
 
