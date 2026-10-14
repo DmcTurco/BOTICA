@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\DocumentSeries;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class DocumentSeriesSeeder extends Seeder
 {
@@ -12,7 +12,7 @@ class DocumentSeriesSeeder extends Seeder
      *
      * Comprobantes de venta (BOLETA, FACTURA, NOTA_VENTA y notas de crédito): se crean por sede en BranchSeeder.
      *
-     * Documentos internos (6 dígitos):
+     * Documentos internos (6 dígitos), definidos en DocumentSeries::GLOBAL:
      *   PRODUCTO       → P-000001
      *   PROVEEDOR      → X-000001
      *   COMPRA         → CMP-000001
@@ -22,74 +22,7 @@ class DocumentSeriesSeeder extends Seeder
      */
     public function run(): void
     {
-        $now = now();
-
-        DB::table('document_series')->insert([
-
-            // Los comprobantes de venta (BOLETA, FACTURA, NOTA_VENTA) se crean por sede
-            // en BranchSeeder con DocumentSeries::crearSeriesParaSede().
-
-            // ── Documentos internos (6 dígitos) ───────────────────────
-            [
-                'type_code'      => 'PRODUCTO',
-                'name'           => 'Producto',
-                'series'         => 'P',
-                'current_number' => 0,
-                'digits'         => 6,
-                'active'         => true,
-                'created_at'     => $now,
-                'updated_at'     => $now,
-            ],
-            [
-                'type_code'      => 'PROVEEDOR',
-                'name'           => 'Proveedor',
-                'series'         => 'X',
-                'current_number' => 0,
-                'digits'         => 6,
-                'active'         => true,
-                'created_at'     => $now,
-                'updated_at'     => $now,
-            ],
-            [
-                'type_code'      => 'CLIENTE',
-                'name'           => 'Cliente',
-                'series'         => 'C',
-                'current_number' => 0,
-                'digits'         => 6,
-                'active'         => true,
-                'created_at'     => $now,
-                'updated_at'     => $now,
-            ],
-            [
-                'type_code'      => 'COMPRA',
-                'name'           => 'Orden de Compra',
-                'series'         => 'CMP',
-                'current_number' => 0,
-                'digits'         => 6,
-                'active'         => true,
-                'created_at'     => $now,
-                'updated_at'     => $now,
-            ],
-            [
-                'type_code'      => 'CREDITO_FIADO',
-                'name'           => 'Crédito Fiado',
-                'series'         => 'CRD',
-                'current_number' => 0,
-                'digits'         => 6,
-                'active'         => true,
-                'created_at'     => $now,
-                'updated_at'     => $now,
-            ],
-            [
-                'type_code'      => 'CIERRE_CAJA',
-                'name'           => 'Cierre de Caja',
-                'series'         => 'CIR',
-                'current_number' => 0,
-                'digits'         => 6,
-                'active'         => true,
-                'created_at'     => $now,
-                'updated_at'     => $now,
-            ],
-        ]);
+        // Idempotente: se puede volver a correr sin duplicar correlativos
+        DocumentSeries::crearSeriesGlobales();
     }
 }

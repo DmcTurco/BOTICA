@@ -20,6 +20,12 @@ class LoginResponse implements LoginResponseContract
             return response()->json(['two_factor' => false]);
         }
 
+        // La sesión es compartida entre paneles: si la URL pendiente es de otro panel
+        // (p. ej. /admin/home al entrar como company) se descarta para no caer en otro login
+        $intended = $request->session()->pull('url.intended');
+        $panelUrl = url(config('fortify.prefix')) . '/';
+        $target   = ($intended && str_starts_with($intended, $panelUrl)) ? $intended : config('fortify.home');
+
         if (config('fortify.guard') === MyApp::EMPLOYEE_SUBDIR) {
             $employee = auth()->guard('employee')->user();
 
@@ -32,6 +38,6 @@ class LoginResponse implements LoginResponseContract
             }
         }
 
-        return redirect()->intended(config('fortify.home'));
+        return redirect()->to($target);
     }
 }

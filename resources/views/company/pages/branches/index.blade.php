@@ -66,8 +66,21 @@
                             </div>
                         </td>
                         <td class="px-4 py-3 text-slate-500">{{ $branch->address ?: '—' }}</td>
+                        @php $missingSeries = \App\Models\DocumentSeries::tiposFaltantesDeSede($branch); @endphp
                         <td class="px-4 py-3 text-slate-500 font-mono text-xs">
                             {{ $branch->documentSeries->where('active', true)->pluck('series')->implode(' · ') ?: '—' }}
+                            {{-- Sede sin series (p. ej. no se corrió el seeder): permite generarlas --}}
+                            @if(count($missingSeries))
+                            <form method="POST" action="{{ route('company.branches.series.generate', $branch) }}" class="mt-1.5 font-sans">
+                                @csrf
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
+                                        title="Faltan: {{ collect($missingSeries)->map(fn ($t) => \App\Models\DocumentSeries::PER_BRANCH[$t]['name'])->implode(', ') }}">
+                                    <i class="fas fa-triangle-exclamation"></i>
+                                    Faltan {{ count($missingSeries) }} — Generar series
+                                </button>
+                            </form>
+                            @endif
                         </td>
                         <td class="px-4 py-3 text-slate-500 font-mono text-xs">{{ $branch->phone ?: '—' }}</td>
                         <td class="px-4 py-3 text-slate-500 text-xs">{{ $branch->email ?: '—' }}</td>

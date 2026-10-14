@@ -72,9 +72,10 @@ class Client extends Model
      */
     public static function publicFor(int $companyId): self
     {
+        // Closure: el código solo se genera si de verdad se crea (no consume correlativo en cada búsqueda)
         return static::firstOrCreate(
             ['company_id' => $companyId, 'document_number' => self::PUBLIC_DOCUMENT],
-            [
+            fn () => [
                 'code'             => DocumentSeries::siguiente(DocumentSeries::CLIENTE),
                 'name'             => self::PUBLIC_NAME,
                 'document_type_id' => DocumentType::DNI,

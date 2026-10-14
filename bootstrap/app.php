@@ -18,6 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'branch.admin' => \App\Http\Middleware\EnsureEmployeeIsBranchAdmin::class,
             'privilege'    => \App\Http\Middleware\EnsureEmployeeHasPrivilege::class,
         ]);
+
+        // Usuario ya logueado que entra al login: va al inicio de su panel (/company/home...), no a "/"
+        $middleware->redirectUsersTo(function (\Illuminate\Http\Request $request) {
+            $routeType = $request->routeType();
+
+            return $routeType ? route($routeType . '.home') : '/';
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -52,6 +52,18 @@ class DocumentSeries extends Model
         self::NOTA_CREDITO_FACTURA => ['prefix' => 'FC', 'width' => 2, 'name' => 'Nota de Crédito (Factura)'],
     ];
 
+    /**
+     * Correlativos internos globales (sin sede ni compañía): P-000001, C-000001...
+     */
+    const GLOBAL = [
+        self::PRODUCTO      => ['series' => 'P',   'name' => 'Producto'],
+        self::PROVEEDOR     => ['series' => 'X',   'name' => 'Proveedor'],
+        self::CLIENTE       => ['series' => 'C',   'name' => 'Cliente'],
+        self::COMPRA        => ['series' => 'CMP', 'name' => 'Orden de Compra'],
+        self::CREDITO_FIADO => ['series' => 'CRD', 'name' => 'Crédito Fiado'],
+        self::CIERRE_CAJA   => ['series' => 'CIR', 'name' => 'Cierre de Caja'],
+    ];
+
     // Límite de correlativo según SUNAT (8 dígitos)
     const LIMITE_CORRELATIVO = 99_999_999;
 
@@ -86,7 +98,7 @@ class DocumentSeries extends Model
             throw new \RuntimeException("El comprobante {$typeCode} requiere la sede que lo emite.");
         }
 
-        $serie = self::where('type_code', $typeCode)
+        $findSerie = fn () => self::where('type_code', $typeCode)
             ->where('active', true)
             ->when(
                 isset(self::PER_BRANCH[$typeCode]),
@@ -96,9 +108,19 @@ class DocumentSeries extends Model
             ->lockForUpdate()
             ->first();
 
+        $serie = $findSerie();
+
+        // Correlativo interno global faltante (no se corrió el seeder): se crea con sus valores fijos
+        if (!$serie && isset(self::GLOBAL[$typeCode])
+            && !self::where('type_code', $typeCode)->whereNull('branch_id')->exists()) {
+            self::crearSeriesGlobales();
+            $serie = $findSerie();
+        }
+
         if (!$serie) {
-            throw new \RuntimeException(
-                "No hay serie activa para este comprobante en la sede ({$typeCode}). Pide a la empresa que configure las series de la sede."
+            throw new \RuntimeException(isset(self::PER_BRANCH[$typeCode])
+                ? "No hay serie activa para este comprobante en la sede ({$typeCode}). Pide a la empresa que genere las series de la sede en Sedes."
+                : "No hay correlativo activo para {$typeCode}. Activa uno en Series."
             );
         }
 
@@ -170,6 +192,52 @@ class DocumentSeries extends Model
                 'active'         => true,
             ]);
         }
+    }
+
+    /**
+     * Crea los correlativos internos globales que falten (producto, cliente, compra...).
+     * Es idempotente: solo inserta los tipos que aún no existen.
+     *
+     * @return int Cantidad de correlativos creados
+     */
+    public static function crearSeriesGlobales(): int
+    {
+        $created = 0;
+
+        foreach (self::GLOBAL as $typeCode => $format) {
+            $exists = self::where('type_code', $typeCode)->whereNull('branch_id')->exists();
+
+            if ($exists) {
+                continue;
+            }
+
+            self::create([
+                'type_code'      => $typeCode,
+                'name'           => $format['name'],
+                'series'         => $format['series'],
+                'current_number' => 0,
+                'digits'         => 6,
+                'active'         => true,
+            ]);
+
+            $created++;
+        }
+
+        return $created;
+    }
+
+    /**
+     * Tipos de comprobante de la sede que no tienen ninguna serie registrada.
+     *
+     * @return array<int, string> type_codes faltantes
+     */
+    public static function tiposFaltantesDeSede(Branch $branch): array
+    {
+        $existing = $branch->relationLoaded('documentSeries')
+            ? $branch->documentSeries->pluck('type_code')->all()
+            : $branch->documentSeries()->pluck('type_code')->all();
+
+        return array_values(array_diff(array_keys(self::PER_BRANCH), $existing));
     }
 
     /**

@@ -30,6 +30,7 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
     Route::get('reports/branches', [Company\BranchReportController::class, 'index'])->name('reports.branches');
 
     // Administración — sedes y empleados
+    Route::post('branches/{branch}/series', [Company\BranchController::class, 'generateSeries'])->name('branches.series.generate');
     Route::resource('branches',  Company\BranchController::class)->except(['show']);
     Route::resource('employees', Company\EmployeeController::class)->except(['show']);
 

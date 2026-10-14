@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Company\BranchRequest;
 use App\Models\Branch;
 use App\Models\DocumentSeries;
+use App\Models\DocumentType;
 use Illuminate\Support\Facades\DB;
 
 class BranchController extends Controller
@@ -97,6 +98,32 @@ class BranchController extends Controller
 
         return redirect()->route('company.branches.index')
             ->with('success', 'Sede actualizada correctamente.');
+    }
+
+    /**
+     * Genera las series de comprobantes que le falten a la sede (B00X, F00X, NV0X, BC0X, FC0X)
+     * y, si no existen, los correlativos internos globales y los tipos de documento (DNI, RUC...).
+     * Útil cuando en el servidor no se corrieron los seeders.
+     * No toca las series que ya existen.
+     */
+    public function generateSeries(Branch $branch)
+    {
+        $company = auth()->guard('company')->user();
+        abort_if($branch->company_id !== $company->id, 403);
+
+        $missing = DocumentSeries::tiposFaltantesDeSede($branch);
+
+        DB::transaction(function () use ($branch) {
+            DocumentType::crearTiposBase();
+            DocumentSeries::crearSeriesGlobales();
+            DocumentSeries::crearSeriesParaSede($branch);
+        });
+
+        $message = empty($missing)
+            ? "La sede {$branch->name} ya tenía todas sus series."
+            : 'Se generaron ' . count($missing) . " series para la sede {$branch->name}.";
+
+        return redirect()->route('company.branches.index')->with('success', $message);
     }
 
     /**

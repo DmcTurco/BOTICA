@@ -41,6 +41,39 @@ class DocumentType extends Model
     const SIN_DOCUMENTO = 5;
 
     /**
+     * Tipos de documento de identidad base (SUNAT). El id es fijo: las constantes de arriba dependen de él.
+     */
+    const BASE = [
+        ['id' => 1, 'code' => '1', 'name' => 'DNI',                  'description' => 'Documento Nacional de Identidad',  'digits' => 8,    'sort_order' => 1],
+        ['id' => 2, 'code' => '4', 'name' => 'Carnet de Extranjería', 'description' => 'Carnet de Extranjería',            'digits' => null, 'sort_order' => 2],
+        ['id' => 3, 'code' => '6', 'name' => 'RUC',                  'description' => 'Registro Único de Contribuyentes', 'digits' => 11,   'sort_order' => 3],
+        ['id' => 4, 'code' => '7', 'name' => 'Pasaporte',            'description' => 'Pasaporte',                        'digits' => null, 'sort_order' => 4],
+        ['id' => 5, 'code' => '0', 'name' => 'Sin documento',        'description' => 'Cliente sin documento / varios',   'digits' => null, 'sort_order' => 5],
+    ];
+
+    /**
+     * Crea los tipos de documento base que falten (por id). Es idempotente.
+     *
+     * @return int Cantidad de tipos creados
+     */
+    public static function crearTiposBase(): int
+    {
+        $existing = self::pluck('id')->all();
+        $created  = 0;
+
+        foreach (self::BASE as $type) {
+            if (in_array($type['id'], $existing)) {
+                continue;
+            }
+
+            self::insert($type + ['active' => true]);
+            $created++;
+        }
+
+        return $created;
+    }
+
+    /**
      * Scope para tipos activos, ordenados.
      */
     public function scopeActivos($query)
