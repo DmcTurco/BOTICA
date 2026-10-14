@@ -10,6 +10,7 @@
 
     <div class="lg:ml-64 flex flex-col h-screen">
         @include('employee/inc/navbar')
+        @include('partials/subscription-banner', ['company' => auth()->guard('employee')->user()?->company])
         <main class="flex-1 min-h-0 flex flex-col @yield('main-padding', 'p-4 md:p-6') @yield('main-class', 'overflow-auto')">
             @yield('content-area')
         </main>

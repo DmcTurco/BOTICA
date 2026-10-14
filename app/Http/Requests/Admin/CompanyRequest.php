@@ -34,6 +34,7 @@ class CompanyRequest extends FormRequest
             'email'    => ['required', 'email', 'max:255', Rule::unique('companies', 'email')->ignore($company?->id)],
             'password' => [$isUpdate ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
         ];
+        // El cobro (plan, prueba, mensualidad) se configura aparte en Suscripciones
 
         // La primera sede solo se pide al crear (después la gestiona la propia empresa)
         if (!$isUpdate) {

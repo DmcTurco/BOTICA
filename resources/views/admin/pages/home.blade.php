@@ -35,13 +35,13 @@
 
         <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
             <div class="flex items-center justify-between mb-3">
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Productos</p>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Mensualidades</p>
                 <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-pills text-emerald-600 text-sm"></i>
+                    <i class="fas fa-money-bill-wave text-emerald-600 text-sm"></i>
                 </div>
             </div>
-            <p class="text-2xl font-bold text-slate-800">{{ $stats['products'] }}</p>
-            <p class="text-xs text-slate-500 mt-1.5">En todas las empresas</p>
+            <p class="text-2xl font-bold text-slate-800">S/ {{ number_format($stats['subscriptionIncome'], 2) }}</p>
+            <p class="text-xs text-slate-500 mt-1.5">Cobrado este mes</p>
         </div>
 
         <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
@@ -55,6 +55,33 @@
             <p class="text-xs text-slate-500 mt-1.5">Total del mes actual</p>
         </div>
     </div>
+
+    {{-- Empresas con la mensualidad vencida: en gracia (aviso rojo) o ya bloqueadas --}}
+    @if($overdue->isNotEmpty())
+    <div class="bg-white rounded-xl border border-red-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-3 bg-red-50 border-b border-red-200 flex items-center gap-2">
+            <i class="fas fa-circle-exclamation text-red-500"></i>
+            <h2 class="text-sm font-semibold text-slate-800">Mensualidades vencidas ({{ $overdue->count() }})</h2>
+        </div>
+        <ul class="divide-y divide-slate-100">
+            @foreach($overdue as $company)
+            <li class="px-5 py-3 flex items-center gap-3">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-800">{{ $company->name }}</p>
+                    <p class="text-xs text-slate-500">
+                        Venció el {{ $company->paid_until->format('d/m/Y') }} ·
+                        {{ $company->subscriptionStatus() === \App\Models\Company::SUB_SUSPENDED ? 'Bloqueada' : 'Se bloquea el ' . $company->subscriptionBlocksOn()->format('d/m/Y') }}
+                    </p>
+                </div>
+                <a href="{{ route('admin.subscriptions.show', $company) }}"
+                   class="px-3 py-1.5 bg-violet-700 hover:bg-violet-800 text-white text-xs font-semibold rounded-lg transition-colors shrink-0">
+                    Registrar pago
+                </a>
+            </li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
 
     <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
         <h2 class="text-sm font-semibold text-slate-800 mb-4">Acciones rápidas</h2>

@@ -20,12 +20,23 @@ Route::prefix(MyApp::ADMINS_SUBDIR)->middleware('auth:admin')->name('admin.')->g
 
     // Compañías (boticas clientes): el admin las registra con su primera sede
     Route::resource('companies', Admin\CompanyController::class)->except(['show', 'destroy']);
+
+    // Suscripciones: cobro de la mensualidad (plan, prueba gratis, pagos), separado de los datos de la empresa
+    Route::get('subscriptions', [Admin\SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::get('subscriptions/{company}', [Admin\SubscriptionController::class, 'show'])->name('subscriptions.show');
+    Route::put('subscriptions/{company}', [Admin\SubscriptionController::class, 'update'])->name('subscriptions.update');
+    Route::post('subscriptions/{company}/payments', [Admin\SubscriptionPaymentController::class, 'store'])->name('subscriptions.payments.store');
+    Route::delete('subscriptions/{company}/payments/{payment}', [Admin\SubscriptionPaymentController::class, 'destroy'])->name('subscriptions.payments.destroy');
 });
 
-Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.')->group(function () {
+// subscription:company → con la mensualidad suspendida solo se ve la pantalla de servicio suspendido
+Route::prefix(MyApp::COMPANY_SUBDIR)->middleware(['auth:company', 'subscription:company'])->name('company.')->group(function () {
     Route::get('/', function () {
         return redirect()->route('company.home');
-    })->withoutMiddleware('auth:company');
+    })->withoutMiddleware(['auth:company', 'subscription:company']);
+
+    Route::get('suspended', \App\Http\Controllers\SuspendedController::class)->name('suspended')
+        ->withoutMiddleware('subscription:company');
 
     Route::get('/home', [Company\CompanyController::class, 'index'])->name('home');
 
@@ -46,10 +57,14 @@ Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.
     Route::put('sunat', [Company\SunatSettingController::class, 'update'])->name('sunat.update');
 });
 
-Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware('auth:employee')->name('employee.')->group(function () {
+// subscription:employee → si la mensualidad de su empresa está suspendida, el empleado no puede usar el panel
+Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware(['auth:employee', 'subscription:employee'])->name('employee.')->group(function () {
     Route::get('/', function () {
         return redirect()->route('employee.home');
-    })->withoutMiddleware('auth:employee');
+    })->withoutMiddleware(['auth:employee', 'subscription:employee']);
+
+    Route::get('suspended', \App\Http\Controllers\SuspendedController::class)->name('suspended')
+        ->withoutMiddleware('subscription:employee');
 
     Route::get('/home', [Employee\EmployeeController::class, 'index'])->name('home');
 

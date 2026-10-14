@@ -30,6 +30,13 @@
             <i class="fas fa-building w-4 text-center text-sm"></i>
             Empresas
         </a>
+
+        <a href="{{ route('admin.subscriptions.index') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-0.5
+                  {{ request()->routeIs('admin.subscriptions.*') ? 'bg-violet-50 text-violet-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800' }}">
+            <i class="fas fa-money-bill-wave w-4 text-center text-sm"></i>
+            Suscripciones
+        </a>
     </nav>
 
     <div class="px-3 py-3 border-t border-slate-200">

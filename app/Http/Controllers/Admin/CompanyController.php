@@ -44,6 +44,7 @@ class CompanyController extends Controller
     /**
      * Registra la compañía lista para trabajar: su usuario de acceso, su primera sede
      * con las series de comprobantes (B001, F001, NV01...) y los datos fijos del sistema.
+     * Nace GRATIS (sin cobro); el cobro se configura después en Suscripciones.
      * El resto (empleados, productos...) lo registra la propia empresa desde su panel.
      */
     public function store(CompanyRequest $request)
@@ -67,7 +68,7 @@ class CompanyController extends Controller
         });
 
         return redirect()->route('admin.companies.index')
-            ->with('success', "Empresa «{$company->name}» creada. Ya puede entrar con {$company->email} en /company/login.");
+            ->with('success', "Empresa «{$company->name}» creada (gratis por ahora). Ya puede entrar con {$company->email} en /company/login. Para cobrarle, configúrala en Suscripciones.");
     }
 
     /**

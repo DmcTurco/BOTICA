@@ -22,6 +22,13 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+
+            // Mensualidad del servicio
+            $table->decimal('monthly_fee', 10, 2)->default(0);         // monto mensual
+            $table->string('billing_cycle', 10)->default('date');      // date: cada mes el mismo día · month_end: vence a fin de mes
+            $table->date('trial_until')->nullable();                   // último día del periodo de prueba gratis
+            $table->date('paid_until')->nullable();                    // último día con servicio cubierto (null = plan gratis, sin cobro)
+
             $table->rememberToken();
             $table->timestamps();
         });

@@ -3,12 +3,13 @@
 @php $isEdit = isset($company); @endphp
 
 @section('title', $isEdit ? 'Editar Empresa' : 'Nueva Empresa')
+@section('main-class', 'overflow-hidden')
 
 @section('content-area')
-<div class="max-w-2xl space-y-4">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
     {{-- Header --}}
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 shrink-0">
         <a href="{{ route('admin.companies.index') }}"
            class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors">
             <i class="fas fa-arrow-left text-xs"></i>
@@ -24,11 +25,12 @@
     </div>
 
     <form method="POST" action="{{ $isEdit ? route('admin.companies.update', $company) : route('admin.companies.store') }}"
-          class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          class="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         @csrf
         @if($isEdit) @method('PUT') @endif
 
-        <div class="p-6 space-y-6">
+        {{-- Campos (scroll interno; los botones quedan fijos abajo) --}}
+        <div class="flex-1 min-h-0 overflow-auto p-6 space-y-6">
 
             {{-- Datos de la empresa --}}
             <div>
@@ -105,8 +107,8 @@
 
         </div>
 
-        {{-- Botones --}}
-        <div class="border-t border-slate-100 px-6 py-4 flex items-center gap-3 bg-slate-50">
+        {{-- Botones (pie fijo) --}}
+        <div class="shrink-0 border-t border-slate-100 px-6 py-4 flex items-center gap-3 bg-slate-50">
             <button type="submit"
                     class="px-5 py-2.5 bg-violet-700 hover:bg-violet-800 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
                 {{ $isEdit ? 'Guardar cambios' : 'Crear Empresa' }}

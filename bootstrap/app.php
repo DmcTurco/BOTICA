@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'cash.open'    => \App\Http\Middleware\EnsureCashRegisterIsOpen::class,
             'branch.admin' => \App\Http\Middleware\EnsureEmployeeIsBranchAdmin::class,
             'privilege'    => \App\Http\Middleware\EnsureEmployeeHasPrivilege::class,
+            'subscription' => \App\Http\Middleware\EnsureSubscriptionIsActive::class,
         ]);
 
         // Usuario ya logueado que entra al login: va al inicio de su panel (/company/home...), no a "/"

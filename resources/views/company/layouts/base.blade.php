@@ -10,6 +10,7 @@
 
     <div class="lg:ml-64 flex flex-col h-screen overflow-hidden">
         @include('company/inc/navbar')
+        @include('partials/subscription-banner', ['company' => auth()->guard('company')->user(), 'showPaymentInfo' => true])
 
         {{-- ── Mensajes flash globales ─────────────────────────────── --}}
         {{-- Éxito, errores y validación se muestran en el modal de alerta --}}
