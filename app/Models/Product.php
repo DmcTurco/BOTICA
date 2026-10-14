@@ -20,6 +20,7 @@ class Product extends Model
     protected $fillable = [
         'code',
         'company_id',
+        'barcode',
         'name',
         'description',
         'category_id',

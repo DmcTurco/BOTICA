@@ -7,6 +7,7 @@ use App\Http\Requests\Company\FormulaRequest;
 use App\Models\Formula;
 use App\Models\Product;
 use App\Models\Unit;
+use App\Services\Requirements;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -47,11 +48,21 @@ class FormulaController extends Controller
     public function create()
     {
         $employee = auth()->guard('employee')->user();
+        $products = $this->catalog($employee->company_id);
+        $units    = Unit::deCompania($employee->company_id)->where('status', 1)->orderBy('name')->get();
+
+        // Los insumos de la fórmula son productos del catálogo
+        $requirements = Requirements::make('Nueva fórmula', 'employee.formulas.index')
+            ->need(collect($products)->isNotEmpty(), 'Productos (insumos)', 'Los insumos de la fórmula se eligen del catálogo de productos.', 'employee.products.create', 'Registrar producto');
+
+        if ($requirements->blocked()) {
+            return $requirements->view();
+        }
 
         return view('employee.pages.formulas.form', [
             'code'      => Formula::nextCode($employee->company_id),
-            'products'  => $this->catalog($employee->company_id),
-            'units'     => Unit::where('status', 1)->orderBy('name')->get(),
+            'products'  => $products,
+            'units'     => $units,
             'currentIngredients' => [],
         ]);
     }
@@ -113,7 +124,7 @@ class FormulaController extends Controller
             'formula'   => $formula,
             'code'      => $formula->code,
             'products'  => $this->catalog($employee->company_id),
-            'units'     => Unit::where('status', 1)->orderBy('name')->get(),
+            'units'     => Unit::deCompania($employee->company_id)->where('status', 1)->orderBy('name')->get(),
             'currentIngredients' => $formula->ingredients
                 ->map(fn ($i) => ['product_code' => $i->product_code, 'quantity' => $i->quantity, 'notes' => $i->notes])
                 ->all(),

@@ -26,7 +26,8 @@ class LaboratoryRequest extends FormRequest
         $id = $this->route('laboratory') ?? $this->route('id');
 
         return [
-            'nombre'      => ['required', 'max:100', Rule::unique('laboratories', 'name')->ignore($id)],
+            // Único dentro de la compañía: otra compañía puede registrar el mismo laboratorio
+            'nombre'      => ['required', 'max:100', Rule::unique('laboratories', 'name')->where('company_id', auth()->guard('employee')->user()?->company_id)->ignore($id)],
             'descripcion' => 'nullable|max:255',
             'pais'        => 'nullable|max:80',
             'telefono'    => 'nullable|max:30',

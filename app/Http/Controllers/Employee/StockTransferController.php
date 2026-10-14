@@ -9,6 +9,7 @@ use App\Models\BranchStock;
 use App\Models\Product;
 use App\Models\StockTransfer;
 use App\Services\BatchService;
+use App\Services\Requirements;
 use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,6 +67,15 @@ class StockTransferController extends Controller
                 'unit'  => $p->unit?->abbreviation,
                 'stock' => (float) $stocks[$p->code],
             ])->values()->all();
+
+        // Un traslado necesita otra sede de destino y stock propio que enviar
+        $requirements = Requirements::make('Nuevo traslado', 'employee.transfers.index')
+            ->need($branches->isNotEmpty(), 'Otra sede activa', 'El traslado envía stock a otra sede. La empresa la crea en Empresa → Sedes.')
+            ->need(!empty($products), 'Stock en esta sede', 'No tienes productos con stock para enviar. Ingrésalo registrando una compra.', 'employee.purchases.create', 'Registrar compra');
+
+        if ($requirements->blocked()) {
+            return $requirements->view();
+        }
 
         return view('employee.pages.transfers.form', compact('branches', 'products'));
     }

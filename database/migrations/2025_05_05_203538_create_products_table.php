@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-            $table->string('code', 20)->primary();                    // PK del producto (código único)
+            $table->string('code', 20)->primary();                    // PK interna, la genera el sistema (P-000001)
             $table->unsignedBigInteger('company_id')->index();        // compañía dueña del catálogo
+            $table->string('barcode', 30)->nullable();                // código de barras (EAN) de la caja; opcional
             $table->string('name', 150);
             $table->text('description')->nullable();
             $table->unsignedBigInteger('category_id')->nullable()->index();
@@ -46,6 +47,9 @@ return new class extends Migration
             // Control de sistema
             $table->timestamps();
             $table->softDeletes();
+
+            // El código de barras no se repite dentro de una compañía, pero dos boticas sí pueden tener el mismo
+            $table->unique(['company_id', 'barcode']);
         });
     }
 

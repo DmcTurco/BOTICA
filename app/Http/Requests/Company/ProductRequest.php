@@ -23,17 +23,21 @@ class ProductRequest extends FormRequest
      */
     public function rules(): array
     {
-        $product = $this->route('product'); // null en store, modelo en update
+        $product   = $this->route('product'); // null en store, modelo en update
+        $companyId = auth()->guard('employee')->user()?->company_id;
+
+        // Categoría, laboratorio y unidades deben ser de la propia compañía
+        $ofCompany = fn (string $table) => \Illuminate\Validation\Rule::exists($table, 'id')->where('company_id', $companyId);
 
         $rules = [
             'nombre'              => 'required|max:150',
             'descripcion'         => 'nullable|max:255',
-            'categoria_id'        => 'required|exists:categories,id',
-            'laboratorio_id'      => 'nullable|exists:laboratories,id',
+            'categoria_id'        => ['required', $ofCompany('categories')],
+            'laboratorio_id'      => ['nullable', $ofCompany('laboratories')],
             'principio_activo'    => 'nullable|max:100',
             'tipo_controlado'     => 'nullable|in:psicotropico,estupefaciente',
             'registro_sanitario'  => 'nullable|max:30',
-            'unidad_medida_id'    => 'required|exists:units,id',
+            'unidad_medida_id'    => ['required', $ofCompany('units')],
             'afectacion_igv'      => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Models\Product::IGV_LABELS))],
             'precio_compra'       => 'required|numeric|min:0',
             'precio_venta_unidad' => 'required|numeric|min:0',
@@ -42,15 +46,17 @@ class ProductRequest extends FormRequest
             'unidades_por_paquete'                => 'nullable|numeric|min:0',
             'stock_minimo'                        => 'nullable|integer|min:0',
             'stock_maximo'                        => 'nullable|integer|min:0',
-            'presentaciones.*.unidad_medida_id'   => 'required|exists:units,id',
+            'presentaciones.*.unidad_medida_id'   => ['required', $ofCompany('units')],
             'presentaciones.*.cantidad_equivalente' => 'required|numeric|min:0.01',
             'presentaciones.*.precio_venta'       => 'required|numeric|min:0',
         ];
 
-        // El código solo se valida en store (en update no se puede cambiar)
-        if (!$product) {
-            $rules['codigo'] = 'required|max:20|unique:products,code';
-        }
+        // El código interno lo genera el sistema (P-000001). El de barras es opcional y no se repite
+        // dentro de la compañía (incluye productos eliminados: el índice único de la BD también los cuenta)
+        $rules['codigo_barras'] = [
+            'nullable', 'max:30', 'regex:/^[A-Za-z0-9\-]+$/',
+            \Illuminate\Validation\Rule::unique('products', 'barcode')->where('company_id', $companyId)->ignore($product?->code, 'code'),
+        ];
 
         return $rules;
     }
@@ -77,8 +83,9 @@ class ProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'codigo.required'              => 'El código del producto es obligatorio.',
-            'codigo.unique'                => 'Ya existe un producto con ese código.',
+            'codigo_barras.unique'         => 'Ya tienes un producto con ese código de barras.',
+            'codigo_barras.regex'          => 'El código de barras solo puede tener letras, números y guiones.',
+            'codigo_barras.max'            => 'El código de barras no puede pasar de 30 caracteres.',
             'nombre.required'              => 'El nombre del producto es obligatorio.',
             'categoria_id.required'        => 'Debe seleccionar una categoría.',
             'categoria_id.exists'          => 'La categoría seleccionada no existe.',

@@ -22,7 +22,7 @@ function purchasePayload(array $override = []): array
 it('convierte la compra por presentación a unidades base', function () {
     loginEmployee();
     stockProduct('P1', 0, 0.15);
-    $blister = Unit::create(['name' => 'Blíster', 'abbreviation' => 'BL', 'status' => 1]);
+    $blister = Unit::create(['company_id' => 1, 'name' => 'Blíster', 'abbreviation' => 'BL', 'status' => 1]);
     $presentation = Presentation::create(['product_code' => 'P1', 'unit_id' => $blister->id, 'equivalent_amount' => 10, 'sale_price' => 3.5, 'status' => 1]);
 
     // 5 blísteres de 10 unidades a S/ 1.50 cada uno
@@ -42,7 +42,7 @@ it('rechaza una presentación que no es del producto', function () {
     loginEmployee();
     stockProduct('P1');
     stockProduct('P2');
-    $box = Unit::create(['name' => 'Caja', 'abbreviation' => 'CJ', 'status' => 1]);
+    $box = Unit::create(['company_id' => 1, 'name' => 'Caja', 'abbreviation' => 'CJ', 'status' => 1]);
     $other = Presentation::create(['product_code' => 'P2', 'unit_id' => $box->id, 'equivalent_amount' => 10, 'sale_price' => 3.5, 'status' => 1]);
 
     $this->post(route('employee.purchases.store'), purchasePayload([

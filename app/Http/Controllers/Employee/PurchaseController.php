@@ -13,6 +13,7 @@ use App\Models\PurchaseOrder;
 use App\Models\StockMovement;
 use App\Models\Supplier;
 use App\Services\BatchService;
+use App\Services\Requirements;
 use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -71,9 +72,17 @@ class PurchaseController extends Controller
                 'presentations' => fn ($q) => $q->where('status', 1)->with('unit:id,name'),
             ])
             ->orderBy('name')
-            ->get(['code', 'name', 'purchase_price', 'unit_id']);
+            ->get(['code', 'barcode', 'name', 'purchase_price', 'unit_id']);
 
         $suppliers = Supplier::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get(['id', 'name', 'ruc']);
+
+        // Sin productos no hay qué comprar (el proveedor es opcional en la compra)
+        $requirements = Requirements::make('Nueva compra', 'employee.purchases.index')
+            ->need($productos->isNotEmpty(), 'Productos', 'Registra los productos que vas a comprar; la compra les ingresa el stock.', 'employee.products.create', 'Registrar producto');
+
+        if ($requirements->blocked()) {
+            return $requirements->view();
+        }
 
         // Recepción de una orden de compra: se precargan sus productos y el proveedor
         $order = $request->filled('order')

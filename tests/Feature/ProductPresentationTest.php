@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 function productPayload(array $extra = []): array
 {
     $category = Category::firstOrCreate(['company_id' => 1, 'name' => 'General'], ['status' => 1]);
-    $unit     = Unit::firstOrCreate(['name' => 'Tableta'], ['abbreviation' => 'TAB', 'sunat_code' => 'NIU', 'status' => 1]);
+    $unit     = Unit::firstOrCreate(['company_id' => 1, 'name' => 'Tableta'], ['abbreviation' => 'TAB', 'sunat_code' => 'NIU', 'status' => 1]);
 
     return array_merge([
         'nombre' => 'Paracetamol', 'categoria_id' => $category->id, 'unidad_medida_id' => $unit->id,
@@ -22,8 +22,8 @@ function productPayload(array $extra = []): array
 it('guarda las presentaciones al editar el producto y las reemplaza por las enviadas', function () {
     loginEmployee();
     stockProduct('P1', 1);
-    $caja = Unit::create(['name' => 'Caja', 'abbreviation' => 'CJA', 'sunat_code' => 'BX', 'status' => 1]);
-    $blister = Unit::create(['name' => 'Blíster', 'abbreviation' => 'BLI', 'sunat_code' => 'NIU', 'status' => 1]);
+    $caja = Unit::create(['company_id' => 1, 'name' => 'Caja', 'abbreviation' => 'CJA', 'sunat_code' => 'BX', 'status' => 1]);
+    $blister = Unit::create(['company_id' => 1, 'name' => 'Blíster', 'abbreviation' => 'BLI', 'sunat_code' => 'NIU', 'status' => 1]);
 
     $this->put(route('employee.products.update', 'P1'), productPayload(['presentaciones' => [
         1 => ['unidad_medida_id' => $caja->id, 'cantidad_equivalente' => 100, 'precio_venta' => 40, 'es_presentacion_principal' => '1'],
@@ -48,7 +48,7 @@ it('guarda las presentaciones al editar el producto y las reemplaza por las envi
 it('si el formulario vuelve con errores no pierde las presentaciones escritas', function () {
     loginEmployee();
     stockProduct('P1', 1);
-    $caja = Unit::create(['name' => 'Caja', 'abbreviation' => 'CJA', 'sunat_code' => 'BX', 'status' => 1]);
+    $caja = Unit::create(['company_id' => 1, 'name' => 'Caja', 'abbreviation' => 'CJA', 'sunat_code' => 'BX', 'status' => 1]);
 
     // Falta el precio de compra: la validación falla y el formulario regresa
     $this->from(route('employee.products.edit', 'P1'))

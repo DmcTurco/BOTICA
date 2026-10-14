@@ -27,7 +27,8 @@ class CategoryRequest extends FormRequest
         $id = $this->route('category') ?? $this->route('id');
 
         return [
-            'nombre'      => ['required', 'max:100', Rule::unique('categories', 'name')->ignore($id)],
+            // Único dentro de la compañía: otra compañía puede tener su propia categoría con el mismo nombre
+            'nombre'      => ['required', 'max:100', Rule::unique('categories', 'name')->where('company_id', auth()->guard('employee')->user()?->company_id)->ignore($id)],
             'descripcion' => 'nullable|max:255',
             'icono'       => 'nullable|max:50',
             'activo'      => 'nullable|boolean',

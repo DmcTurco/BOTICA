@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Production;
 use App\Models\StockMovement;
 use App\Services\BatchService;
+use App\Services\Requirements;
 use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +62,14 @@ class ProductionController extends Controller
             ->where('status', 1)
             ->orderBy('name')
             ->get();
+
+        // Se prepara a partir de una fórmula (receta) registrada
+        $requirements = Requirements::make('Nueva preparación', 'employee.productions.index')
+            ->need($formulas->isNotEmpty(), 'Fórmulas magistrales', 'Cada preparación sigue una fórmula con sus insumos.', 'employee.formulas.create', 'Registrar fórmula');
+
+        if ($requirements->blocked()) {
+            return $requirements->view();
+        }
 
         $codes  = $formulas->flatMap(fn ($f) => $f->ingredients->pluck('product_code'))->unique()->values();
         $stocks = BranchStock::where('branch_id', $employee->branch_id)

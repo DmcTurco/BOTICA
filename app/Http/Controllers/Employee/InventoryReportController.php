@@ -42,7 +42,7 @@ class InventoryReportController extends Controller
             ->where('status', 1);
 
         if ($request->filled('buscar')) {
-            $query->where(fn ($q) => $q->where('name', 'like', '%' . $request->buscar . '%')->orWhere('code', 'like', '%' . $request->buscar . '%'));
+            $query->where(fn ($q) => $q->where('name', 'like', '%' . $request->buscar . '%')->orWhere('code', 'like', '%' . $request->buscar . '%')->orWhere('barcode', 'like', '%' . $request->buscar . '%'));
         }
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);

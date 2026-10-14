@@ -15,11 +15,20 @@ class Unit extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
+        'company_id',
         'name',
         'abbreviation',
         'sunat_code',
         'status'
     ];
+
+    /**
+     * Unidades de una compañía.
+     */
+    public function scopeDeCompania($query, int $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
 
     public function productos()
     {

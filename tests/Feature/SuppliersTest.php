@@ -180,12 +180,24 @@ it('numera las órdenes en orden y permite anular las pendientes', function () {
 
 it('reposición arma una orden de compra con las cantidades sugeridas', function () {
     loginEmployee();
+    makeSupplier();
     stockProduct('BAJO', 2, 1, 10);   // sugerido: 2 × 10 − 2 = 18
 
     $this->get(route('employee.replenishment.index'))->assertOk()->assertSee('Orden de compra con los marcados');
 
     $form = $this->get(route('employee.purchase-orders.create', ['products' => ['BAJO' => 18]]))->assertOk();
     expect($form->viewData('initial'))->toBe([['product_code' => 'BAJO', 'quantity' => 18.0]]);
+});
+
+it('la orden de compra avisa qué falta registrar si no hay proveedores ni productos', function () {
+    loginEmployee();
+
+    $this->get(route('employee.purchase-orders.create'))
+        ->assertOk()
+        ->assertViewIs('employee.pages.requirements')
+        ->assertSee('faltan datos previos')
+        ->assertSee('Registrar proveedor')
+        ->assertSee('Registrar producto');
 });
 
 it('proveedores y cuentas por pagar exigen su privilegio', function () {
@@ -212,7 +224,7 @@ it('crea y edita proveedores desde una vista propia', function () {
 
 it('crea y edita unidades desde una vista propia', function () {
     loginEmployee();
-    $unit = App\Models\Unit::create(['name' => 'Blíster', 'abbreviation' => 'BL', 'status' => 1]);
+    $unit = App\Models\Unit::create(['company_id' => 1, 'name' => 'Blíster', 'abbreviation' => 'BL', 'status' => 1]);
 
     $this->get(route('employee.units.create'))->assertOk()->assertSee('Nueva Unidad');
     $this->get(route('employee.units.edit', $unit))->assertOk()->assertSee('Blíster');

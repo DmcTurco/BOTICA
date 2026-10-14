@@ -15,6 +15,8 @@
         </main>
     </div>
 
+    {{-- Modal de avisos (éxito / errores de validación), igual que en los otros paneles --}}
+    @include('partials/alert-modal')
     @include('admin/inc/foot')
 
     <script>

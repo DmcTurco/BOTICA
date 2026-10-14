@@ -10,11 +10,11 @@ use Illuminate\Http\Request;
 class UnitController extends Controller
 {
     /**
-     * Lista las unidades de medida con la cantidad de productos que las usan.
+     * Lista las unidades de medida de la compañía con la cantidad de productos que las usan.
      */
     public function index(Request $request)
     {
-        $query = Unit::withCount(['productos', 'presentaciones']);
+        $query = Unit::deCompania($this->companyId())->withCount(['productos', 'presentaciones']);
 
         if ($request->filled('buscar')) {
             $query->where(fn ($q) => $q->where('name', 'like', '%' . $request->buscar . '%')
@@ -42,17 +42,19 @@ class UnitController extends Controller
      */
     public function edit(Unit $unit)
     {
+        $this->authorizeUnit($unit);
+
         $unit->loadCount(['productos', 'presentaciones']);
 
         return view('employee.pages.units.form', ['unit' => $unit, 'sunatCodes' => UnitRequest::SUNAT_CODES]);
     }
 
     /**
-     * Crea una unidad de medida.
+     * Crea una unidad de medida de la compañía.
      */
     public function store(UnitRequest $request)
     {
-        Unit::create($request->validated());
+        Unit::create($request->validated() + ['company_id' => $this->companyId()]);
 
         return redirect()->route('employee.units.index')->with('success', 'Unidad creada correctamente.');
     }
@@ -62,6 +64,8 @@ class UnitController extends Controller
      */
     public function update(UnitRequest $request, Unit $unit)
     {
+        $this->authorizeUnit($unit);
+
         $unit->update($request->validated());
 
         return redirect()->route('employee.units.index')->with('success', 'Unidad actualizada correctamente.');
@@ -72,6 +76,8 @@ class UnitController extends Controller
      */
     public function destroy(Unit $unit)
     {
+        $this->authorizeUnit($unit);
+
         if ($unit->productos()->exists() || $unit->presentaciones()->exists()) {
             return redirect()->route('employee.units.index')
                 ->with('error', 'No se puede eliminar «' . $unit->name . '»: hay productos o presentaciones que la usan. Puedes desactivarla.');
@@ -80,5 +86,21 @@ class UnitController extends Controller
         $unit->delete();
 
         return redirect()->route('employee.units.index')->with('success', 'Unidad eliminada correctamente.');
+    }
+
+    /**
+     * Compañía del empleado autenticado.
+     */
+    private function companyId(): int
+    {
+        return auth()->guard('employee')->user()->company_id;
+    }
+
+    /**
+     * Solo se gestionan las unidades de la propia compañía.
+     */
+    private function authorizeUnit(Unit $unit): void
+    {
+        abort_if($unit->company_id !== $this->companyId(), 403);
     }
 }

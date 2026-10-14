@@ -7,6 +7,15 @@
 @section('content-area')
 @php
     $editOrder = $editOrder ?? null;
+
+    // Comprobantes que la sede puede emitir (con serie activa); al editar se muestran todos
+    $voucherButtons = [
+        3 => ['label' => 'Nota de Venta', 'icon' => 'fa-file-lines'],
+        1 => ['label' => 'Boleta',        'icon' => 'fa-receipt'],
+        2 => ['label' => 'Factura',       'icon' => 'fa-file-invoice'],
+    ];
+    $voucherButtons = array_intersect_key($voucherButtons, array_flip($availableVouchers ?? array_keys($voucherButtons)));
+    $defaultVoucher = array_key_first($voucherButtons);
     $canDiscount = auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_APLICAR_DESCUENTO);
 
     // Ajustes de venta de la sede (Configuración): redondeo en efectivo y descuento por monto
@@ -99,7 +108,7 @@
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                         <input id="inputBusqueda" type="text"
                                class="w-full pl-8 pr-10 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                               placeholder="Buscar por código, nombre o principio activo...">
+                               placeholder="Escanea el código de barras o busca por nombre...">
                         <button id="btnLimpiarBusqueda"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors hidden">
                             <i class="fas fa-xmark text-xs"></i>
@@ -131,7 +140,8 @@
                             @forelse($products as $product)
                             <tr class="hover:bg-emerald-50/40 transition-colors cursor-default producto-row"
                                 data-code="{{ $product->code }}"
-                                data-search="{{ strtolower($product->name . ' ' . $product->code . ' ' . $product->active_ingredient) }}"
+                                data-barcode="{{ $product->barcode }}"
+                                data-search="{{ strtolower($product->name . ' ' . $product->code . ' ' . $product->barcode . ' ' . $product->active_ingredient) }}"
                                 data-stock="{{ $product->branchStocks->first()?->stock_actual ?? 0 }}"
                                 data-name="{{ $product->name }}"
                                 data-afectacion="{{ $product->igv_affectation }}"
@@ -265,7 +275,7 @@
 
                     {{-- Inputs ocultos para los valores seleccionados --}}
                     <input type="hidden" id="tipoPago" value="1">
-                    <input type="hidden" id="tipoComprobante" value="3">
+                    <input type="hidden" id="tipoComprobante" value="{{ $defaultVoucher }}">
                     <input type="hidden" id="tipoDocumentoId" value="">
 
                     {{-- ─ Tipo de Pago ──────────────────────────────── --}}
@@ -307,18 +317,12 @@
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Comprobante</p>
                         <div class="flex flex-col gap-1.5">
-                            <button class="btn-comprobante btn-comprobante-activo flex items-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all" data-value="3">
-                                <i class="fas fa-file-lines text-xs"></i>
-                                Nota de Venta
+                            @foreach($voucherButtons as $value => $voucher)
+                            <button class="btn-comprobante {{ $value === $defaultVoucher ? 'btn-comprobante-activo' : 'btn-comprobante-inactivo' }} flex items-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all" data-value="{{ $value }}">
+                                <i class="fas {{ $voucher['icon'] }} text-xs"></i>
+                                {{ $voucher['label'] }}
                             </button>
-                            <button class="btn-comprobante btn-comprobante-inactivo flex items-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all" data-value="1">
-                                <i class="fas fa-receipt text-xs"></i>
-                                Boleta
-                            </button>
-                            <button class="btn-comprobante btn-comprobante-inactivo flex items-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all" data-value="2">
-                                <i class="fas fa-file-invoice text-xs"></i>
-                                Factura
-                            </button>
+                            @endforeach
                         </div>
                     </div>
 
@@ -720,6 +724,27 @@ $('#inputBusqueda').on('input', function() {
     const term = $(this).val().trim().toLowerCase();
     $('#btnLimpiarBusqueda').toggleClass('hidden', !term);
     filtrarProductos();
+});
+
+// Lector de código de barras: escribe el código y envía Enter. Si coincide exacto con el
+// código de barras o el código interno de un producto, se abre directo para agregarlo
+$('#inputBusqueda').on('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+
+    const term = $(this).val().trim().toLowerCase();
+    if (!term) return;
+
+    const $row = $('.producto-row').filter(function() {
+        // attr y no data(): data() convierte "0012345" en el número 12345 y pierde los ceros
+        return ($(this).attr('data-barcode') || '').toLowerCase() === term
+            || ($(this).attr('data-code') || '').toLowerCase() === term;
+    }).first();
+
+    if ($row.length) {
+        $(this).val('').trigger('input');
+        $row.find('.btn-agregar').trigger('click');
+    }
 });
 
 $('#btnLimpiarBusqueda').on('click', function() {

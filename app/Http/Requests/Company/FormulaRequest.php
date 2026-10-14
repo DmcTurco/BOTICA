@@ -43,7 +43,7 @@ class FormulaRequest extends FormRequest
             'pharmaceutical_form' => 'nullable|string|max:50',
             'description'         => 'nullable|string|max:1000',
             'yield_quantity'      => 'required|numeric|min:0.01|max:99999999',
-            'yield_unit_id'       => 'nullable|exists:units,id',
+            'yield_unit_id'       => ['nullable', \Illuminate\Validation\Rule::exists('units', 'id')->where('company_id', $companyId)],
             'procedure'           => 'nullable|string|max:5000',
             'storage'             => 'nullable|string|max:255',
             'shelf_life_days'     => 'nullable|integer|min:1|max:3650',

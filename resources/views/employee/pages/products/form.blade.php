@@ -71,19 +71,32 @@
                     <div id="tab-general" class="tab-panel space-y-5">
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            {{-- Código interno: lo genera el sistema al guardar (P-000001) --}}
                             <div>
-                                <label for="codigo" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Código <span class="text-red-500">*</span>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Código</label>
+                                <div class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 font-mono {{ isset($products) ? 'text-slate-700' : 'text-slate-400' }}">
+                                    {{ $products->code ?? 'Automático al guardar' }}
+                                </div>
+                            </div>
+                            {{-- Código de barras de la caja: se escanea o se escribe; opcional --}}
+                            <div>
+                                <label for="codigo_barras" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                    Código de barras
                                 </label>
-                                <input type="text" id="codigo" name="codigo" required maxlength="20"
-                                    value="{{ old('codigo', $products->code ?? '') }}"
-                                    {{ isset($products) ? 'readonly' : '' }}
-                                    class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent {{ isset($products) ? 'bg-slate-50 text-slate-500' : '' }}"
-                                    placeholder="Ej: MED-001">
-                                @error('codigo')
+                                <div class="relative">
+                                    <i class="fas fa-barcode absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                                    <input type="text" id="codigo_barras" name="codigo_barras" maxlength="30"
+                                        value="{{ old('codigo_barras', $products->barcode ?? '') }}"
+                                        class="w-full pl-8 pr-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        placeholder="Escanea la caja o escríbelo">
+                                </div>
+                                @error('codigo_barras')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label for="categoria_id" class="block text-sm font-medium text-slate-700 mb-1.5">
                                     Categoría <span class="text-red-500">*</span>

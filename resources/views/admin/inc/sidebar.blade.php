@@ -24,16 +24,11 @@
             <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">Sistema</p>
         </div>
 
-        <a href="#"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-0.5 text-slate-600 hover:bg-slate-50 hover:text-slate-800">
+        <a href="{{ route('admin.companies.index') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-0.5
+                  {{ request()->routeIs('admin.companies.*') ? 'bg-violet-50 text-violet-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800' }}">
             <i class="fas fa-building w-4 text-center text-sm"></i>
             Empresas
-        </a>
-
-        <a href="#"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-0.5 text-slate-600 hover:bg-slate-50 hover:text-slate-800">
-            <i class="fas fa-users w-4 text-center text-sm"></i>
-            Usuarios
         </a>
     </nav>
 

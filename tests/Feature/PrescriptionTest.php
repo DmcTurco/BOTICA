@@ -76,7 +76,7 @@ it('marcar un producto como controlado lo deja también como que requiere receta
     loginEmployee();
     stockProduct('P1', 1);
     $category = App\Models\Category::create(['company_id' => 1, 'name' => 'Psicotrópicos', 'status' => 1]);
-    $unit     = App\Models\Unit::create(['name' => 'Tableta', 'abbreviation' => 'TAB', 'sunat_code' => 'NIU', 'status' => 1]);
+    $unit     = App\Models\Unit::create(['company_id' => 1, 'name' => 'Tableta', 'abbreviation' => 'TAB', 'sunat_code' => 'NIU', 'status' => 1]);
 
     $this->put(route('employee.products.update', 'P1'), [
         'nombre' => 'Clonazepam 2mg', 'categoria_id' => $category->id, 'unidad_medida_id' => $unit->id, 'afectacion_igv' => '20',

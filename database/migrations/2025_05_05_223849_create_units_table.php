@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('units', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->index(); // cada compañía tiene sus propias unidades
             $table->string('name', 50); // Unidad, Blister, Caja, Frasco, etc.
             $table->string('abbreviation', 10);
             $table->string('sunat_code', 3)->default('NIU'); // catálogo SUNAT 03: NIU unidad, BX caja, BO frasco...

@@ -33,7 +33,8 @@ class ReplenishmentController extends Controller
                 }
                 if ($request->filled('buscar')) {
                     $q->where(fn ($w) => $w->where('name', 'like', '%' . $request->buscar . '%')
-                        ->orWhere('code', 'like', '%' . $request->buscar . '%'));
+                        ->orWhere('code', 'like', '%' . $request->buscar . '%')
+                        ->orWhere('barcode', 'like', '%' . $request->buscar . '%'));
                 }
             });
 

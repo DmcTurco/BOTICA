@@ -116,8 +116,10 @@ function openRegister(Employee $employee, float $opening = 100, float $cashSale 
 /** Deja lista una sede para vender: serie de nota de venta, caja abierta y un producto gravado de S/ 10 */
 function posSetup(\App\Models\Employee $employee): void
 {
-    // Correlativos globales (cliente público) y tipos de documento
-    test()->seed([Database\Seeders\DocumentSeriesSeeder::class, Database\Seeders\DocumentTypeSeeder::class]);
+    // Correlativos globales (cliente público) y tipos de documento. Solo la serie NV01 en la sede
+    // (el DocumentSeriesSeeder también crearía B001/F001... de la sede)
+    \App\Models\DocumentSeries::crearSeriesGlobales();
+    test()->seed(Database\Seeders\DocumentTypeSeeder::class);
     \App\Models\DocumentSeries::create([
         'company_id' => 1, 'branch_id' => $employee->branch_id, 'type_code' => \App\Models\DocumentSeries::NOTA_VENTA,
         'name' => 'Nota de Venta', 'series' => 'NV01', 'current_number' => 0, 'digits' => 8, 'active' => true,

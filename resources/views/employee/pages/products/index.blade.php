@@ -30,7 +30,7 @@
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     <input type="text" name="buscar" value="{{ request('buscar') }}"
                            class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                           placeholder="Código, nombre o principio activo...">
+                           placeholder="Código, código de barras, nombre o principio activo...">
                 </div>
                 <select data-search name="categoria"
                         class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
@@ -107,7 +107,12 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($products as $producto)
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-5 py-3 text-slate-500 text-xs font-mono">{{ $producto->code }}</td>
+                        <td class="px-5 py-3 text-slate-500 text-xs font-mono">
+                            {{ $producto->code }}
+                            @if($producto->barcode)
+                            <span class="block text-[10px] text-slate-400"><i class="fas fa-barcode"></i> {{ $producto->barcode }}</span>
+                            @endif
+                        </td>
                         <td class="px-5 py-3">
                             <div>
                                 <p class="font-medium text-slate-800">{{ $producto->name }}</p>

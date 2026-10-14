@@ -11,8 +11,9 @@ class UnitSeeder extends Seeder
     {
         $now = now();
 
-        DB::table('units')->insert([
-            ['name' => 'Unidad',    'abbreviation' => 'UND',  'status' => 1, 'created_at' => $now, 'updated_at' => $now],
+        // Las unidades son de cada compañía: las de ejemplo pertenecen a la compañía seed (id = 1)
+        DB::table('units')->insert(array_map(fn ($unit) => ['company_id' => 1] + $unit, [
+            ['name' => 'Unidad',   'abbreviation' => 'UND',  'status' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Tableta',   'abbreviation' => 'TAB',  'status' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Cápsula',   'abbreviation' => 'CAP',  'status' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Blíster',   'abbreviation' => 'BLI',  'status' => 1, 'created_at' => $now, 'updated_at' => $now],
@@ -24,7 +25,7 @@ class UnitSeeder extends Seeder
             ['name' => 'Tubo',      'abbreviation' => 'TUB',  'status' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Mililitro', 'abbreviation' => 'ML',   'status' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Gramo',     'abbreviation' => 'GR',   'status' => 1, 'created_at' => $now, 'updated_at' => $now],
-        ]);
+        ]));
 
         // Código SUNAT de la unidad de medida (catálogo 03); el resto usa NIU (unidad)
         foreach (['CJA' => 'BX', 'FRC' => 'BO', 'TUB' => 'TU', 'ML' => 'MLT', 'GR' => 'GRM'] as $abbreviation => $code) {

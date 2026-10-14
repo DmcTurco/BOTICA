@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Company\ProductRequest;
 use App\Models\BranchStock;
 use App\Models\Category;
+use App\Models\DocumentSeries;
 use App\Models\Laboratory;
 use App\Models\Presentation;
 use App\Models\Product;
 use App\Models\Unit;
+use App\Services\Requirements;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -32,6 +34,7 @@ class ProductController extends Controller
         if ($request->filled('buscar')) {
             $query->where(function ($q) use ($request) {
                 $q->where('code', 'like', '%' . $request->buscar . '%')
+                  ->orWhere('barcode', 'like', '%' . $request->buscar . '%')
                   ->orWhere('name', 'like', '%' . $request->buscar . '%')
                   ->orWhere('active_ingredient', 'like', '%' . $request->buscar . '%');
             });
@@ -61,7 +64,16 @@ class ProductController extends Controller
         $employee     = auth()->guard('employee')->user();
         $categories   = Category::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get();
         $laboratories = Laboratory::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get();
-        $units        = Unit::where('status', 1)->orderBy('name')->get();
+        $units        = Unit::deCompania($employee->company_id)->where('status', 1)->orderBy('name')->get();
+
+        // Categoría y unidad son obligatorias en el producto: sin ellas no se puede guardar
+        $requirements = Requirements::make('Nuevo producto', 'employee.products.index')
+            ->need($categories->isNotEmpty(), 'Categorías', 'Cada producto pertenece a una categoría (analgésicos, antibióticos...).', 'employee.categories.create', 'Registrar categoría')
+            ->need($units->isNotEmpty(), 'Unidades de medida', 'Cada producto se vende en una unidad (tableta, frasco, caja...).', 'employee.units.create', 'Registrar unidad');
+
+        if ($requirements->blocked()) {
+            return $requirements->view();
+        }
 
         return view('employee.pages.products.form', compact('categories', 'laboratories', 'units'));
     }
@@ -76,7 +88,9 @@ class ProductController extends Controller
             $producto = new Product();
             $producto->company_id             = $employee->company_id;
             $producto->employee_id            = $employee->id;
-            $producto->code                   = $request->codigo;
+            // Código interno automático (único en todo el sistema); el de barras lo ingresa el usuario
+            $producto->code                   = DocumentSeries::siguiente(DocumentSeries::PRODUCTO);
+            $producto->barcode                = $request->codigo_barras ?: null;
             $producto->name                   = $request->nombre;
             $producto->description            = $request->descripcion;
             $producto->category_id            = $request->categoria_id;
@@ -122,7 +136,7 @@ class ProductController extends Controller
             DB::commit();
 
             return redirect()->route('employee.products.index')
-                ->with('success', 'Producto creado correctamente.');
+                ->with('success', "Producto creado correctamente con el código {$producto->code}.");
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear producto: ' . $e->getMessage());
@@ -140,7 +154,7 @@ class ProductController extends Controller
 
         $categories   = Category::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get();
         $laboratories = Laboratory::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get();
-        $units        = Unit::where('status', 1)->orderBy('name')->get();
+        $units        = Unit::deCompania($employee->company_id)->where('status', 1)->orderBy('name')->get();
 
         // Cargar presentaciones propias del producto y stock de la sede del empleado
         $products = $product->load([
@@ -160,6 +174,7 @@ class ProductController extends Controller
         DB::beginTransaction();
 
         try {
+            $product->barcode                = $request->codigo_barras ?: null;
             $product->name                   = $request->nombre;
             $product->description            = $request->descripcion;
             $product->category_id            = $request->categoria_id;

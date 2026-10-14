@@ -17,6 +17,9 @@ Route::prefix(MyApp::ADMINS_SUBDIR)->middleware('auth:admin')->name('admin.')->g
     })->withoutMiddleware('auth:admin');
 
     Route::get('/home', [Admin\AdminController::class, 'index'])->name('home');
+
+    // Compañías (boticas clientes): el admin las registra con su primera sede
+    Route::resource('companies', Admin\CompanyController::class)->except(['show', 'destroy']);
 });
 
 Route::prefix(MyApp::COMPANY_SUBDIR)->middleware('auth:company')->name('company.')->group(function () {

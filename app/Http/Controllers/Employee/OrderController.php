@@ -16,6 +16,7 @@ use App\Jobs\SendOrderToSunat;
 use App\Models\CompanySunatSetting;
 use App\Services\Sunat\Contracts\SunatGateway;
 use App\Services\BatchService;
+use App\Services\Requirements;
 use App\Services\Sunat\TaxCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -500,6 +501,23 @@ class OrderController extends Controller
 
         $products = $this->withSellableStock($products, $branchId);
 
+        // Comprobantes con serie activa en la sede (los demás no se muestran)
+        $availableVouchers = $this->availableVouchers($branchId);
+
+        $requirements = Requirements::make('Ventas', 'employee.home')
+            ->need(Product::where('company_id', $employee->company_id)->exists(), 'Productos', 'Registra los productos que vas a vender.', 'employee.products.create', 'Registrar producto')
+            ->need($products->isNotEmpty(), 'Stock en esta sede', 'Ningún producto tiene stock en tu sede. Ingrésalo registrando una compra.', 'employee.purchases.create', 'Registrar compra')
+            ->need(!empty($availableVouchers), 'Series de comprobantes de la sede', 'La empresa debe generarlas en Empresa → Sedes → "Generar series".');
+
+        if ($requirements->blocked()) {
+            return $requirements->view();
+        }
+
+        // Tipos de documento SUNAT: datos fijos del sistema, se crean si no se corrió el seeder
+        if (!DocumentType::exists()) {
+            DocumentType::crearTiposBase();
+        }
+
         $documentTypes = DocumentType::activos()->get();
 
         // Configuración de impresión de la sede (para el modal post-venta)
@@ -512,7 +530,26 @@ class OrderController extends Controller
         // Cliente predeterminado del POS (ventas al público general)
         $publicClient = Client::publicFor($employee->company_id);
 
-        return view('employee.pages.orders.index', compact('products', 'documentTypes', 'printConfig', 'historicalCaja', 'publicClient'));
+        return view('employee.pages.orders.index', compact('products', 'documentTypes', 'printConfig', 'historicalCaja', 'publicClient', 'availableVouchers'));
+    }
+
+    /**
+     * Tipos de comprobante (voucher_type de orders) que la sede puede emitir:
+     * los que tienen una serie activa. Ej.: [3, 1] si falta la serie de factura.
+     *
+     * @return array<int, int>
+     */
+    private function availableVouchers(int $branchId): array
+    {
+        $activeTypes = DocumentSeries::where('branch_id', $branchId)
+            ->where('active', true)
+            ->pluck('type_code')
+            ->all();
+
+        return array_keys(array_filter(
+            DocumentSeries::VOUCHER_TYPE_MAP,
+            fn ($typeCode) => in_array($typeCode, $activeTypes, true)
+        ));
     }
 
     /**

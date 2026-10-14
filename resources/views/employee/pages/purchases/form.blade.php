@@ -147,7 +147,7 @@
                                         ])->values();
                                     @endphp
                                     <tr class="hover:bg-emerald-50 transition-colors cursor-pointer fila-producto"
-                                        data-code="{{ $p->code }}" data-name="{{ $p->name }}"
+                                        data-code="{{ $p->code }}" data-barcode="{{ $p->barcode }}" data-name="{{ $p->name }}"
                                         data-unit="{{ $p->unit?->name ?? 'Unidad' }}"
                                         data-presentations="{{ json_encode($presData) }}"
                                         data-cost="{{ $p->purchase_price ?? 0 }}">
@@ -365,7 +365,7 @@
             const q = this.value.toLowerCase().trim();
             let visible = 0;
             document.querySelectorAll('.fila-producto').forEach(fila => {
-                const texto = fila.dataset.name.toLowerCase() + fila.dataset.code.toLowerCase();
+                const texto = fila.dataset.name.toLowerCase() + ' ' + fila.dataset.code.toLowerCase() + ' ' + (fila.dataset.barcode || '').toLowerCase();
                 const mostrar = texto.includes(q);
                 fila.style.display = mostrar ? '' : 'none';
                 if (mostrar) visible++;

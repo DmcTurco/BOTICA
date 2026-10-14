@@ -18,7 +18,7 @@
                     <i class="fas fa-building text-violet-700 text-sm"></i>
                 </div>
             </div>
-            <p class="text-2xl font-bold text-slate-800">0</p>
+            <p class="text-2xl font-bold text-slate-800">{{ $stats['companies'] }}</p>
             <p class="text-xs text-slate-500 mt-1.5">Registradas en el sistema</p>
         </div>
 
@@ -29,7 +29,7 @@
                     <i class="fas fa-users text-indigo-600 text-sm"></i>
                 </div>
             </div>
-            <p class="text-2xl font-bold text-slate-800">0</p>
+            <p class="text-2xl font-bold text-slate-800">{{ $stats['employees'] }}</p>
             <p class="text-xs text-slate-500 mt-1.5">En todas las empresas</p>
         </div>
 
@@ -40,8 +40,8 @@
                     <i class="fas fa-pills text-emerald-600 text-sm"></i>
                 </div>
             </div>
-            <p class="text-2xl font-bold text-slate-800">0</p>
-            <p class="text-xs text-slate-500 mt-1.5">En inventario global</p>
+            <p class="text-2xl font-bold text-slate-800">{{ $stats['products'] }}</p>
+            <p class="text-xs text-slate-500 mt-1.5">En todas las empresas</p>
         </div>
 
         <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
@@ -51,7 +51,7 @@
                     <i class="fas fa-chart-bar text-amber-500 text-sm"></i>
                 </div>
             </div>
-            <p class="text-2xl font-bold text-slate-800">S/. 0.00</p>
+            <p class="text-2xl font-bold text-slate-800">S/ {{ number_format($stats['salesMonth'], 2) }}</p>
             <p class="text-xs text-slate-500 mt-1.5">Total del mes actual</p>
         </div>
     </div>
@@ -59,19 +59,19 @@
     <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
         <h2 class="text-sm font-semibold text-slate-800 mb-4">Acciones rápidas</h2>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <a href="#"
+            <a href="{{ route('admin.companies.index') }}"
                class="flex flex-col items-center gap-2 p-4 rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50 transition-colors group">
                 <div class="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center group-hover:bg-violet-200 transition-colors">
                     <i class="fas fa-building text-violet-700"></i>
                 </div>
                 <span class="text-xs font-medium text-slate-600 group-hover:text-violet-700 text-center">Gestionar Empresas</span>
             </a>
-            <a href="#"
+            <a href="{{ route('admin.companies.create') }}"
                class="flex flex-col items-center gap-2 p-4 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors group">
                 <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                    <i class="fas fa-users text-indigo-600"></i>
+                    <i class="fas fa-plus text-indigo-600"></i>
                 </div>
-                <span class="text-xs font-medium text-slate-600 group-hover:text-indigo-600 text-center">Gestionar Usuarios</span>
+                <span class="text-xs font-medium text-slate-600 group-hover:text-indigo-600 text-center">Nueva Empresa</span>
             </a>
         </div>
     </div>

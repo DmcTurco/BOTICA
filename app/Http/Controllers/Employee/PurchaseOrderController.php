@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
+use App\Services\Requirements;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -52,8 +53,19 @@ class PurchaseOrderController extends Controller
             ->map(fn ($qty, $code) => ['product_code' => (string) $code, 'quantity' => (float) $qty])
             ->values()->all();
 
+        $suppliers = Supplier::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get(['id', 'name']);
+
+        // La orden de compra exige proveedor y al menos un producto
+        $requirements = Requirements::make('Nueva orden de compra', 'employee.purchase-orders.index')
+            ->need($suppliers->isNotEmpty(), 'Proveedores', 'La orden de compra se emite a un proveedor.', 'employee.suppliers.create', 'Registrar proveedor')
+            ->need($products->isNotEmpty(), 'Productos', 'Registra los productos que vas a pedir.', 'employee.products.create', 'Registrar producto');
+
+        if ($requirements->blocked()) {
+            return $requirements->view();
+        }
+
         return view('employee.pages.purchase-orders.form', [
-            'suppliers' => Supplier::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get(['id', 'name']),
+            'suppliers' => $suppliers,
             'products'  => $products->all(),
             'initial'   => old('items', $suggested),
             'costs'     => $products->pluck('cost', 'code'),

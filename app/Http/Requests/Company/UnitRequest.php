@@ -38,11 +38,13 @@ class UnitRequest extends FormRequest
      */
     public function rules(): array
     {
-        $unit = $this->route('unit');
+        $unit      = $this->route('unit');
+        $companyId = auth()->guard('employee')->user()?->company_id;
 
+        // Únicos dentro de la compañía: otra compañía puede tener su propia "Tableta"
         return [
-            'name'         => ['required', 'string', 'max:50', Rule::unique('units', 'name')->ignore($unit?->id)->whereNull('deleted_at')],
-            'abbreviation' => ['required', 'string', 'max:10', Rule::unique('units', 'abbreviation')->ignore($unit?->id)->whereNull('deleted_at')],
+            'name'         => ['required', 'string', 'max:50', Rule::unique('units', 'name')->where('company_id', $companyId)->ignore($unit?->id)->whereNull('deleted_at')],
+            'abbreviation' => ['required', 'string', 'max:10', Rule::unique('units', 'abbreviation')->where('company_id', $companyId)->ignore($unit?->id)->whereNull('deleted_at')],
             'sunat_code'   => ['required', Rule::in(array_keys(self::SUNAT_CODES))],
             'status'       => 'required|in:0,1',
         ];
