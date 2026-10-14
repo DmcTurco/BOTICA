@@ -482,33 +482,53 @@
 
 {{-- ── Modal: cobro en efectivo (con cuánto paga y vuelto) ───── --}}
 <div id="modalCobro" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm">
-        <div class="flex items-center gap-3 p-5 border-b border-slate-100">
-            <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center shrink-0"><i class="fas fa-money-bill-wave text-emerald-600 text-sm"></i></div>
-            <p class="text-sm font-bold text-slate-800">Cobro en efectivo</p>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        {{-- Cabecera con el total a cobrar --}}
+        <div class="relative text-center px-5 pt-5 pb-6" style="background:linear-gradient(135deg,#059669,#10b981)">
+            <button type="button" onclick="cerrarModalCobro()" class="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-lg text-white hover:bg-white/20">
+                <i class="fas fa-xmark text-sm"></i>
+            </button>
+            <div class="w-11 h-11 mx-auto rounded-full flex items-center justify-center" style="background:rgba(255,255,255,.2)">
+                <i class="fas fa-money-bill-wave text-white"></i>
+            </div>
+            <p class="text-[10px] font-bold uppercase tracking-widest mt-3" style="color:rgba(255,255,255,.8)">Total a cobrar</p>
+            <p id="cobroTotal" class="text-4xl font-bold text-white mt-0.5">S/ 0.00</p>
         </div>
+
         <div class="p-5 space-y-4">
-            <div class="text-center">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total a cobrar</p>
-                <p id="cobroTotal" class="text-3xl font-bold text-slate-800 mt-0.5">S/ 0.00</p>
-            </div>
             <div>
-                <label for="cobroPagaCon" class="block text-xs font-medium text-slate-600 mb-1">Paga con (S/)</label>
-                <input type="number" id="cobroPagaCon" min="0" step="0.10" inputmode="decimal" autocomplete="off"
-                       class="w-full px-3 py-2.5 text-lg font-semibold text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                       placeholder="0.00">
-                <div id="cobroRapidos" class="flex flex-wrap justify-center gap-1.5 mt-2"></div>
+                <label for="cobroPagaCon" class="block text-xs font-medium text-slate-600 mb-1.5">Paga con</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-slate-400">S/</span>
+                    <input type="number" id="cobroPagaCon" min="0" step="0.10" inputmode="decimal" autocomplete="off"
+                           class="w-full pl-11 pr-3 py-3 text-2xl font-bold text-center text-slate-800 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                           placeholder="0.00">
+                </div>
+                <div id="cobroRapidos" class="flex flex-wrap justify-center gap-1.5 mt-2.5"></div>
             </div>
-            <div class="text-center bg-slate-50 rounded-xl py-3">
-                <p id="cobroVueltoLbl" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vuelto</p>
-                <p id="cobroVuelto" class="text-3xl font-bold text-slate-300 mt-0.5">S/ 0.00</p>
+
+            {{-- Tarjeta de vuelto: cambia de color según el estado (vacío / vuelto / falta) --}}
+            <div id="cobroVueltoBox" class="rounded-2xl py-4 px-4 flex items-center gap-4"
+                 style="background:#f8fafc;border:2px dashed #cbd5e1;transition:all .2s">
+                <div id="cobroVueltoIcon" class="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                     style="background:#e2e8f0;color:#94a3b8;transition:all .2s">
+                    <i class="fas fa-coins text-lg"></i>
+                </div>
+                <div class="flex-1 text-left">
+                    <p id="cobroVueltoLbl" class="text-[10px] font-bold uppercase tracking-widest" style="color:#94a3b8">Vuelto</p>
+                    <p id="cobroVuelto" class="text-3xl font-bold leading-tight" style="color:#cbd5e1">S/ 0.00</p>
+                </div>
             </div>
+
             <p id="cobroError" class="hidden text-xs text-red-600 text-center"></p>
             <p class="text-[11px] text-slate-400 text-center">Puedes dejar «Paga con» vacío si no quieres registrar el monto.</p>
         </div>
-        <div class="flex justify-end gap-3 px-5 py-4 border-t border-slate-100">
-            <button type="button" onclick="cerrarModalCobro()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg">Cancelar</button>
-            <button type="button" id="btnConfirmarCobro" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">Confirmar venta</button>
+
+        <div class="flex justify-end gap-3 px-5 py-4 border-t border-slate-100 bg-slate-50">
+            <button type="button" onclick="cerrarModalCobro()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg">Cancelar</button>
+            <button type="button" id="btnConfirmarCobro" class="px-5 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm">
+                <i class="fas fa-check mr-1"></i> Confirmar venta
+            </button>
         </div>
     </div>
 </div>
@@ -827,10 +847,6 @@ $('#modalBtnInc').on('click', function() {
     if (v < max) $('#modalCantidad').val(v + 1);
 });
 
-$('#modalCantidad').on('keydown', function(e) {
-    if (e.key === 'Enter') $('#modalBtnAgregar').trigger('click');
-});
-
 $('#modalBtnAgregar').on('click', function() {
     if (!modalProducto) return;
     const { code, name, stock, afectacion, receta } = modalProducto;
@@ -1051,24 +1067,28 @@ function cerrarModalCobro() {
     document.getElementById('modalCobro').style.setProperty('display', 'none', 'important');
 }
 
-// Vuelto = efectivo recibido − lo que se cobra
+// Vuelto = efectivo recibido − lo que se cobra (la tarjeta cambia de estilo: vacío / vuelto / falta)
 function actualizarVuelto() {
     const recibido = parseFloat($('#cobroPagaCon').val());
-    const $vuelto  = $('#cobroVuelto');
+    const estados = {
+        vacio:  { box: 'background:#f8fafc;border:2px dashed #cbd5e1', icon: 'background:#e2e8f0;color:#94a3b8', lbl: '#94a3b8', num: '#cbd5e1', ico: 'fa-coins' },
+        vuelto: { box: 'background:#ecfdf5;border:2px solid #6ee7b7',  icon: 'background:#10b981;color:#fff',    lbl: '#059669', num: '#047857', ico: 'fa-hand-holding-dollar' },
+        falta:  { box: 'background:#fef2f2;border:2px solid #fca5a5',  icon: 'background:#ef4444;color:#fff',    lbl: '#dc2626', num: '#dc2626', ico: 'fa-triangle-exclamation' },
+    };
 
-    if (isNaN(recibido) || recibido <= 0) {
-        $vuelto.removeClass('text-emerald-600 text-red-500').addClass('text-slate-300').text('S/ 0.00');
-        $('#cobroVueltoLbl').text('Vuelto');
-        return;
+    let clave = 'vacio', texto = 'Vuelto', monto = 0;
+    if (!isNaN(recibido) && recibido > 0) {
+        const vuelto = redondear(recibido - totalACobrar);
+        clave = vuelto < 0 ? 'falta' : 'vuelto';
+        texto = vuelto < 0 ? 'Falta' : 'Vuelto';
+        monto = Math.abs(vuelto);
     }
 
-    const vuelto = redondear(recibido - totalACobrar);
-    const falta  = vuelto < 0;
-
-    $('#cobroVueltoLbl').text(falta ? 'Falta' : 'Vuelto');
-    $vuelto.removeClass('text-slate-300 text-emerald-600 text-red-500')
-           .addClass(falta ? 'text-red-500' : 'text-emerald-600')
-           .text('S/ ' + Math.abs(vuelto).toFixed(2));
+    const e = estados[clave];
+    $('#cobroVueltoBox').attr('style', e.box + ';transition:all .2s');
+    $('#cobroVueltoIcon').attr('style', e.icon + ';transition:all .2s').find('i').attr('class', 'fas ' + e.ico + ' text-lg');
+    $('#cobroVueltoLbl').text(texto).css('color', e.lbl);
+    $('#cobroVuelto').css('color', e.num).text('S/ ' + monto.toFixed(2));
 }
 
 $('#cobroPagaCon').on('input', actualizarVuelto);
@@ -1091,7 +1111,6 @@ function confirmarCobro() {
     $('#btnTerminarVenta').trigger('click');
 }
 $('#btnConfirmarCobro').on('click', confirmarCobro);
-$('#cobroPagaCon').on('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); confirmarCobro(); } });
 $('#modalCobro').on('keydown', function (e) { if (e.key === 'Escape') cerrarModalCobro(); });
 
 function actualizarContadorCarrito() {

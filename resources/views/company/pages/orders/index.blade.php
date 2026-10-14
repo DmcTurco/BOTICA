@@ -584,10 +584,6 @@ $('#modalBtnInc').on('click', function() {
     if (v < max) $('#modalCantidad').val(v + 1);
 });
 
-$('#modalCantidad').on('keydown', function(e) {
-    if (e.key === 'Enter') $('#modalBtnAgregar').trigger('click');
-});
-
 $('#modalBtnAgregar').on('click', function() {
     if (!modalProducto) return;
     const { code, name, stock } = modalProducto;

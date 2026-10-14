@@ -30,7 +30,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.20, 'unit_sale_price'        => 0.50,
                 'package_purchase_price' => 1.50, 'package_sale_price'     => 4.00, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'A-01', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -43,7 +43,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.30, 'unit_sale_price'        => 0.70,
                 'package_purchase_price' => 2.50, 'package_sale_price'     => 6.00, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'A-02', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -56,7 +56,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.50, 'unit_sale_price'        => 1.20,
                 'package_purchase_price' => 4.00, 'package_sale_price'     => 10.00, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'A-03', 'status' => 1, 'employee_id' => 1,
             ],
             // Antibióticos
@@ -70,7 +70,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Cápsula'),
                 'purchase_price'         => 0.40, 'unit_sale_price'        => 0.90,
                 'package_purchase_price' => 3.50, 'package_sale_price'     => 7.50, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => true,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'B-01', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -83,7 +83,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 1.20, 'unit_sale_price'        => 2.80,
                 'package_purchase_price' => 5.50, 'package_sale_price'     => 12.00, 'units_per_package' => 6,
-                'taxed_product' => false, 'requires_recipe' => true,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'B-02', 'status' => 1, 'employee_id' => 1,
             ],
             // Antihipertensivos
@@ -97,7 +97,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.25, 'unit_sale_price'        => 0.60,
                 'package_purchase_price' => 2.00, 'package_sale_price'     => 5.50, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => true,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'C-01', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -110,7 +110,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.15, 'unit_sale_price'        => 0.40,
                 'package_purchase_price' => 1.20, 'package_sale_price'     => 3.50, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => true,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'C-02', 'status' => 1, 'employee_id' => 1,
             ],
             // Digestivos
@@ -124,7 +124,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Cápsula'),
                 'purchase_price'         => 0.30, 'unit_sale_price'        => 0.70,
                 'package_purchase_price' => 2.50, 'package_sale_price'     => 6.00, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'D-01', 'status' => 1, 'employee_id' => 1,
             ],
             // Antidiabéticos
@@ -138,7 +138,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.20, 'unit_sale_price'        => 0.50,
                 'package_purchase_price' => 1.80, 'package_sale_price'     => 4.50, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => true,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'E-01', 'status' => 1, 'employee_id' => 1,
             ],
             // Vitaminas
@@ -152,7 +152,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.15, 'unit_sale_price'        => 0.35,
                 'package_purchase_price' => 1.20, 'package_sale_price'     => 3.00, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'F-01', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -165,7 +165,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Ampolla'),
                 'purchase_price'         => 1.50, 'unit_sale_price'        => 3.50,
                 'package_purchase_price' => null, 'package_sale_price'     => null, 'units_per_package' => null,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'F-02', 'status' => 1, 'employee_id' => 1,
             ],
             // Dermatológicos
@@ -193,7 +193,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.25, 'unit_sale_price'        => 0.60,
                 'package_purchase_price' => 2.00, 'package_sale_price'     => 5.50, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'H-01', 'status' => 1, 'employee_id' => 1,
             ],
             // Antiparasitarios
@@ -207,7 +207,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.60, 'unit_sale_price'        => 1.50,
                 'package_purchase_price' => null, 'package_sale_price'     => null, 'units_per_package' => null,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'I-01', 'status' => 1, 'employee_id' => 1,
             ],
             // Oftalmológicos
@@ -221,7 +221,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Frasco'),
                 'purchase_price'         => 3.50, 'unit_sale_price'        => 7.00,
                 'package_purchase_price' => null, 'package_sale_price'     => null, 'units_per_package' => null,
-                'taxed_product' => false, 'requires_recipe' => true,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'J-01', 'status' => 1, 'employee_id' => 1,
             ],
             // Alternativas con el mismo principio activo (marca vs genérico, otras dosis): sirven para probar «Ver alternativas»
@@ -235,7 +235,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.1, 'unit_sale_price'        => 0.25,
                 'package_purchase_price' => 0.8, 'package_sale_price'     => 2.0, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'A-04', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -248,7 +248,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.35, 'unit_sale_price'        => 0.8,
                 'package_purchase_price' => 3.0, 'package_sale_price'     => 7.0, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'A-05', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -261,7 +261,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.15, 'unit_sale_price'        => 0.35,
                 'package_purchase_price' => 1.2, 'package_sale_price'     => 3.0, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'A-06', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -274,7 +274,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.45, 'unit_sale_price'        => 1.0,
                 'package_purchase_price' => 3.8, 'package_sale_price'     => 9.0, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'A-07', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -287,7 +287,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.25, 'unit_sale_price'        => 0.6,
                 'package_purchase_price' => 2.0, 'package_sale_price'     => 5.0, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'A-08', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -300,7 +300,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Cápsula'),
                 'purchase_price'         => 0.25, 'unit_sale_price'        => 0.6,
                 'package_purchase_price' => 2.2, 'package_sale_price'     => 5.0, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => true,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'B-03', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -313,7 +313,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.8, 'unit_sale_price'        => 1.8,
                 'package_purchase_price' => 6.5, 'package_sale_price'     => 15.0, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => true,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'B-04', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -326,7 +326,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Cápsula'),
                 'purchase_price'         => 0.15, 'unit_sale_price'        => 0.4,
                 'package_purchase_price' => 1.3, 'package_sale_price'     => 3.5, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'D-02', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -339,7 +339,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Cápsula'),
                 'purchase_price'         => 0.55, 'unit_sale_price'        => 1.3,
                 'package_purchase_price' => 4.5, 'package_sale_price'     => 11.0, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'D-03', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -352,7 +352,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.1, 'unit_sale_price'        => 0.3,
                 'package_purchase_price' => 0.9, 'package_sale_price'     => 2.5, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => false,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'H-02', 'status' => 1, 'employee_id' => 1,
             ],
             [
@@ -365,7 +365,7 @@ class ProductSeeder extends Seeder
                 'unit_id'           => $unit('Tableta'),
                 'purchase_price'         => 0.3, 'unit_sale_price'        => 0.7,
                 'package_purchase_price' => 2.6, 'package_sale_price'     => 6.0, 'units_per_package' => 10,
-                'taxed_product' => false, 'requires_recipe' => true,
+                'taxed_product' => true, 'requires_recipe' => false,
                 'location' => 'E-02', 'status' => 1, 'employee_id' => 1,
             ],
             [

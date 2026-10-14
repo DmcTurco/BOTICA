@@ -85,6 +85,13 @@
     modal.addEventListener('click', function (e) { if (e.target === modal) closeAlertModal(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAlertModal(); });
 
+    // Enter dentro de un campo no envía ni confirma el formulario: solo se confirma con el botón
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        var t = e.target;
+        if (t && t.tagName === 'INPUT' && t.form && !/^(submit|button|reset)$/.test(t.type)) e.preventDefault();
+    });
+
     // La validación la hace el servidor (Form Request): se desactiva la validación nativa del navegador
     document.querySelectorAll('form').forEach(function (form) {
         form.setAttribute('novalidate', 'novalidate');
