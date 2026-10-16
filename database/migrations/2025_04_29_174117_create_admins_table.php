@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Hash;
+use App\Support\InitialUser;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -22,11 +22,9 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
         });
-        
-        DB::table('admins')->insert([
-            'name' => 'Admin Name',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('0000'),
+
+        // Admin del sistema. Correo y contraseña: INITIAL_ADMIN_* del .env
+        DB::table('admins')->insert(InitialUser::attributes('admin') + [
             'created_at' => now(),
             'updated_at' => now(),
         ]);

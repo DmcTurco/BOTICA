@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Hash;
+use App\Support\InitialUser;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -28,14 +28,11 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // role_id 2 = branch_admin (ver roles seeder)
-        DB::table('employees')->insert([
+        // role_id 2 = branch_admin (ver roles seeder). Correo y contraseña: INITIAL_EMPLOYEE_* del .env
+        DB::table('employees')->insert(InitialUser::attributes('employee') + [
             'company_id' => 1,
             'branch_id'  => 1,
             'role_id'    => 2,
-            'name'       => 'Employee Name',
-            'email'      => 'employee@example.com',
-            'password'   => Hash::make('0000'),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

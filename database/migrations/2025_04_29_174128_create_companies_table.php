@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use App\Support\InitialUser;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -33,10 +33,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::table('companies')->insert([
-            'name'       => 'Company Name',
-            'email'      => 'company@example.com',
-            'password'   => Hash::make('0000'),
+        // Compañía seed (id = 1). Correo y contraseña: INITIAL_COMPANY_* del .env
+        DB::table('companies')->insert(InitialUser::attributes('company') + [
             'created_at' => now(),
             'updated_at' => now(),
         ]);
