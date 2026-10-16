@@ -11,7 +11,9 @@ use App\Models\Laboratory;
 use App\Models\Presentation;
 use App\Models\Product;
 use App\Models\Unit;
+use App\Services\BatchService;
 use App\Services\Requirements;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -78,7 +80,10 @@ class ProductController extends Controller
         return view('employee.pages.products.form', compact('categories', 'laboratories', 'units'));
     }
 
-    public function store(ProductRequest $request)
+    /**
+     * Registra el producto con su stock de la sede (y el stock inicial, si se indicó) y sus presentaciones.
+     */
+    public function store(ProductRequest $request, StockService $stock, BatchService $batches)
     {
         $employee = auth()->guard('employee')->user();
 
@@ -99,9 +104,6 @@ class ProductController extends Controller
             $producto->unit_id                = $request->unidad_medida_id;
             $producto->purchase_price         = $request->precio_compra;
             $producto->unit_sale_price        = $request->precio_venta_unidad;
-            $producto->package_purchase_price = $request->precio_compra_paquete;
-            $producto->package_sale_price     = $request->precio_venta_paquete;
-            $producto->units_per_package      = $request->unidades_por_paquete;
             $producto->igv_affectation        = $request->afectacion_igv;
             $producto->taxed_product          = $request->afectacion_igv === Product::IGV_GRAVADO;
             $producto->requires_recipe        = $request->has('requiere_receta') || $request->filled('tipo_controlado') ? 1 : 0;
@@ -117,6 +119,23 @@ class ProductController extends Controller
                 'stock_minimum' => $request->stock_minimo ?? null,
                 'stock_maximum' => $request->stock_maximo ?? null,
             ]);
+
+            // Stock inicial (mercadería que ya está en el estante): entra al kardex como "Inventario inicial"
+            $initialStock = round((float) $request->stock_inicial, 2);
+            if ($initialStock > 0) {
+                $stock->move(
+                    $employee->company_id, $employee->branch_id, $producto->code, $initialStock,
+                    'initial', null, (float) $producto->purchase_price, 'Inventario inicial'
+                );
+
+                // Con lote o vencimiento se registra como lote (FEFO); si no, quedan como unidades sin lote
+                if ($request->filled('lote_inicial') || $request->filled('vencimiento_inicial')) {
+                    $batches->receive(
+                        $employee->company_id, $employee->branch_id, $producto->code, $initialStock,
+                        $request->lote_inicial, $request->vencimiento_inicial, (float) $producto->purchase_price, 'initial', null
+                    );
+                }
+            }
 
             if ($request->has('presentaciones') && is_array($request->presentaciones)) {
                 foreach ($request->presentaciones as $data) {
@@ -136,7 +155,8 @@ class ProductController extends Controller
             DB::commit();
 
             return redirect()->route('employee.products.index')
-                ->with('success', "Producto creado correctamente con el código {$producto->code}.");
+                ->with('success', "Producto creado correctamente con el código {$producto->code}."
+                    . ($initialStock > 0 ? " Stock inicial: {$initialStock}." : ''));
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear producto: ' . $e->getMessage());
@@ -183,9 +203,6 @@ class ProductController extends Controller
             $product->unit_id                = $request->unidad_medida_id;
             $product->purchase_price         = $request->precio_compra;
             $product->unit_sale_price        = $request->precio_venta_unidad;
-            $product->package_purchase_price = $request->precio_compra_paquete;
-            $product->package_sale_price     = $request->precio_venta_paquete;
-            $product->units_per_package      = $request->unidades_por_paquete;
             $product->igv_affectation        = $request->afectacion_igv;
             $product->taxed_product          = $request->afectacion_igv === Product::IGV_GRAVADO;
             $product->requires_recipe        = $request->has('requiere_receta') || $request->filled('tipo_controlado') ? 1 : 0;

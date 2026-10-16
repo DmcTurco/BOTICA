@@ -27,10 +27,7 @@ class Product extends Model
         'laboratory_id',
         'active_ingredient',
         'purchase_price',
-        'package_purchase_price',
-        'units_per_package',
         'unit_sale_price',
-        'package_sale_price',
         'unit_id',
         'taxed_product',
         'igv_affectation',
@@ -55,9 +52,7 @@ class Product extends Model
 
     protected $casts = [
         'purchase_price'         => 'decimal:2',
-        'package_purchase_price' => 'decimal:2',
         'unit_sale_price'        => 'decimal:2',
-        'package_sale_price'     => 'decimal:2',
         'taxed_product'          => 'boolean',
         'requires_recipe'        => 'boolean',
     ];
@@ -94,7 +89,7 @@ class Product extends Model
         return $this->belongsTo(Laboratory::class, 'laboratory_id');
     }
 
-    /** Unidad de medida principal */
+    /** Unidad base: la más pequeña que se vende (sus precios son purchase_price y unit_sale_price) */
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class, 'unit_id');
@@ -146,15 +141,6 @@ class Product extends Model
     public function getUtilidadUnidadAttribute(): float
     {
         return (float) ($this->unit_sale_price - $this->purchase_price);
-    }
-
-    /** Utilidad por paquete vendido */
-    public function getUtilidadPaqueteAttribute(): ?float
-    {
-        if ($this->package_sale_price && $this->package_purchase_price) {
-            return (float) ($this->package_sale_price - $this->package_purchase_price);
-        }
-        return null;
     }
 
     // ── Aliases de relaciones (compatibilidad con vistas existentes) ──

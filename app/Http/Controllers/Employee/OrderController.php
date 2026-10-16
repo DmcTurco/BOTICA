@@ -362,11 +362,11 @@ class OrderController extends Controller
         }
 
         // El precio de cada línea debe ser uno que el producto realmente tiene en la base de datos
-        // (unidad, paquete o una presentación activa); el navegador nunca fija el precio.
+        // (unidad base o una presentación activa); el navegador nunca fija el precio.
         foreach ($items as $item) {
             $product = $products[$item['code']];
 
-            $allowed = collect([$product->unit_sale_price, $product->package_sale_price])
+            $allowed = collect([$product->unit_sale_price])
                 ->merge($product->presentations->where('status', 1)->pluck('sale_price'))
                 ->filter(fn ($price) => $price !== null)
                 ->map(fn ($price) => (float) $price);

@@ -102,3 +102,44 @@ it('ventas incluye el código de barras para buscar y escanear', function () {
         ->assertOk()
         ->assertSee('data-barcode="0012345"', false);
 });
+
+// ── Stock inicial ──────────────────────────────────────────────────
+
+it('el stock inicial entra al crear el producto, con su lote y queda en el kardex', function () {
+    $employee = loginEmployee();
+
+    $this->post(route('employee.products.store'), barcodeProductData(1, [
+        'stock_inicial' => 300, 'lote_inicial' => 'L-2026', 'vencimiento_inicial' => '2027-12-31',
+    ]))->assertSessionHasNoErrors();
+
+    $product  = Product::sole();
+    $movement = \App\Models\StockMovement::where('product_code', $product->code)->sole();
+    $batch    = \App\Models\StockBatch::where('product_code', $product->code)->sole();
+
+    expect($product->stockEnSede($employee->branch_id))->toBe(300.0)
+        ->and($movement->reference_type)->toBe('initial')
+        ->and($movement->referencia_label)->toBe('Inventario inicial')
+        ->and((float) $movement->quantity)->toBe(300.0)
+        ->and($batch->batch)->toBe('L-2026')
+        ->and((float) $batch->quantity_remaining)->toBe(300.0);
+});
+
+it('sin stock inicial el producto nace en cero y sin movimientos', function () {
+    $employee = loginEmployee();
+
+    $this->post(route('employee.products.store'), barcodeProductData(1))->assertSessionHasNoErrors();
+
+    $product = Product::sole();
+    expect($product->stockEnSede($employee->branch_id))->toBe(0.0)
+        ->and(\App\Models\StockMovement::count())->toBe(0)
+        ->and(\App\Models\StockBatch::count())->toBe(0);
+});
+
+it('el stock inicial no puede ser negativo', function () {
+    loginEmployee();
+
+    $this->post(route('employee.products.store'), barcodeProductData(1, ['stock_inicial' => -5]))
+        ->assertSessionHasErrors('stock_inicial');
+
+    expect(Product::count())->toBe(0);
+});

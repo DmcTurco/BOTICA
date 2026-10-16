@@ -43,6 +43,13 @@ it('el admin crea una compañía lista para vender: usuario, primera sede y seri
 
     // Las series no chocan con las de la otra compañía (cada una empieza en 001)
     expect(DocumentSeries::where('branch_id', $branch->id)->where('type_code', 'BOLETA')->value('series'))->toBe('B001');
+
+    // Nace con el catálogo base propio: unidades (con código SUNAT), categorías y laboratorios (solo nombre y país)
+    expect($company->units()->count())->toBe(12)
+        ->and($company->units()->where('abbreviation', 'CJA')->value('sunat_code'))->toBe('BX')
+        ->and($company->categories()->count())->toBe(12)
+        ->and($company->laboratories()->where('name', 'Farmex')->first(['country', 'phone'])->toArray())
+        ->toBe(['country' => 'Perú', 'phone' => null]);
 });
 
 it('el admin lista y edita compañías; la contraseña solo cambia si se escribe', function () {

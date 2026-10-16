@@ -193,7 +193,8 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label for="unidad_medida_id" class="block text-sm font-medium text-slate-700 mb-1.5">
-                                    Unidad de Medida <span class="text-red-500">*</span>
+                                    Unidad base <span class="text-red-500">*</span>
+                                    <span class="font-normal text-slate-400">(la más pequeña que vendes)</span>
                                 </label>
                                 <select data-search id="unidad_medida_id" name="unidad_medida_id" required
                                     class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
@@ -212,7 +213,7 @@
                             <div class="flex items-end">
                                 <p class="text-xs text-slate-400 pb-2">
                                     <i class="fas fa-info-circle mr-1"></i>
-                                    La fecha de vencimiento se registra por lote al registrar una compra.
+                                    Ej: Tableta. El blíster o la caja se agregan en <strong>Presentaciones</strong>.
                                 </p>
                             </div>
                         </div>
@@ -241,8 +242,8 @@
 
                         {{-- Precios Unitarios --}}
                         <div>
-                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Precio Unitario
-                                <span class="font-normal text-slate-400 normal-case">(de una sola unidad: 1 tableta, 1 ampolla...)</span>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Precio de la unidad base
+                                <span class="font-normal text-slate-400 normal-case">(de una sola unidad: 1 tableta, 1 ampolla...). El precio del blíster o la caja va en Presentaciones.</span>
                             </p>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
@@ -296,69 +297,6 @@
                             </div>
                         </div>
 
-                        {{-- Precios por Paquete --}}
-                        <div>
-                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Precio por
-                                Paquete <span class="font-normal text-slate-400 normal-case">(opcional)</span></p>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                                <div>
-                                    <label for="precio_compra_paquete"
-                                        class="block text-sm font-medium text-slate-700 mb-1.5">Precio Compra</label>
-                                    <div
-                                        class="flex rounded-lg border border-slate-300 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent">
-                                        <span
-                                            class="flex items-center px-3 bg-slate-50 text-slate-500 text-sm border-r border-slate-300">S/.</span>
-                                        <input type="number" id="precio_compra_paquete" name="precio_compra_paquete"
-                                            min="0" step="0.01"
-                                            value="{{ old('precio_compra_paquete', $products->package_purchase_price ?? '') }}"
-                                            class="flex-1 px-3 py-2.5 text-sm bg-white focus:outline-none"
-                                            placeholder="0.00">
-                                    </div>
-                                    @error('precio_compra_paquete')
-                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                                <div>
-                                    <label for="precio_venta_paquete"
-                                        class="block text-sm font-medium text-slate-700 mb-1.5">Precio Venta</label>
-                                    <div
-                                        class="flex rounded-lg border border-slate-300 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent">
-                                        <span
-                                            class="flex items-center px-3 bg-slate-50 text-slate-500 text-sm border-r border-slate-300">S/.</span>
-                                        <input type="number" id="precio_venta_paquete" name="precio_venta_paquete"
-                                            min="0" step="0.01"
-                                            value="{{ old('precio_venta_paquete', $products->package_sale_price ?? '') }}"
-                                            class="flex-1 px-3 py-2.5 text-sm bg-white focus:outline-none"
-                                            placeholder="0.00">
-                                    </div>
-                                    @error('precio_venta_paquete')
-                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                                <div>
-                                    <label for="unidades_por_paquete"
-                                        class="block text-sm font-medium text-slate-700 mb-1.5">Unidades por
-                                        Paquete</label>
-                                    <input type="number" id="unidades_por_paquete" name="unidades_por_paquete"
-                                        min="0" step="1"
-                                        value="{{ old('unidades_por_paquete', $products->units_per_package ?? '') }}"
-                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                        placeholder="Ej: 12">
-                                    @error('unidades_por_paquete')
-                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="mt-3">
-                                <div
-                                    class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center inline-block min-w-40">
-                                    <p class="text-xs text-slate-500 mb-1">Utilidad por Paquete</p>
-                                    <p id="utilidad_paquete" class="text-base font-bold text-emerald-700">S/. 0.00</p>
-                                </div>
-                            </div>
-                        </div>
-
                         {{-- Stock --}}
                         <div>
                             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Control de Stock
@@ -382,6 +320,21 @@
                                         </div>
                                         <p class="text-xs text-slate-400 mt-1">El stock se actualiza mediante compras
                                             registradas.</p>
+                                    </div>
+                                @else
+                                    {{-- Stock inicial: la mercadería que ya está en el estante al empezar a usar el sistema --}}
+                                    <div>
+                                        <label for="stock_inicial" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                            Stock inicial <span class="font-normal text-slate-400">(en unidades base)</span>
+                                        </label>
+                                        <input type="number" id="stock_inicial" name="stock_inicial" min="0" step="0.01"
+                                            value="{{ old('stock_inicial') }}"
+                                            class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                            placeholder="0">
+                                        @error('stock_inicial')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
+                                        <p class="text-xs text-slate-400 mt-1">Lo que ya tienes en el estante. Ej: 3 cajas de 100 → 300. Lo nuevo entra por compras.</p>
                                     </div>
                                 @endisset
 
@@ -410,6 +363,31 @@
                                     @enderror
                                 </div>
                             </div>
+
+                            {{-- Lote y vencimiento del stock inicial (opcionales): con ellos entra a las alertas de vencimiento --}}
+                            @unless (isset($products))
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-4">
+                                    <div>
+                                        <label for="lote_inicial" class="block text-sm font-medium text-slate-700 mb-1.5">Lote del stock inicial</label>
+                                        <input type="text" id="lote_inicial" name="lote_inicial" maxlength="50"
+                                            value="{{ old('lote_inicial') }}"
+                                            class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                            placeholder="Opcional">
+                                        @error('lote_inicial')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label for="vencimiento_inicial" class="block text-sm font-medium text-slate-700 mb-1.5">Vencimiento del stock inicial</label>
+                                        <input type="date" id="vencimiento_inicial" name="vencimiento_inicial"
+                                            value="{{ old('vencimiento_inicial') }}"
+                                            class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                        @error('vencimiento_inicial')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+                            @endunless
                         </div>
                     </div>
 
@@ -629,8 +607,7 @@
         }
 
         function inicializarEventos() {
-            $('#precio_compra, #precio_venta_unidad, #precio_compra_paquete, #precio_venta_paquete').on('input',
-                calcularUtilidades);
+            $('#precio_compra, #precio_venta_unidad').on('input', calcularUtilidades);
 
             $('#btn-agregar-presentacion').on('click', function() {
                 agregarPresentacion();
@@ -644,16 +621,12 @@
         function calcularUtilidades() {
             const pc = parseFloat($('#precio_compra').val()) || 0;
             const pv = parseFloat($('#precio_venta_unidad').val()) || 0;
-            const pcp = parseFloat($('#precio_compra_paquete').val()) || 0;
-            const pvp = parseFloat($('#precio_venta_paquete').val()) || 0;
 
             const utilUnit = pv - pc;
             $('#utilidad_unitaria').text('S/. ' + utilUnit.toFixed(2));
 
             const margen = pc > 0 ? (utilUnit / pc) * 100 : 0;
             $('#margen_utilidad').text(margen.toFixed(2) + '%');
-
-            $('#utilidad_paquete').text('S/. ' + (pvp - pcp).toFixed(2));
         }
     </script>
 @endsection

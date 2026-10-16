@@ -203,6 +203,12 @@ class Company extends Authenticatable
         return $this->hasMany(Category::class, 'company_id');
     }
 
+    /** Unidades de medida del catálogo */
+    public function units(): HasMany
+    {
+        return $this->hasMany(Unit::class, 'company_id');
+    }
+
     /** Laboratorios del catálogo */
     public function laboratories(): HasMany
     {

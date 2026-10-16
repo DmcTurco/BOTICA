@@ -24,9 +24,7 @@ class DemoSeeder extends Seeder
             BranchSeeder::class,         // Requiere: companies (id=1) — reemplaza el placeholder de la migración
 
             // ── Catálogo (nivel compañía) ─────────────────────────────────
-            LaboratorySeeder::class,     // Requiere: companies (id=1)
-            UnitSeeder::class,           // Sin dependencias
-            CategorySeeder::class,       // Requiere: companies (id=1)
+            StarterCatalogSeeder::class, // Requiere: companies (id=1) — unidades, categorías y laboratorios base
             ProductSeeder::class,        // Requiere: laboratories, units, categories, employees (id=1)
             PresentationSeeder::class,   // Requiere: products, units
 

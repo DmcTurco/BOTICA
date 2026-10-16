@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Company;
 use App\Models\DocumentSeries;
 use App\Models\DocumentType;
+use App\Services\CompanyStarterCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -43,7 +44,8 @@ class CompanyController extends Controller
 
     /**
      * Registra la compañía lista para trabajar: su usuario de acceso, su primera sede
-     * con las series de comprobantes (B001, F001, NV01...) y los datos fijos del sistema.
+     * con las series de comprobantes (B001, F001, NV01...), los datos fijos del sistema
+     * y el catálogo base (unidades, categorías y laboratorios).
      * Nace GRATIS (sin cobro); el cobro se configura después en Suscripciones.
      * El resto (empleados, productos...) lo registra la propia empresa desde su panel.
      */
@@ -63,6 +65,9 @@ class CompanyController extends Controller
             DocumentType::crearTiposBase();
             DocumentSeries::crearSeriesGlobales();
             DocumentSeries::crearSeriesParaSede($branch);
+
+            // Catálogo base: unidades, categorías y laboratorios comunes
+            CompanyStarterCatalog::seed($company);
 
             return $company;
         });

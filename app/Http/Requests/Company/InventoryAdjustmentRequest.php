@@ -9,6 +9,7 @@ class InventoryAdjustmentRequest extends FormRequest
 {
     /** Motivos de ajuste que ofrece la pantalla */
     const REASONS = [
+        'inicial'  => 'Inventario inicial (stock que ya tenía)',
         'conteo'   => 'Error de conteo / inventario físico',
         'merma'    => 'Merma o rotura',
         'vencido'  => 'Producto vencido',

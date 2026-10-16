@@ -21,15 +21,11 @@ return new class extends Migration
             $table->unsignedBigInteger('laboratory_id')->nullable()->index();
             $table->string('active_ingredient', 100)->nullable();
 
-            // Datos de compra (precio de referencia del catálogo)
+            // Precios de la unidad base (la más pequeña que se vende: 1 tableta, 1 frasco...).
+            // Blíster, caja, etc. son presentaciones (tabla presentations) con su propio precio.
             $table->decimal('purchase_price', 10, 2);
-            $table->decimal('package_purchase_price', 10, 2)->nullable();
-            $table->integer('units_per_package')->nullable()->comment('Cuántas unidades vienen en un paquete/blister/caja');
-
-            // Datos de venta
             $table->decimal('unit_sale_price', 10, 2);
-            $table->decimal('package_sale_price', 10, 2)->nullable();
-            $table->unsignedBigInteger('unit_id')->nullable()->index();
+            $table->unsignedBigInteger('unit_id')->nullable()->index(); // unidad base
 
             // Stock eliminado del catálogo — ahora vive en branch_stock (por sede)
 
