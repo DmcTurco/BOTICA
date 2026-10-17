@@ -11,8 +11,8 @@
 @section('content-area')
 <div class="flex-1 flex flex-col gap-3 min-h-0">
 
-    <div class="flex items-center justify-between shrink-0 flex-wrap gap-3">
-        <div>
+    <div class="flex items-center shrink-0 flex-wrap gap-3">
+        <div class="flex-1 min-w-0">
             <h1 class="text-xl font-bold text-slate-800">Lotes y Vencimientos</h1>
             <p class="text-sm text-slate-500 mt-0.5">
                 {{ $all ? 'Todos los lotes con stock en tu sede' : 'Lotes vencidos o que vencen en los próximos ' . $days . ' días' }}
@@ -25,14 +25,14 @@
             </select>
             <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
         </form>
+        @include('employee.partials.export-button')
     </div>
 
     @include('employee.partials.alerts')
-    @include('employee.partials.export-button')
 
     <div class="grid grid-cols-2 gap-3 shrink-0">
-        <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Lotes listados</p><p class="text-lg font-bold text-slate-800">{{ $rows->count() }}</p></div>
-        <div class="bg-red-50 border border-red-200 rounded-xl p-4"><p class="text-xs text-red-600">Ya vencidos</p><p class="text-lg font-bold text-red-700">{{ $expired }}</p></div>
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-2.5"><p class="text-xs text-slate-400">Lotes listados</p><p class="text-lg font-bold text-slate-800">{{ $rows->count() }}</p></div>
+        <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-2.5"><p class="text-xs text-red-600">Ya vencidos</p><p class="text-lg font-bold text-red-700">{{ $expired }}</p></div>
     </div>
 
     <p class="text-xs text-slate-400 shrink-0"><i class="fas fa-circle-info mr-1"></i> Las ventas salen primero del lote que vence antes y nunca de un lote vencido. Las unidades vencidas siguen contando en el stock hasta que las des de baja.</p>

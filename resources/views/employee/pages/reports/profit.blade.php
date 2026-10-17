@@ -9,10 +9,10 @@
 @endphp
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
-    <div class="flex items-center justify-between shrink-0 flex-wrap gap-3">
-        <div>
+    <div class="flex items-center shrink-0 flex-wrap gap-3">
+        <div class="flex-1 min-w-0">
             <h1 class="text-xl font-bold text-slate-800">Reporte de Utilidad</h1>
             <p class="text-sm text-slate-500 mt-0.5">{{ $from->format('d/m/Y') }} al {{ $to->format('d/m/Y') }}</p>
         </div>
@@ -21,22 +21,22 @@
             <input type="date" name="fecha_hasta" value="{{ $to->toDateString() }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
             <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
         </form>
+        @include('employee.partials.export-button')
     </div>
 
     @include('employee.partials.alerts')
-    @include('employee.partials.export-button')
 
     <div class="grid grid-cols-3 gap-3 shrink-0">
-        <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Ventas netas (sin IGV)</p><p class="text-lg font-bold text-slate-800">{{ $money($sales) }}</p></div>
-        <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Costo de lo vendido</p><p class="text-lg font-bold text-slate-800">{{ $money($cost) }}</p></div>
-        <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Utilidad {{ $sales > 0 ? '· ' . round($profit / $sales * 100, 1) . '%' : '' }}</p><p class="text-lg font-bold">{{ $money($profit) }}</p></div>
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-2.5"><p class="text-xs text-slate-400">Ventas netas (sin IGV)</p><p class="text-lg font-bold text-slate-800">{{ $money($sales) }}</p></div>
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-2.5"><p class="text-xs text-slate-400">Costo de lo vendido</p><p class="text-lg font-bold text-slate-800">{{ $money($cost) }}</p></div>
+        <div class="bg-sky-600 rounded-xl px-4 py-2.5 text-white"><p class="text-xs text-sky-200">Utilidad {{ $sales > 0 ? '· ' . round($profit / $sales * 100, 1) . '%' : '' }}</p><p class="text-lg font-bold">{{ $money($profit) }}</p></div>
     </div>
 
     <p class="text-xs text-slate-400 shrink-0"><i class="fas fa-circle-info mr-1"></i> El costo se calcula con el precio de compra actual de cada producto, no con el precio al que se compró cada lote.</p>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <table class="w-full text-sm">
-            <thead><tr class="bg-slate-50 border-b border-slate-200">
+    <div class="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="flex-1 min-h-0 overflow-auto"><table class="w-full text-sm">
+            <thead class="sticky top-0 z-10"><tr class="bg-slate-50 border-b border-slate-200">
                 <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Producto</th>
                 <th class="text-center px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Unid.</th>
                 <th class="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Venta</th>
@@ -58,7 +58,7 @@
                 <tr><td colspan="6" class="px-5 py-12 text-center text-sm text-slate-400">No hay ventas en el rango</td></tr>
                 @endforelse
             </tbody>
-        </table>
+        </table></div>
     </div>
 </div>
 @endsection

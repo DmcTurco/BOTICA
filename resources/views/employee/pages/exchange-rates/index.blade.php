@@ -4,7 +4,7 @@
 @section('main-padding', 'p-2 md:p-3')
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
     <div class="shrink-0">
         <h1 class="text-xl font-bold text-slate-800">Tipo de Cambio</h1>
@@ -32,9 +32,9 @@
         </div>
     </form>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <table class="w-full text-sm">
-            <thead><tr class="bg-slate-50 border-b border-slate-200">
+    <div class="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="flex-1 min-h-0 overflow-auto"><table class="w-full text-sm">
+            <thead class="sticky top-0 z-10"><tr class="bg-slate-50 border-b border-slate-200">
                 <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha</th>
                 <th class="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Compra</th>
                 <th class="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Venta</th>
@@ -52,7 +52,7 @@
                 <tr><td colspan="4" class="px-5 py-10 text-center text-sm text-slate-400">Aún no hay tipos de cambio registrados</td></tr>
                 @endforelse
             </tbody>
-        </table>
+        </table></div>
         @if($rates->hasPages())<div class="px-5 py-3 border-t border-slate-200 bg-slate-50">{{ $rates->links() }}</div>@endif
     </div>
 </div>

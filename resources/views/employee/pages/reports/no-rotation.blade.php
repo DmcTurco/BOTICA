@@ -11,8 +11,8 @@
 @section('content-area')
 <div class="flex-1 flex flex-col gap-3 min-h-0">
 
-    <div class="flex items-center justify-between shrink-0 flex-wrap gap-3">
-        <div>
+    <div class="flex items-center shrink-0 flex-wrap gap-3">
+        <div class="flex-1 min-w-0">
             <h1 class="text-xl font-bold text-slate-800">Productos sin Rotación</h1>
             <p class="text-sm text-slate-500 mt-0.5">Con stock en tu sede y sin ventas en los últimos {{ $days }} días</p>
         </div>
@@ -22,14 +22,14 @@
             </select>
             <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
         </form>
+        @include('employee.partials.export-button')
     </div>
 
     @include('employee.partials.alerts')
-    @include('employee.partials.export-button')
 
     <div class="grid grid-cols-2 gap-3 shrink-0">
-        <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Productos parados</p><p class="text-lg font-bold text-slate-800">{{ $products->count() }}</p></div>
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4"><p class="text-xs text-amber-700">Dinero inmovilizado (a costo)</p><p class="text-lg font-bold text-amber-800">{{ $money($totalValue) }}</p></div>
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-2.5"><p class="text-xs text-slate-400">Productos parados</p><p class="text-lg font-bold text-slate-800">{{ $products->count() }}</p></div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5"><p class="text-xs text-amber-700">Dinero inmovilizado (a costo)</p><p class="text-lg font-bold text-amber-800">{{ $money($totalValue) }}</p></div>
     </div>
 
     <div class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">

@@ -16,13 +16,15 @@
 @section('content-area')
 <div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
 
-    <div class="shrink-0">
-        <h1 class="text-xl font-bold text-slate-800">{{ $config['title'] }}</h1>
-        <p class="text-sm text-slate-500 mt-0.5">Stock de tu sede, valorizado a precio de compra y a precio de venta (por unidad)</p>
+    <div class="flex items-start justify-between gap-3 shrink-0">
+        <div>
+            <h1 class="text-xl font-bold text-slate-800">{{ $config['title'] }}</h1>
+            <p class="text-sm text-slate-500 mt-0.5">Stock de tu sede, valorizado a precio de compra y a precio de venta (por unidad)</p>
+        </div>
+        @include('employee.partials.export-button')
     </div>
 
     @include('employee.partials.alerts')
-    @include('employee.partials.export-button')
 
     <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-sm shrink-0">
         <form action="{{ route($routeName) }}" method="GET" class="flex flex-col sm:flex-row gap-3">
@@ -43,10 +45,10 @@
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
-        <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Productos</p><p class="text-lg font-bold text-slate-800">{{ $productCount }}</p></div>
-        <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Unidades en stock</p><p class="text-lg font-bold text-slate-800">{{ $fmt($totalUnits) }}</p></div>
-        <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Valor a costo</p><p class="text-lg font-bold text-slate-800">{{ $money($totalCost) }}</p></div>
-        <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Valor a precio de venta</p><p class="text-lg font-bold">{{ $money($totalSale) }}</p></div>
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-2.5"><p class="text-xs text-slate-400">Productos</p><p class="text-lg font-bold text-slate-800">{{ $productCount }}</p></div>
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-2.5"><p class="text-xs text-slate-400">Unidades en stock</p><p class="text-lg font-bold text-slate-800">{{ $fmt($totalUnits) }}</p></div>
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-2.5"><p class="text-xs text-slate-400">Valor a costo</p><p class="text-lg font-bold text-slate-800">{{ $money($totalCost) }}</p></div>
+        <div class="bg-sky-600 rounded-xl px-4 py-2.5 text-white"><p class="text-xs text-sky-200">Valor a precio de venta</p><p class="text-lg font-bold">{{ $money($totalSale) }}</p></div>
     </div>
 
     @forelse($groups as $groupName => $items)
