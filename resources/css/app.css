@@ -46,15 +46,19 @@
     .sidebar-collapsed #sidebar > div:first-child { justify-content: center; padding-left: 0; padding-right: 0; }
     .sidebar-collapsed #sidebar > div:first-child > div:last-child { display: none; }
 
-    /* Títulos de sección y candados fuera; enlaces centrados con su ícono */
+    /* Títulos de sección y candados fuera; opciones centradas con su ícono.
+       Las opciones bloqueadas (p. ej. "Editar apertura" sin caja abierta) son <span> en vez de <a> */
     .sidebar-collapsed #sidebar nav p,
-    .sidebar-collapsed #sidebar nav a > i.ml-auto { display: none; }
+    .sidebar-collapsed #sidebar nav a > i.ml-auto,
+    .sidebar-collapsed #sidebar nav li > span > i.ml-auto { display: none; }
     .sidebar-collapsed #sidebar nav a,
+    .sidebar-collapsed #sidebar nav li > span,
     .sidebar-collapsed #sidebar form button {
         position: relative; justify-content: center; gap: 0;
         padding-left: 0; padding-right: 0; font-size: 0;
     }
     .sidebar-collapsed #sidebar nav a > i:first-child,
+    .sidebar-collapsed #sidebar nav li > span > i:first-child,
     .sidebar-collapsed #sidebar form button > i:first-child { font-size: 0.875rem; }
 
     /* Contadores (p. ej. aprobaciones pendientes): globito en la esquina del ícono */

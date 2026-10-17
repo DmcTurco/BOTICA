@@ -8,11 +8,15 @@
         } catch (e) {}
     })();
 
-    // Con el menú plegado solo se ven íconos: el nombre de cada opción aparece al pasar el mouse
+    // Con el menú plegado solo se ven íconos: el nombre de cada opción aparece al pasar el mouse.
+    // Las opciones bloqueadas (<span> con su motivo en title) muestran nombre y motivo, y lo recuperan al desplegar.
     function syncSidebarTitles() {
         var collapsed = document.documentElement.classList.contains('sidebar-collapsed');
-        document.querySelectorAll('#sidebar nav a, #sidebar form button').forEach(function (el) {
-            if (collapsed) el.title = el.textContent.replace(/\s+/g, ' ').trim();
+        document.querySelectorAll('#sidebar nav a, #sidebar nav li > span, #sidebar form button').forEach(function (el) {
+            if (el.dataset.reason === undefined) el.dataset.reason = el.getAttribute('title') || '';
+            var name = el.textContent.replace(/\s+/g, ' ').trim();
+            if (collapsed) el.title = el.dataset.reason ? name + ' · ' + el.dataset.reason : name;
+            else if (el.dataset.reason) el.title = el.dataset.reason;
             else el.removeAttribute('title');
         });
     }
