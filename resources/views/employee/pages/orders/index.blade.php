@@ -19,7 +19,7 @@
 
     // Ajustes de venta de la sede (Configuración): redondeo en efectivo y descuento por monto
     $salesCfg = array_merge(
-        ['cash_rounding' => false, 'amount_discount' => false],
+        ['cash_rounding' => false, 'rounding_favor' => 'customer', 'amount_discount' => false],
         auth()->guard('employee')->user()->branch()->with('config')->first()?->getSettingGroup('sales') ?? []
     );
 
@@ -1121,8 +1121,9 @@ function redondear(n) {
 // Totales de la última actualización (se envían al servidor, que los vuelve a calcular)
 let totalesVenta = { sub: 0, igv: 0, total: 0 };
 
-// Ajuste de la sede: redondeo en efectivo (hacia abajo al múltiplo de S/ 0.10)
+// Ajuste de la sede: redondeo en efectivo al múltiplo de S/ 0.10, a favor del cliente o del negocio
 const REDONDEO_EFECTIVO = @json((bool) $salesCfg['cash_rounding']);
+const REDONDEO_A_FAVOR  = @json($salesCfg['rounding_favor']);   // 'customer' (hacia abajo) o 'business' (hacia arriba)
 
 // 10 = gravado (IGV 18%) · 20 = exonerado · 30 = inafecto
 function actualizarTotales() {
@@ -1166,11 +1167,17 @@ function actualizarTotales() {
     $('#igv').text('S/ ' + redondear(igv).toFixed(2));
     $('#total').text('S/ ' + total.toFixed(2));
 
-    // Redondeo en efectivo: solo si la sede lo activó, el pago es en efectivo y hay céntimos que perdonar
-    const redondeo = (REDONDEO_EFECTIVO && $('#tipoPago').val() == 1) ? (Math.round(total * 100) % 10) / 100 : 0;
+    // Redondeo en efectivo al múltiplo de S/ 0.10 (solo si la sede lo activó y el pago es en efectivo).
+    // A favor del cliente: positivo (se cobra menos); a favor del negocio: negativo (se cobra más).
+    // Siempre se cobra total − redondeo, igual que en el servidor.
+    let redondeo = 0;
+    if (REDONDEO_EFECTIVO && $('#tipoPago').val() == 1) {
+        const resto = Math.round(total * 100) % 10;
+        if (resto) redondeo = REDONDEO_A_FAVOR === 'business' ? -(10 - resto) / 100 : resto / 100;
+    }
     $('#lblRedondeo, #redondeo').toggleClass('hidden', redondeo === 0);
     $('#lblCobrar, #cobrar').toggleClass('hidden', redondeo === 0);
-    $('#redondeo').text('− S/ ' + redondeo.toFixed(2));
+    $('#redondeo').text((redondeo > 0 ? '− ' : '+ ') + 'S/ ' + Math.abs(redondeo).toFixed(2));
     $('#cobrar').text('S/ ' + redondear(total - redondeo).toFixed(2));
 
     totalACobrar = redondear(total - redondeo);

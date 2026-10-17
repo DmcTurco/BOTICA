@@ -127,8 +127,8 @@
         <td>TOTAL</td>
         <td>S/ {{ number_format($order->total, 2) }}</td>
     </tr>
-    @if((float) $order->rounding_amount > 0)
-    <tr><td>Redondeo</td><td>- S/ {{ number_format($order->rounding_amount, 2) }}</td></tr>
+    @if((float) $order->rounding_amount != 0)
+    <tr><td>Redondeo</td><td>{{ (float) $order->rounding_amount > 0 ? '-' : '+' }} S/ {{ number_format(abs((float) $order->rounding_amount), 2) }}</td></tr>
     <tr><td><strong>A COBRAR</strong></td><td><strong>S/ {{ number_format($order->total - $order->rounding_amount, 2) }}</strong></td></tr>
     @endif
     @if(!is_null($order->amount_received))

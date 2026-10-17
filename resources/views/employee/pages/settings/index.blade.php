@@ -31,18 +31,56 @@
                     <div>
                         <p class="text-sm font-semibold text-slate-700">Redondeo en pagos en efectivo</p>
                         <p class="text-xs text-slate-400 mt-0.5">
-                            El total se cobra hacia abajo al múltiplo de S/ 0.10 (ej: S/ 44.37 → S/ 44.30). Solo con pago en efectivo;
+                            El total se cobra al múltiplo de S/ 0.10 (la moneda más pequeña que circula). Solo con pago en efectivo;
                             el comprobante conserva su total y el redondeo se muestra aparte.
                         </p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-                        <input type="checkbox" name="cash_rounding" value="1" class="sr-only peer" {{ $salesConfig['cash_rounding'] ? 'checked' : '' }}>
+                        <input type="checkbox" name="cash_rounding" id="cashRounding" value="1" class="sr-only peer" {{ $salesConfig['cash_rounding'] ? 'checked' : '' }}>
                         <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-sky-500 rounded-full peer
                                     peer-checked:bg-sky-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px]
                                     after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
                                     peer-checked:after:translate-x-full"></div>
                     </label>
                 </div>
+
+                {{-- A favor de quién se redondea (solo con el redondeo activo) --}}
+                @php $favor = $salesConfig['rounding_favor'] ?? 'customer'; @endphp
+                <div id="bloqueFavor" class="pl-4 border-l-2 border-sky-200 space-y-2 {{ $salesConfig['cash_rounding'] ? '' : 'hidden' }}">
+                    <p class="text-xs font-semibold text-slate-600">Redondear a favor de</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="rounding_favor" value="customer" class="peer sr-only" {{ $favor !== 'business' ? 'checked' : '' }}>
+                            <div class="h-full p-3 rounded-lg border-2 border-slate-200 peer-checked:border-sky-500 peer-checked:bg-sky-50 hover:border-slate-300 transition-colors">
+                                <p class="text-sm font-semibold text-slate-800"><i class="fas fa-user text-sky-600 text-xs mr-1"></i> Cliente</p>
+                                <p class="text-xs text-slate-500">Hacia abajo: S/ 44.37 → S/ 44.30</p>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="rounding_favor" value="business" class="peer sr-only" {{ $favor === 'business' ? 'checked' : '' }}>
+                            <div class="h-full p-3 rounded-lg border-2 border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50 hover:border-slate-300 transition-colors">
+                                <p class="text-sm font-semibold text-slate-800"><i class="fas fa-store text-amber-600 text-xs mr-1"></i> Negocio</p>
+                                <p class="text-xs text-slate-500">Hacia arriba: S/ 44.37 → S/ 44.40</p>
+                            </div>
+                        </label>
+                    </div>
+                    <p id="avisoFavorNegocio" class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 {{ $favor === 'business' ? '' : 'hidden' }}">
+                        <i class="fas fa-triangle-exclamation mr-1"></i>
+                        En Perú, Indecopi sanciona redondear en perjuicio del cliente sin su conformidad expresa (ej. multa de 4 UIT a una cadena de boticas).
+                        Úsalo solo si informas y el cliente acepta.
+                    </p>
+                </div>
+                <script>
+                    // El selector "a favor de" solo aplica con el redondeo encendido; el aviso, al elegir "Negocio"
+                    document.getElementById('cashRounding').addEventListener('change', function () {
+                        document.getElementById('bloqueFavor').classList.toggle('hidden', !this.checked);
+                    });
+                    document.querySelectorAll('input[name="rounding_favor"]').forEach(function (r) {
+                        r.addEventListener('change', function () {
+                            document.getElementById('avisoFavorNegocio').classList.toggle('hidden', this.value !== 'business');
+                        });
+                    });
+                </script>
 
                 <div class="border-t border-slate-100"></div>
 

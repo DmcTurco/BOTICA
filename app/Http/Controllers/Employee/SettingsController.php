@@ -27,6 +27,7 @@ class SettingsController extends Controller
         // Ajustes de venta (apagados por defecto)
         $salesConfig = array_merge([
             'cash_rounding'   => false,
+            'rounding_favor'  => 'customer',   // a favor de quién se redondea: customer (hacia abajo) o business (hacia arriba)
             'amount_discount' => false,
         ], $branch->getSettingGroup('sales'));
 
@@ -86,6 +87,7 @@ class SettingsController extends Controller
             'copies'           => 'required|integer|min:1|max:5',
             'printer_name'     => 'nullable|string|max:100',
             'cash_rounding'    => 'nullable|boolean',
+            'rounding_favor'   => 'nullable|in:customer,business',
             'amount_discount'  => 'nullable|boolean',
         ]);
 
@@ -101,6 +103,7 @@ class SettingsController extends Controller
 
         $branch->setSettingGroup('sales', [
             'cash_rounding'   => $request->boolean('cash_rounding'),
+            'rounding_favor'  => $request->input('rounding_favor') === 'business' ? 'business' : 'customer',
             'amount_discount' => $request->boolean('amount_discount'),
         ]);
 

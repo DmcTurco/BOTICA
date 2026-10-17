@@ -239,26 +239,44 @@ class OrderController extends Controller
     /** Descuento máximo que se puede dar en una venta (%) */
     const MAX_DISCOUNT_PERCENT = 50;
 
-    /** Ajustes de venta de la sede (apagados por defecto): redondeo en efectivo y descuento por monto */
+    /**
+     * Ajustes de venta de la sede (apagados por defecto): redondeo en efectivo, a favor de quién
+     * redondea (cliente por defecto) y descuento por monto.
+     */
     private function salesSettings(): array
     {
         $branch = auth()->guard('employee')->user()->branch()->with('config')->first();
 
-        return array_merge(['cash_rounding' => false, 'amount_discount' => false], $branch?->getSettingGroup('sales') ?? []);
+        return array_merge(
+            ['cash_rounding' => false, 'rounding_favor' => 'customer', 'amount_discount' => false],
+            $branch?->getSettingGroup('sales') ?? []
+        );
     }
 
     /**
-     * Redondeo en efectivo: el total se cobra hacia abajo al múltiplo de S/ 0.10 más cercano
-     * (la moneda más pequeña que circula). Solo con pago en efectivo y si la sede lo activó.
-     * Devuelve los céntimos que se perdonan al cliente (0.00 a 0.09).
+     * Redondeo en efectivo al múltiplo de S/ 0.10 (la moneda más pequeña que circula).
+     * Solo con pago en efectivo y si la sede lo activó. Según la configuración de la sede:
+     *   - a favor del cliente: se cobra hacia abajo (S/ 44.37 → 44.30) → devuelve +0.07 (céntimos perdonados)
+     *   - a favor del negocio: se cobra hacia arriba (S/ 44.37 → 44.40) → devuelve −0.03 (céntimos cobrados de más)
+     * Lo que se cobra siempre es total − redondeo.
      */
     private function cashRounding(float $total, int $paymentType): float
     {
-        if ($paymentType !== \App\Models\CashRegister::PAYMENT_CASH || !$this->salesSettings()['cash_rounding']) {
+        $settings = $this->salesSettings();
+
+        if ($paymentType !== \App\Models\CashRegister::PAYMENT_CASH || !$settings['cash_rounding']) {
             return 0.0;
         }
 
-        return round(((int) round($total * 100) % 10) / 100, 2);
+        $rest = (int) round($total * 100) % 10;
+
+        if ($rest === 0) {
+            return 0.0;
+        }
+
+        return $settings['rounding_favor'] === 'business'
+            ? -round((10 - $rest) / 100, 2)
+            : round($rest / 100, 2);
     }
 
     /**

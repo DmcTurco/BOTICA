@@ -183,6 +183,45 @@ it('redondea hacia abajo a S/ 0.10 solo en efectivo y si la sede lo activó', fu
     expect(App\Models\CashRegister::first()->totalCash())->toBe(45.85);
 });
 
+it('redondea hacia arriba si la sede eligió a favor del negocio', function () {
+    $employee = loginEmployee();
+    posSetup($employee);
+    $employee->branch->setSettingGroup('sales', ['cash_rounding' => true, 'rounding_favor' => 'business', 'amount_discount' => true]);
+
+    // 22.95 en efectivo → se cobra 23.00: se guarda −0.05 (cobrado de más)
+    $sale = ['discount_value' => 0.55, 'total' => 22.95];
+
+    posSale($sale + ['amount_received' => 22.95])->assertStatus(422);   // no alcanza para los 23.00
+    posSale($sale + ['amount_received' => 25])->assertOk();
+
+    $order = Order::latest('id')->first();
+    expect((float) $order->rounding_amount)->toBe(-0.05)
+        ->and((float) $order->total)->toBe(22.95)                        // el comprobante conserva su total
+        ->and(App\Models\CashRegister::first()->totalCash())->toBe(23.0);
+
+    $this->get(route('employee.orders.print', [$order, 'ticket_80mm']))->assertOk()
+        ->assertSee('+ S/ 0.05', false)->assertSee('23.00')->assertSee('2.00');   // vuelto de 25
+
+    // Con tarjeta no se redondea
+    posSale($sale + ['payment_type' => 2, 'operation_number' => '123'])->assertOk();
+    expect((float) Order::latest('id')->first()->rounding_amount)->toBe(0.0);
+});
+
+it('la configuración guarda a favor de quién se redondea (cliente por defecto)', function () {
+    $employee = loginEmployee();
+    $base = ['default_template' => 'ticket_80mm', 'copies' => 1, 'cash_rounding' => 1];
+
+    $this->get(route('employee.settings.index'))->assertOk()->assertSee('Redondear a favor de');
+
+    $this->post(route('employee.settings.update'), $base + ['rounding_favor' => 'business'])->assertSessionHasNoErrors();
+    expect($employee->branch->fresh()->getSettingGroup('sales')['rounding_favor'])->toBe('business');
+
+    $this->post(route('employee.settings.update'), $base)->assertSessionHasNoErrors();
+    expect($employee->branch->fresh()->getSettingGroup('sales')['rounding_favor'])->toBe('customer');
+
+    $this->post(route('employee.settings.update'), $base + ['rounding_favor' => 'otro'])->assertSessionHasErrors('rounding_favor');
+});
+
 it('el comprobante impreso muestra el redondeo y el monto a cobrar', function () {
     $employee = loginEmployee();
     posSetup($employee);

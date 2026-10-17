@@ -62,7 +62,7 @@ return new class extends Migration
             $table->decimal('igv', 10, 2)->default(0);
             $table->decimal('discount_percent', 5, 2)->default(0);      // % de descuento aplicado a todas las líneas
             $table->decimal('discount_amount', 10, 2)->default(0);      // descuento aplicado (sin IGV, ya restado de las bases)
-            $table->decimal('rounding_amount', 10, 2)->default(0);      // redondeo a favor del cliente en pagos en efectivo (el efectivo cobrado es total - redondeo)
+            $table->decimal('rounding_amount', 10, 2)->default(0);      // redondeo en efectivo: + a favor del cliente, − a favor del negocio (el efectivo cobrado es total - redondeo)
             $table->decimal('amount_received', 10, 2)->nullable();      // efectivo con el que pagó el cliente (solo pago en efectivo; el vuelto = recibido - (total - redondeo))
             $table->decimal('total', 10, 2)->default(0);
             $table->decimal('credit_balance', 10, 2)->default(0);       // lo que el cliente aún debe (ventas a crédito)
