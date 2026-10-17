@@ -1,7 +1,7 @@
 <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-30 flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300">
 
     <div class="flex items-center gap-3 h-16 px-5 border-b border-slate-200 shrink-0">
-        <div class="w-8 h-8 bg-sky-600 rounded-lg flex items-center justify-center shrink-0">
+        <div class="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shrink-0">
             <i class="fas fa-plus text-white text-sm"></i>
         </div>
         <div class="min-w-0">
@@ -18,7 +18,7 @@
                 <li>
                     <a href="{{ route('employee.home') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.home') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.home') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-gauge-high w-4 text-center shrink-0"></i>
                         Dashboard
                     </a>
@@ -49,7 +49,7 @@
                 <li>
                     <a href="{{ route('employee.cash-register.show-open') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.cash-register.show-open') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.cash-register.show-open') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-lock-open w-4 text-center shrink-0"></i>
                         {{ $cajaAbierta ? 'Abrir caja pasada' : 'Apertura de caja' }}
                     </a>
@@ -58,7 +58,7 @@
                 <li>
                     <a href="{{ route('employee.cash-register.historical', $historica) }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ $historicaActiva === $historica->id ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ $historicaActiva === $historica->id ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-clock-rotate-left w-4 text-center shrink-0 {{ $historicaActiva === $historica->id ? '' : 'text-amber-500' }}"></i>
                         Caja del {{ $historica->register_date->format('d/m/Y') }}
                     </a>
@@ -70,7 +70,7 @@
                     @if($cajaAbierta)
                     <a href="{{ route('employee.cash-register.edit') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.cash-register.edit') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.cash-register.edit') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-pen-to-square w-4 text-center shrink-0"></i>
                         Editar apertura
                     </a>
@@ -89,7 +89,7 @@
                     @if($cajaAbierta)
                     <a href="{{ route('employee.cash-register.show-close') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.cash-register.show-close') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.cash-register.show-close') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-lock w-4 text-center shrink-0"></i>
                         Cierre de caja
                     </a>
@@ -108,7 +108,7 @@
                     @if($cajaAbierta)
                     <a href="{{ route('employee.orders.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.orders.index') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.orders.index') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-cash-register w-4 text-center shrink-0"></i>
                         Ventas
                     </a>
@@ -126,7 +126,7 @@
                 <li>
                     <a href="{{ route('employee.orders.historial') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.orders.historial') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.orders.historial') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-receipt w-4 text-center shrink-0"></i>
                         Historial
                     </a>
@@ -136,7 +136,7 @@
                 <li>
                     <a href="{{ route('employee.clients.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.clients.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.clients.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-users w-4 text-center shrink-0"></i>
                         Clientes
                     </a>
@@ -146,7 +146,7 @@
                 <li>
                     <a href="{{ route('employee.cash-movements.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.cash-movements.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.cash-movements.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-money-bill-transfer w-4 text-center shrink-0"></i>
                         Gastos e ingresos
                     </a>
@@ -156,7 +156,7 @@
                 <li>
                     <a href="{{ route('employee.cash-closures.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.cash-closures.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.cash-closures.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-clipboard-check w-4 text-center shrink-0"></i>
                         Cierres de caja
                     </a>
@@ -166,7 +166,7 @@
                 <li>
                     <a href="{{ route('employee.lost-sales.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.lost-sales.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.lost-sales.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-circle-minus w-4 text-center shrink-0"></i>
                         Ventas perdidas
                     </a>
@@ -176,7 +176,7 @@
                 <li>
                     <a href="{{ route('employee.prescriptions.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.prescriptions.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.prescriptions.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-file-prescription w-4 text-center shrink-0"></i>
                         Registro de recetas
                     </a>
@@ -186,7 +186,7 @@
                 <li>
                     <a href="{{ route('employee.receivables.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.receivables.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.receivables.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-hand-holding-dollar w-4 text-center shrink-0"></i>
                         Cuentas por cobrar
                     </a>
@@ -196,7 +196,7 @@
                 <li>
                     <a href="{{ route('employee.exchange-rates.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.exchange-rates.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.exchange-rates.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-dollar-sign w-4 text-center shrink-0"></i>
                         Tipo de cambio
                     </a>
@@ -206,7 +206,7 @@
                 <li>
                     <a href="{{ route('employee.series.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.series.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.series.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-list-ol w-4 text-center shrink-0"></i>
                         Correlativos
                     </a>
@@ -235,7 +235,7 @@
                 <li>
                     <a href="{{ route('employee.products.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.products.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.products.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-pills w-4 text-center shrink-0"></i>
                         Productos
                     </a>
@@ -243,7 +243,7 @@
                 <li>
                     <a href="{{ route('employee.categories.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.categories.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.categories.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-tags w-4 text-center shrink-0"></i>
                         Categorías
                     </a>
@@ -251,7 +251,7 @@
                 <li>
                     <a href="{{ route('employee.laboratories.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.laboratories.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.laboratories.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-flask w-4 text-center shrink-0"></i>
                         Laboratorios
                     </a>
@@ -259,7 +259,7 @@
                 <li>
                     <a href="{{ route('employee.units.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.units.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.units.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-ruler-combined w-4 text-center shrink-0"></i>
                         Unidades
                     </a>
@@ -269,7 +269,7 @@
                 <li>
                     <a href="{{ route('employee.purchases.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.purchases.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.purchases.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-truck-ramp-box w-4 text-center shrink-0"></i>
                         Compras
                     </a>
@@ -279,7 +279,7 @@
                 <li>
                     <a href="{{ route('employee.suppliers.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.suppliers.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.suppliers.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-truck w-4 text-center shrink-0"></i>
                         Proveedores
                     </a>
@@ -289,7 +289,7 @@
                 <li>
                     <a href="{{ route('employee.purchase-orders.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.purchase-orders.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.purchase-orders.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-file-circle-check w-4 text-center shrink-0"></i>
                         Órdenes de compra
                     </a>
@@ -299,7 +299,7 @@
                 <li>
                     <a href="{{ route('employee.payables.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.payables.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.payables.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-file-invoice-dollar w-4 text-center shrink-0"></i>
                         Cuentas por pagar
                     </a>
@@ -309,7 +309,7 @@
                 <li>
                     <a href="{{ route('employee.controlled-book.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.controlled-book.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.controlled-book.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-book-medical w-4 text-center shrink-0"></i>
                         Libro de controlados
                     </a>
@@ -319,7 +319,7 @@
                 <li>
                     <a href="{{ route('employee.kardex.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.kardex.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.kardex.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-chart-gantt w-4 text-center shrink-0"></i>
                         Kardex
                     </a>
@@ -329,7 +329,7 @@
                 <li>
                     <a href="{{ route('employee.adjustments.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.adjustments.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.adjustments.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-scale-balanced w-4 text-center shrink-0"></i>
                         Ajuste de inventario
                     </a>
@@ -339,7 +339,7 @@
                 <li>
                     <a href="{{ route('employee.replenishment.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.replenishment.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.replenishment.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-triangle-exclamation w-4 text-center shrink-0"></i>
                         Reposición
                     </a>
@@ -349,7 +349,7 @@
                 <li>
                     <a href="{{ route('employee.transfers.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.transfers.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.transfers.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-right-left w-4 text-center shrink-0"></i>
                         Traspasos
                     </a>
@@ -372,7 +372,7 @@
                 <li>
                     <a href="{{ route('employee.formulas.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.formulas.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.formulas.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-vial w-4 text-center shrink-0"></i>
                         Fórmulas
                     </a>
@@ -382,7 +382,7 @@
                 <li>
                     <a href="{{ route('employee.productions.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.productions.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.productions.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-flask-vial w-4 text-center shrink-0"></i>
                         Preparaciones
                     </a>
@@ -432,7 +432,7 @@
                     <li>
                         <a href="{{ route($linkRoute) }}"
                            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                                  {{ request()->routeIs($linkRoute) ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                                  {{ request()->routeIs($linkRoute) ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                             <i class="fas {{ $linkIcon }} w-4 text-center shrink-0"></i>
                             {{ $linkLabel }}
                         </a>
@@ -458,12 +458,12 @@
                 <li>
                     <a href="{{ route('employee.approvals.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.approvals.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.approvals.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-vault w-4 text-center shrink-0"></i>
                         Aprobaciones
                         @if($pendingCount > 0)
                         <span class="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black
-                                     {{ request()->routeIs('employee.approvals.*') ? 'bg-white text-sky-600' : 'bg-amber-500 text-white' }}">
+                                     {{ request()->routeIs('employee.approvals.*') ? 'bg-white text-emerald-600' : 'bg-amber-500 text-white' }}">
                             {{ $pendingCount > 9 ? '9+' : $pendingCount }}
                         </span>
                         @endif
@@ -472,7 +472,7 @@
                 <li>
                     <a href="{{ route('employee.employees.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.employees.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.employees.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-user-gear w-4 text-center shrink-0"></i>
                         Empleados
                     </a>
@@ -480,7 +480,7 @@
                 <li>
                     <a href="{{ route('employee.settings.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('employee.settings.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                              {{ request()->routeIs('employee.settings.*') ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-emerald-600 hover:text-white' }}">
                         <i class="fas fa-sliders w-4 text-center shrink-0"></i>
                         Configuración
                     </a>

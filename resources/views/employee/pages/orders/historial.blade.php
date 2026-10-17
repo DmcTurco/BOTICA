@@ -351,7 +351,7 @@
         <div class="px-6 py-4 border-t border-slate-200 shrink-0 flex items-center justify-between">
             <button type="button" id="btn-imprimir-modal"
                     onclick="printCurrentSale()"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors">
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
                 <i class="fas fa-print text-xs"></i> Imprimir
             </button>
             <button onclick="closeDetailModal()"

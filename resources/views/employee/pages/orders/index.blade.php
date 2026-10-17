@@ -467,13 +467,13 @@
         </div>
         <div class="p-5 grid grid-cols-2 gap-3">
             <input type="hidden" id="recetaNivel" value="1">
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Paciente <span class="text-red-500">*</span></label><input type="text" id="recetaPaciente" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Documento del paciente <span class="receta-controlado text-red-500">*</span></label><input type="text" id="recetaDocPaciente" maxlength="15" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Médico <span class="text-red-500">*</span></label><input type="text" id="recetaMedico" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">N° colegiatura (CMP) <span class="text-red-500">*</span></label><input type="text" id="recetaCmp" maxlength="20" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">N° de receta <span class="receta-controlado text-red-500">*</span></label><input type="text" id="recetaNumero" maxlength="30" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Fecha de la receta <span class="text-red-500">*</span></label><input type="date" id="recetaFecha" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
-            <div class="col-span-2"><label class="block text-xs font-medium text-slate-600 mb-1">Establecimiento de salud</label><input type="text" id="recetaEstablecimiento" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Paciente <span class="text-red-500">*</span></label><input type="text" id="recetaPaciente" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Documento del paciente <span class="receta-controlado text-red-500">*</span></label><input type="text" id="recetaDocPaciente" maxlength="15" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Médico <span class="text-red-500">*</span></label><input type="text" id="recetaMedico" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">N° colegiatura (CMP) <span class="text-red-500">*</span></label><input type="text" id="recetaCmp" maxlength="20" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">N° de receta <span class="receta-controlado text-red-500">*</span></label><input type="text" id="recetaNumero" maxlength="30" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Fecha de la receta <span class="text-red-500">*</span></label><input type="date" id="recetaFecha" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
+            <div class="col-span-2"><label class="block text-xs font-medium text-slate-600 mb-1">Establecimiento de salud</label><input type="text" id="recetaEstablecimiento" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
             <p id="recetaError" class="hidden col-span-2 text-xs text-red-600"></p>
         </div>
         <div class="flex justify-end gap-3 px-5 py-4 border-t border-slate-100">
@@ -625,7 +625,7 @@
         {{-- Acciones --}}
         <div class="px-6 py-5 flex flex-col gap-3">
             <button type="button" id="btnPrintSale"
-                    class="w-full flex items-center justify-center gap-2 px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors">
+                    class="w-full flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors">
                 <i class="fas fa-print text-xs"></i>
                 Imprimir comprobante
             </button>

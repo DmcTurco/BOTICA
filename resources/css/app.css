@@ -5,6 +5,8 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+/* Color de marca: emerald (botones, foco, navegación) en los paneles de empresa y empleado.
+   El panel admin usa violeta a propósito, y sky queda solo para lo informativo (avisos, ayudas). */
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
@@ -35,7 +37,7 @@
     animation: ping-once 0.35s ease-out;
 }
 
-/* Select2 — skin sin Bootstrap */
+/* Select2 — skin sin Bootstrap (foco y resaltado con el verde de marca: emerald 500/50/700) */
 .select2-container--default .select2-selection--single {
     height: 38px;
     border: 1px solid #cbd5e1;
@@ -55,8 +57,8 @@
 }
 .select2-container--default.select2-container--focus .select2-selection--single,
 .select2-container--default.select2-container--open .select2-selection--single {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px #eef2ff;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px #d1fae5;
     outline: none;
 }
 .select2-dropdown {
@@ -66,8 +68,8 @@
     font-size: 0.875rem;
 }
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
-    background-color: #eef2ff;
-    color: #4f46e5;
+    background-color: #ecfdf5;
+    color: #047857;
 }
 .select2-search--dropdown .select2-search__field {
     border: 1px solid #e2e8f0;
