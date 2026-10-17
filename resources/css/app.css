@@ -34,6 +34,11 @@
 .app-main > .flex-1 {
     min-height: var(--page-min-h, 34rem);
 }
+/* En una columna que ya hace scroll, los bloques no se encogen: si no, una tarjeta con
+   overflow-hidden y una tabla larga se aplasta y sus filas quedan recortadas sin scroll. */
+.flex-col.min-h-0.overflow-auto > * {
+    flex-shrink: 0;
+}
 
 /* ── Menú lateral plegable (solo ≥ 1024 px; debajo sigue el menú deslizable) ──────────
    La clase .sidebar-collapsed en <html> la pone partials/sidebar-collapse. Con el menú

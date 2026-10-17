@@ -14,7 +14,7 @@
 @endphp
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
     <div class="flex items-start justify-between gap-3 shrink-0">
         <div>
@@ -51,25 +51,33 @@
         <div class="bg-sky-600 rounded-xl px-4 py-2.5 text-white"><p class="text-xs text-sky-200">Valor a precio de venta</p><p class="text-lg font-bold">{{ $money($totalSale) }}</p></div>
     </div>
 
-    @forelse($groups as $groupName => $items)
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        @if($config['by_lab'])
-        <div class="px-5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-            <p class="text-sm font-semibold text-slate-800"><i class="fas fa-flask text-slate-400 text-xs mr-1"></i> {{ $groupName }}</p>
-            <p class="text-xs text-slate-500">{{ $items->count() }} prod. · costo <strong class="text-slate-800">{{ $money($items->sum('cost_value')) }}</strong></p>
-        </div>
-        @endif
-        <div class="overflow-x-auto">
+    {{-- Una sola tabla que ocupa el resto de la pantalla, con scroll propio y encabezado fijo --}}
+    <div class="flex-1 min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+        @if($productCount === 0)
+        <div class="flex-1 flex items-center justify-center p-10 text-sm text-slate-400">No hay productos para mostrar</div>
+        @else
+        <div class="flex-1 min-h-0 overflow-auto">
         <table class="w-full text-sm">
-            <thead><tr class="{{ $config['by_lab'] ? '' : 'bg-slate-50' }} border-b border-slate-200">
-                <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Producto</th>
-                @unless($config['by_lab'])<th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Laboratorio</th>@endunless
-                <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock</th>
-                <th class="text-right px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">P. compra</th>
-                <th class="text-right px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor costo</th>
-                <th class="text-right px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Valor venta</th>
+            <thead class="sticky top-0 z-10"><tr class="bg-slate-50 border-b border-slate-200">
+                <th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Producto</th>
+                @unless($config['by_lab'])<th class="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap hidden md:table-cell">Laboratorio</th>@endunless
+                <th class="text-center px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Stock</th>
+                <th class="text-right px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">P. compra</th>
+                <th class="text-right px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Valor costo</th>
+                <th class="text-right px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap hidden md:table-cell">Valor venta</th>
             </tr></thead>
+            @foreach($groups as $groupName => $items)
             <tbody class="divide-y divide-slate-100">
+                @if($config['by_lab'])
+                <tr class="bg-sky-50/70 border-y border-slate-200">
+                    <td colspan="5" class="px-5 py-2">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-sm font-semibold text-slate-800"><i class="fas fa-flask text-slate-400 text-xs mr-1"></i> {{ $groupName }}</p>
+                            <p class="text-xs text-slate-500 whitespace-nowrap">{{ $items->count() }} prod. · costo <strong class="text-slate-800">{{ $money($items->sum('cost_value')) }}</strong></p>
+                        </div>
+                    </td>
+                </tr>
+                @endif
                 @foreach($items as $p)
                 <tr class="hover:bg-slate-50">
                     <td class="px-5 py-2"><p class="text-xs font-medium text-slate-800">{{ $p->name }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $p->code }}@if($p->category) · {{ $p->category->name }}@endif</p></td>
@@ -81,11 +89,10 @@
                 </tr>
                 @endforeach
             </tbody>
+            @endforeach
         </table>
         </div>
+        @endif
     </div>
-    @empty
-    <div class="bg-white rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-400">No hay productos para mostrar</div>
-    @endforelse
 </div>
 @endsection
