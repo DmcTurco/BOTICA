@@ -152,7 +152,7 @@ it('las ventas a crédito no se editan y el crédito exige privilegio para cobra
 
 it('el cliente guarda su línea de crédito', function () {
     loginEmployee();
-    $this->seed(Database\Seeders\DocumentSeriesSeeder::class);   // correlativo de clientes (C-000001)
+    $this->seed(Database\Seeders\DocumentSeriesSeeder::class);   // correlativo de clientes (C-00000001)
 
     $this->post(route('employee.clients.store'), ['name' => 'Doña Rosa', 'credit_limit' => 150])->assertSessionHasNoErrors();
 

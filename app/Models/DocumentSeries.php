@@ -53,7 +53,7 @@ class DocumentSeries extends Model
     ];
 
     /**
-     * Correlativos internos globales (sin sede ni compañía): P-000001, C-000001...
+     * Correlativos internos globales (sin sede ni compañía): P-00000001, C-00000001...
      */
     const GLOBAL = [
         self::PRODUCTO      => ['series' => 'P',   'name' => 'Producto'],
@@ -82,8 +82,8 @@ class DocumentSeries extends Model
      *
      * Ejemplos:
      *   DocumentSeries::siguiente('BOLETA')   → "B001-00000001"
-     *   DocumentSeries::siguiente('PRODUCTO') → "P-000001"
-     *   DocumentSeries::siguiente('COMPRA')   → "CMP-000001"
+     *   DocumentSeries::siguiente('PRODUCTO') → "P-00000001"
+     *   DocumentSeries::siguiente('COMPRA')   → "CMP-00000001"
      *
      * Los comprobantes de venta (BOLETA, FACTURA, NOTA_VENTA) llevan serie y correlativo
      * propios de cada sede: hay que pasar el $branchId de la sede que vende.
@@ -161,6 +161,42 @@ class DocumentSeries extends Model
     }
 
     /**
+     * Reserva de una vez $cantidad correlativos internos globales consecutivos (p. ej. al precargar
+     * el catálogo de productos de una compañía). Debe llamarse DENTRO de una transacción.
+     * Devuelve los códigos en orden: ['P-00000001', 'P-00000002', ...].
+     */
+    public static function reservar(string $typeCode, int $cantidad): array
+    {
+        if (!isset(self::GLOBAL[$typeCode])) {
+            throw new \RuntimeException("Solo se pueden reservar en bloque correlativos internos globales ({$typeCode}).");
+        }
+        if ($cantidad <= 0) {
+            return [];
+        }
+
+        if (!self::where('type_code', $typeCode)->whereNull('branch_id')->exists()) {
+            self::crearSeriesGlobales();
+        }
+
+        $serie = self::where('type_code', $typeCode)->whereNull('branch_id')->where('active', true)->lockForUpdate()->firstOrFail();
+
+        $desde  = $serie->current_number + 1;
+        $hasta  = $serie->current_number + $cantidad;
+        $limite = (10 ** $serie->digits) - 1;
+
+        if ($hasta > $limite) {
+            throw new \RuntimeException("El correlativo {$serie->series} no alcanza para {$cantidad} códigos más (llegaría a {$hasta}).");
+        }
+
+        $serie->update(['current_number' => $hasta]);
+
+        return array_map(
+            fn ($n) => $serie->series . '-' . str_pad($n, $serie->digits, '0', STR_PAD_LEFT),
+            range($desde, $hasta)
+        );
+    }
+
+    /**
      * Crea las series de comprobantes de una sede (boleta, factura y nota de venta).
      * Cada serie toma el siguiente número libre de la compañía (B001, B002...).
      * Es idempotente: si la sede ya tiene serie de un tipo, no crea otra.
@@ -216,7 +252,7 @@ class DocumentSeries extends Model
                 'name'           => $format['name'],
                 'series'         => $format['series'],
                 'current_number' => 0,
-                'digits'         => 6,
+                'digits'         => 8,   // 8 dígitos: alcanza para muchas compañías con catálogo precargado
                 'active'         => true,
             ]);
 

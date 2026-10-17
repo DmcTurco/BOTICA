@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Company;
 use App\Models\DocumentSeries;
 use App\Models\DocumentType;
+use App\Services\CompanyProductCatalog;
 use App\Services\CompanyStarterCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +34,8 @@ class CompanyController extends Controller
      */
     public function create()
     {
-        return view('admin.pages.companies.form');
+        // Cuántos productos trae el catálogo precargable (se muestra en la casilla)
+        return view('admin.pages.companies.form', ['catalogSize' => CompanyProductCatalog::size()]);
     }
 
     /**
@@ -41,11 +43,12 @@ class CompanyController extends Controller
      * con las series de comprobantes (B001, F001, NV01...), los datos fijos del sistema
      * y el catálogo base (unidades, categorías y laboratorios).
      * Nace GRATIS (sin cobro); el cobro se configura después en Suscripciones.
-     * El resto (empleados, productos...) lo registra la propia empresa desde su panel.
+     * Opcionalmente nace con el catálogo de productos precargado (stock 0, ver CompanyProductCatalog);
+     * el resto (empleados, stock...) lo registra la propia empresa desde su panel.
      */
     public function store(CompanyRequest $request)
     {
-        $company = DB::transaction(function () use ($request) {
+        [$company, $loaded] = DB::transaction(function () use ($request) {
             $company = Company::create($request->safe()->only(['name', 'ruc', 'address', 'phone', 'email', 'password']));
 
             $branch = Branch::create([
@@ -63,11 +66,18 @@ class CompanyController extends Controller
             // Catálogo base: unidades, categorías y laboratorios comunes
             CompanyStarterCatalog::seed($company);
 
-            return $company;
+            // Opcional: productos precargados con stock 0 (medicamentos DIGEMID + no medicamentos)
+            $loaded = $request->boolean('load_products') ? CompanyProductCatalog::seed($company) : null;
+
+            return [$company, $loaded];
         });
 
+        $productsNote = $loaded
+            ? ' Se cargaron ' . number_format($loaded['medicines'] + $loaded['others']) . ' productos con stock en 0.'
+            : '';
+
         return redirect()->route('admin.companies.index')
-            ->with('success', "Empresa «{$company->name}» creada (gratis por ahora). Ya puede entrar con {$company->email} en /company/login. Para cobrarle, configúrala en Suscripciones.");
+            ->with('success', "Empresa «{$company->name}» creada (gratis por ahora).{$productsNote} Ya puede entrar con {$company->email} en /company/login. Para cobrarle, configúrala en Suscripciones.");
     }
 
     /**

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-            $table->string('code', 20)->primary();                    // PK interna, la genera el sistema (P-000001)
+            $table->string('code', 20)->primary();                    // PK interna, la genera el sistema (P-00000001)
             $table->unsignedBigInteger('company_id')->index();        // compañía dueña del catálogo
             $table->string('barcode', 30)->nullable();                // código de barras (EAN) de la caja; opcional
             $table->string('name', 150);
@@ -38,7 +38,7 @@ return new class extends Migration
             $table->string('location', 50)->nullable()->comment('Ubicación de referencia en farmacia');
             $table->smallInteger('status')->nullable();
 
-            $table->unsignedBigInteger('employee_id')->index();       // empleado que registró el producto
+            $table->unsignedBigInteger('employee_id')->nullable()->index(); // empleado que registró el producto (null = catálogo precargado por el sistema)
 
             // Control de sistema
             $table->timestamps();

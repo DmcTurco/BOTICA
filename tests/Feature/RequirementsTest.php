@@ -86,6 +86,6 @@ it('los correlativos internos se crean solos y el cliente público no gasta núm
     Client::publicFor(1);
     Client::publicFor(1);
 
-    expect($client->code)->toBe('C-000001')
+    expect($client->code)->toBe('C-00000001')
         ->and(DocumentSeries::where('type_code', DocumentSeries::CLIENTE)->value('current_number'))->toBe(1);
 });

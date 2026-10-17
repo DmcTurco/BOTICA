@@ -102,6 +102,24 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Catálogo de productos precargado (opcional; unidades, categorías y laboratorios se cargan siempre) --}}
+            <div class="border-t border-slate-100 pt-5">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Productos</p>
+                <label class="flex items-start gap-3 p-4 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                    <input type="hidden" name="load_products" value="0">
+                    <input type="checkbox" name="load_products" value="1" class="mt-0.5 w-4 h-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                           {{ old('load_products', '1') == '1' ? 'checked' : '' }}>
+                    <span>
+                        <span class="block text-sm font-semibold text-slate-700">Cargar el catálogo de productos (stock en 0)</span>
+                        <span class="block text-xs text-slate-500 mt-0.5">
+                            Unos {{ number_format($catalogSize ?? 0) }} productos listos para vender: los medicamentos más comunes en las boticas
+                            del Perú (fuente DIGEMID, con registro sanitario, laboratorio, presentación y precio de referencia) y productos de
+                            botica que no son medicamentos (sin precio). Todos con stock en 0: la empresa lo ingresa con sus compras.
+                        </span>
+                    </span>
+                </label>
+            </div>
             @endunless
 
         </div>

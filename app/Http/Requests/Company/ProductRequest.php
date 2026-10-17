@@ -56,7 +56,7 @@ class ProductRequest extends FormRequest
             $rules['vencimiento_inicial'] = 'nullable|date';
         }
 
-        // El código interno lo genera el sistema (P-000001). El de barras es opcional y no se repite
+        // El código interno lo genera el sistema (P-00000001). El de barras es opcional y no se repite
         // dentro de la compañía (incluye productos eliminados: el índice único de la BD también los cuenta)
         $rules['codigo_barras'] = [
             'nullable', 'max:30', 'regex:/^[A-Za-z0-9\-]+$/',

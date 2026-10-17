@@ -70,7 +70,7 @@
                     <div id="tab-general" class="tab-panel space-y-5">
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            {{-- Código interno: lo genera el sistema al guardar (P-000001) --}}
+                            {{-- Código interno: lo genera el sistema al guardar (P-00000001) --}}
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1.5">Código</label>
                                 <div class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 font-mono {{ isset($products) ? 'text-slate-700' : 'text-slate-400' }}">

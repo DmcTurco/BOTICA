@@ -400,8 +400,9 @@ class OrderController extends Controller
             $price  = $presentation ? (float) $presentation->sale_price : (float) $product->unit_sale_price;
             $factor = $presentation ? (float) $presentation->equivalent_amount : 1.0;
 
-            if ($factor <= 0 || ($presentation === null && $product->unit_sale_price === null)) {
-                return ['error' => "«{$product->name}» no tiene precio de venta configurado."];
+            // Sin precio (p. ej. un producto del catálogo precargado que la botica aún no ha preciado)
+            if ($factor <= 0 || $price <= 0) {
+                return ['error' => "«{$product->name}» no tiene precio de venta. Ponle su precio en Productos antes de venderlo."];
             }
 
             $key = $product->code . '|' . ($presentation?->id ?? 'base');

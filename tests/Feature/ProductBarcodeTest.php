@@ -42,7 +42,7 @@ it('el código interno lo genera el sistema y el de barras se guarda aparte', fu
         ->assertSessionHasNoErrors();
 
     $product = Product::where('name', 'Panadol 500mg')->sole();
-    expect($product->code)->toBe('P-000001')
+    expect($product->code)->toBe('P-00000001')
         ->and($product->barcode)->toBe('7751234567890')
         ->and(DocumentSeries::where('type_code', DocumentSeries::PRODUCTO)->value('current_number'))->toBe(1);
 });
@@ -75,7 +75,7 @@ it('dos compañías pueden registrar el mismo código de barras', function () {
         ->assertSessionHasNoErrors();
 
     expect(Product::where('barcode', '7751234567890')->pluck('company_id')->sort()->values()->all())->toBe([1, $other->id])
-        ->and(Product::pluck('code')->sort()->values()->all())->toBe(['P-000001', 'P-000002']);
+        ->and(Product::pluck('code')->sort()->values()->all())->toBe(['P-00000001', 'P-00000002']);
 });
 
 it('al editar se puede conservar o cambiar el código de barras', function () {

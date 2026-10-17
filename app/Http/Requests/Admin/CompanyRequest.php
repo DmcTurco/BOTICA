@@ -40,6 +40,7 @@ class CompanyRequest extends FormRequest
         if (!$isUpdate) {
             $rules['branch_name']    = 'required|string|max:100';
             $rules['branch_address'] = 'nullable|string|max:200';
+            $rules['load_products']  = 'nullable|boolean';   // precargar el catálogo de productos (stock 0)
         }
 
         return $rules;
