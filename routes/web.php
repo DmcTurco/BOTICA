@@ -182,6 +182,12 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware(['auth:employee', 'subscriptio
         Route::get('adjustments', [Employee\InventoryAdjustmentController::class, 'index'])->name('adjustments.index');
         Route::get('adjustments/create', [Employee\InventoryAdjustmentController::class, 'create'])->name('adjustments.create');
         Route::post('adjustments', [Employee\InventoryAdjustmentController::class, 'store'])->name('adjustments.store');
+
+        // Inventario inicial (toma de inventario de muchos productos, por pantalla o Excel)
+        Route::get('initial-inventory', [Employee\InitialInventoryController::class, 'index'])->name('initial-inventory.index');
+        Route::post('initial-inventory', [Employee\InitialInventoryController::class, 'store'])->name('initial-inventory.store');
+        Route::get('initial-inventory/template', [Employee\InitialInventoryController::class, 'template'])->name('initial-inventory.template');
+        Route::post('initial-inventory/import', [Employee\InitialInventoryController::class, 'import'])->name('initial-inventory.import');
     });
 
     // Productos por debajo del stock mínimo

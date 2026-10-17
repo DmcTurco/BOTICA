@@ -334,6 +334,15 @@
                         Ajuste de inventario
                     </a>
                 </li>
+                {{-- Toma de inventario de muchos productos a la vez (mismo permiso que el ajuste) --}}
+                <li>
+                    <a href="{{ route('employee.initial-inventory.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                              {{ request()->routeIs('employee.initial-inventory.*') ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                        <i class="fas fa-clipboard-list w-4 text-center shrink-0"></i>
+                        Inventario inicial
+                    </a>
+                </li>
                 @endif
                 @if($hasReplenish)
                 <li>

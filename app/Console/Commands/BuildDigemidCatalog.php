@@ -2,10 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Support\XlsxReader;
 use Illuminate\Console\Command;
-use RuntimeException;
-use XMLReader;
-use ZipArchive;
 
 /**
  * Genera el catálogo de medicamentos que se precarga en las compañías nuevas, a partir del Excel
@@ -89,7 +87,7 @@ class BuildDigemidCatalog extends Command
             return self::FAILURE;
         }
 
-        $rows    = $this->readSheet($file);
+        $rows    = XlsxReader::rows($file);
         $header  = null;
         $catalog = [];
 
@@ -248,57 +246,5 @@ class BuildDigemidCatalog extends Command
     private function plain(string $text): string
     {
         return strtr(mb_strtolower($text, 'UTF-8'), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n']);
-    }
-
-    /**
-     * Lee la primera hoja de un .xlsx con ZipArchive + XMLReader (sin librerías externas).
-     * Devuelve las filas como arreglos indexados por número de columna (A=0, B=1...).
-     */
-    private function readSheet(string $file): \Generator
-    {
-        $zip = new ZipArchive();
-        if ($zip->open($file) !== true) {
-            throw new RuntimeException('No se pudo abrir el Excel.');
-        }
-
-        // Textos compartidos (las celdas de texto guardan solo su índice)
-        $shared = [];
-        $xml = $zip->getFromName('xl/sharedStrings.xml');
-        if ($xml !== false) {
-            $reader = new XMLReader();
-            $reader->XML($xml);
-            while ($reader->read()) {
-                if ($reader->nodeType === XMLReader::ELEMENT && $reader->name === 'si') {
-                    $node = simplexml_load_string($reader->readOuterXml());
-                    $shared[] = $node->t !== null && (string) $node->t !== '' ? (string) $node->t : implode('', array_map('strval', $node->xpath('//*[local-name()="t"]')));
-                }
-            }
-        }
-
-        $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
-        $zip->close();
-
-        $reader = new XMLReader();
-        $reader->XML($sheet);
-        while ($reader->read()) {
-            if ($reader->nodeType !== XMLReader::ELEMENT || $reader->name !== 'row') {
-                continue;
-            }
-            $row = [];
-            foreach (simplexml_load_string($reader->readOuterXml())->c as $cell) {
-                $col = 0;
-                foreach (str_split(preg_replace('/\d+/', '', (string) $cell['r'])) as $letter) {
-                    $col = $col * 26 + (ord($letter) - 64);
-                }
-                $value = (string) $cell->v;
-                if ((string) $cell['t'] === 's') {
-                    $value = $shared[(int) $value] ?? '';
-                } elseif ((string) $cell['t'] === 'inlineStr') {
-                    $value = (string) $cell->is->t;
-                }
-                $row[$col - 1] = $value;
-            }
-            yield $row;
-        }
     }
 }

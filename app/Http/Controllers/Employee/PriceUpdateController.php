@@ -75,7 +75,7 @@ class PriceUpdateController extends Controller
                 $product = $products->get($code);
 
                 if ($product) {
-                    $changed += $this->applyPrices($product, $values, $employee->id);
+                    $changed += PriceChange::apply($product, $values, $employee->id);
                 }
             }
         });
@@ -111,7 +111,7 @@ class PriceUpdateController extends Controller
                     'purchase_price'  => in_array($data['target'], ['purchase', 'both'], true) ? round((float) $product->purchase_price * $factor, 2) : (float) $product->purchase_price,
                     'unit_sale_price' => in_array($data['target'], ['sale', 'both'], true) ? round((float) $product->unit_sale_price * $factor, 2) : (float) $product->unit_sale_price,
                 ];
-                $changed += $this->applyPrices($product, $new, $employee->id);
+                $changed += PriceChange::apply($product, $new, $employee->id);
             });
         });
 
@@ -138,41 +138,5 @@ class PriceUpdateController extends Controller
         }
 
         return $query;
-    }
-
-    /**
-     * Aplica los precios nuevos a un producto y deja cada cambio en la bitácora.
-     * Devuelve cuántos precios cambiaron.
-     */
-    private function applyPrices(Product $product, array $values, int $employeeId): int
-    {
-        $count = 0;
-
-        foreach (['purchase_price', 'unit_sale_price'] as $field) {
-            $old = round((float) $product->{$field}, 2);
-            $new = round((float) $values[$field], 2);
-
-            if ($old === $new) {
-                continue;
-            }
-
-            PriceChange::create([
-                'company_id'   => $product->company_id,
-                'product_code' => $product->code,
-                'field'        => $field,
-                'old_value'    => $old,
-                'new_value'    => $new,
-                'employee_id'  => $employeeId,
-            ]);
-
-            $product->{$field} = $new;
-            $count++;
-        }
-
-        if ($count) {
-            $product->save();
-        }
-
-        return $count;
     }
 }
