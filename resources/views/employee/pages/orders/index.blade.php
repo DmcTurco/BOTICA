@@ -792,15 +792,56 @@ $(document).on('click', '.alt-item', function () {
     $('#inputBusqueda').val($(this).data('name')).trigger('input');
 });
 
+// ── Presentaciones y stock ────────────────────────────────────
+// El carrito tiene una línea por producto + presentación (clave "código|id" o "código|base"):
+// así la unidad y el blíster del mismo producto quedan separados, cada uno con su precio.
+// El stock del producto está en unidades base; cada línea ocupa cantidad × factor
+// (1 blíster x10 = 10 unidades), y entre todas sus líneas no pueden superar el stock.
+function claveLinea(code, presentationId) {
+    return code + '|' + (presentationId || 'base');
+}
+
+// Unidades base que ya ocupan en el carrito las líneas de un producto (sin contar una de ellas)
+function unidadesEnCarrito(code, exceptoClave) {
+    return Object.entries(carrito).reduce((s, [k, i]) => s + (i.code === code && k !== exceptoClave ? i.qty * i.factor : 0), 0);
+}
+
+// Cantidad máxima de una presentación según el stock libre del producto
+function maxCantidad(code, factor, stock, exceptoClave) {
+    return Math.floor(Math.max(stock - unidadesEnCarrito(code, exceptoClave), 0) / factor + 1e-9);
+}
+
+function escapar(texto) {
+    return $('<div>').text(texto == null ? '' : String(texto)).html();
+}
+
 // ── Modal de cantidad / presentación ─────────────────────────
 let modalProducto   = null;
 let modalPrecio     = 0;
+let modalPresentacion = { id: null, factor: 1, label: '' };
+
+// Cantidad máxima con la presentación elegida en el modal (lo ya agregado de esa misma
+// presentación se suma al agregar, así que cuenta como ocupado)
+function modalMax() {
+    if (!modalProducto) return 9999;
+    return maxCantidad(modalProducto.code, modalPresentacion.factor, modalProducto.stock, null);
+}
+
+function pintarStockModal() {
+    const max = modalMax();
+    $('#modalCantidad').attr('max', max);
+    $('#modalStock').text(modalPresentacion.factor > 1
+        ? `${modalProducto.stock} unid. · alcanza para ${max}`
+        : `${max} unid.`);
+}
 
 $(document).on('click', '.btn-agregar', function() {
     const code          = $(this).data('code');
-    const name          = $(this).data('name');
+    const name          = String($(this).data('name'));
     const price         = parseFloat($(this).data('price'));
-    const stock         = parseInt($(this).data('stock'));
+    // Al editar una venta, sus líneas traen el stock que ya tenía descontado (stock + lo vendido)
+    const enCarrito     = Object.values(carrito).find(i => i.code === code);
+    const stock         = Math.max(parseInt($(this).data('stock')) || 0, enCarrito ? enCarrito.stock : 0);
     const afectacion    = String($(this).data('afectacion') || '20');
     const receta        = parseInt($(this).data('receta')) || 0;
     const ingredient    = String($(this).data('ingredient') || '');
@@ -810,11 +851,11 @@ $(document).on('click', '.btn-agregar', function() {
     $('#altLista').empty();
     $('#altBox').toggleClass('hidden', !ingredient);
     modalPrecio   = price;
+    modalPresentacion = { id: null, factor: 1, label: '' };
 
     $('#modalNombre').text(name);
     $('#modalCodigo').text(code);
-    $('#modalCantidad').val(1).attr('max', stock);
-    $('#modalStock').text(stock);
+    $('#modalCantidad').val(1);
     $('#modalPrecio').text('S/ ' + price.toFixed(2));
 
     const $lista = $('#listaPresentaciones').empty();
@@ -823,27 +864,29 @@ $(document).on('click', '.btn-agregar', function() {
         // Si hay una presentación de 1 unidad al mismo precio que la base, es la misma opción:
         // se muestra una sola vez con el nombre de la presentación (ej: Tableta)
         const duplicada = presentations.find(p => parseFloat(p.amount) === 1 && Math.abs(parseFloat(p.price) - price) < 0.005);
-        $lista.append(opcionPresentacion('base', duplicada ? duplicada.label : 'Unidad', '', price, true));
+        $lista.append(opcionPresentacion('base', duplicada ? duplicada.label : 'Unidad', '', price, 1, true));
         presentations.forEach(p => {
             if (p === duplicada) return;
-            $lista.append(opcionPresentacion(p.id, p.label, 'x' + p.amount + ' uds', p.price, false));
+            $lista.append(opcionPresentacion(p.id, p.label, 'x' + p.amount + ' uds', p.price, parseFloat(p.amount), false));
         });
     } else {
         $('#seccionPresentaciones').addClass('hidden');
     }
 
+    pintarStockModal();
     document.getElementById('modalAgregar').style.setProperty('display', 'flex', 'important');
     setTimeout(() => $('#modalCantidad').focus().select(), 50);
 });
 
-function opcionPresentacion(val, label, sub, price, checked) {
+function opcionPresentacion(val, label, sub, price, factor, checked) {
     const active = checked ? 'border-sky-500 bg-sky-50' : 'border-slate-200 hover:border-slate-300';
     return `
         <label class="flex items-center gap-2.5 p-2.5 rounded-lg border ${active} cursor-pointer presentacion-opcion transition-colors">
-            <input type="radio" name="modalPresentacion" value="${val}" data-price="${price}" ${checked ? 'checked' : ''}
+            <input type="radio" name="modalPresentacion" value="${val}" data-price="${price}" data-factor="${factor}"
+                   data-label="${escapar(val === 'base' ? '' : label)}" ${checked ? 'checked' : ''}
                    class="text-emerald-600 shrink-0">
             <span class="flex-1 min-w-0">
-                <span class="text-sm font-medium text-slate-700">${label}</span>
+                <span class="text-sm font-medium text-slate-700">${escapar(label)}</span>
                 ${sub ? `<span class="text-xs text-slate-400 ml-1">(${sub})</span>` : ''}
             </span>
             <span class="text-sm font-semibold text-slate-700 whitespace-nowrap">S/ ${parseFloat(price).toFixed(2)}</span>
@@ -852,12 +895,20 @@ function opcionPresentacion(val, label, sub, price, checked) {
 
 $(document).on('change', 'input[name="modalPresentacion"]', function() {
     modalPrecio = parseFloat($(this).data('price'));
+    modalPresentacion = {
+        id:     $(this).val() === 'base' ? null : parseInt($(this).val()),
+        factor: parseFloat($(this).data('factor')) || 1,
+        label:  String($(this).attr('data-label') || ''),
+    };
     $('#modalPrecio').text('S/ ' + modalPrecio.toFixed(2));
     $('.presentacion-opcion').each(function() {
         const checked = $(this).find('input').is(':checked');
         $(this).toggleClass('border-sky-500 bg-sky-50', checked)
                .toggleClass('border-slate-200', !checked);
     });
+    pintarStockModal();
+    const max = modalMax();
+    if ((parseInt($('#modalCantidad').val()) || 1) > max) $('#modalCantidad').val(Math.max(max, 1));
 });
 
 $('#modalBtnDec').on('click', function() {
@@ -866,22 +917,28 @@ $('#modalBtnDec').on('click', function() {
 });
 
 $('#modalBtnInc').on('click', function() {
-    const v   = parseInt($('#modalCantidad').val()) || 1;
-    const max = modalProducto ? modalProducto.stock : 9999;
-    if (v < max) $('#modalCantidad').val(v + 1);
+    const v = parseInt($('#modalCantidad').val()) || 1;
+    if (v < modalMax()) $('#modalCantidad').val(v + 1);
 });
 
 $('#modalBtnAgregar').on('click', function() {
     if (!modalProducto) return;
     const { code, name, stock, afectacion, receta } = modalProducto;
-    const price = modalPrecio;
-    const qty   = Math.min(Math.max(parseInt($('#modalCantidad').val()) || 1, 1), stock);
+    const { id: presentationId, factor, label } = modalPresentacion;
+    const max = modalMax();
 
-    if (carrito[code]) {
-        carrito[code].qty   = Math.min(carrito[code].qty + qty, stock);
-        carrito[code].price = price;
+    if (max < 1) {
+        window.showAlertModal('Stock insuficiente', [`No queda stock de «${name}» para agregar ${label ? 'esa presentación' : 'otra unidad'}.`]);
+        return;
+    }
+
+    const qty   = Math.min(Math.max(parseInt($('#modalCantidad').val()) || 1, 1), max);
+    const clave = claveLinea(code, presentationId);
+
+    if (carrito[clave]) {
+        carrito[clave].qty += qty;
     } else {
-        carrito[code] = { name, price, stock, qty, afectacion, receta };
+        carrito[clave] = { code, name, label, presentationId, factor, price: modalPrecio, stock, qty, afectacion, receta };
     }
 
     cerrarModalAgregar();
@@ -898,27 +955,33 @@ $(document).on('keydown', function(e) {
 });
 
 // ── Cambiar cantidad en carrito ───────────────────────────────
+// Máximo de una línea: lo que deja libre el resto de líneas del mismo producto
+function maxLinea(clave) {
+    const i = carrito[clave];
+    return maxCantidad(i.code, i.factor, i.stock, clave);
+}
+
 $(document).on('input', '.input-cantidad', function() {
-    const code = $(this).data('code');
-    const val  = parseInt($(this).val()) || 1;
-    carrito[code].qty = Math.min(Math.max(val, 1), carrito[code].stock);
-    $(this).val(carrito[code].qty);
+    const clave = $(this).data('key');
+    const val   = parseInt($(this).val()) || 1;
+    carrito[clave].qty = Math.min(Math.max(val, 1), Math.max(maxLinea(clave), 1));
+    $(this).val(carrito[clave].qty);
     actualizarTotales();
 });
 
 $(document).on('click', '.btn-dec', function() {
-    const code = $(this).data('code');
-    if (carrito[code].qty > 1) { carrito[code].qty--; renderCarrito(); }
+    const clave = $(this).data('key');
+    if (carrito[clave].qty > 1) { carrito[clave].qty--; renderCarrito(); }
 });
 
 $(document).on('click', '.btn-inc', function() {
-    const code = $(this).data('code');
-    if (carrito[code].qty < carrito[code].stock) { carrito[code].qty++; renderCarrito(); }
+    const clave = $(this).data('key');
+    if (carrito[clave].qty < maxLinea(clave)) { carrito[clave].qty++; renderCarrito(); }
 });
 
 // ── Eliminar del carrito ──────────────────────────────────────
 $(document).on('click', '.btn-quitar', function() {
-    delete carrito[$(this).data('code')];
+    delete carrito[$(this).data('key')];
     renderCarrito();
 });
 
@@ -945,26 +1008,30 @@ function renderCarrito() {
         $('#btnVaciarCarrito').removeClass('hidden');
         $('#btnTerminarVenta').prop('disabled', false);
 
-        keys.forEach((code) => {
-            const item    = carrito[code];
+        keys.forEach((clave) => {
+            const item    = carrito[clave];
             const importe = (item.price * item.qty).toFixed(2);
+            // La presentación (Blíster x10, Caja x100...) se muestra junto al nombre
+            const presentacion = item.label
+                ? `<span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 text-[10px] font-semibold">${escapar(item.label)}${item.factor > 1 ? ' x' + item.factor : ''}</span>`
+                : '';
             $tbody.append(`
                 <tr class="hover:bg-slate-50 transition-colors">
                     <td class="px-4 py-2.5">
-                        <p class="text-sm font-medium text-slate-800">${item.name}</p>
-                        <p class="text-xs text-slate-400 font-mono">${code}</p>
+                        <p class="text-sm font-medium text-slate-800">${escapar(item.name)}${presentacion}</p>
+                        <p class="text-xs text-slate-400 font-mono">${escapar(item.code)}</p>
                     </td>
                     <td class="px-3 py-2.5">
                         <div class="flex items-center justify-center gap-1">
-                            <button class="btn-dec w-6 h-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors text-xs" data-code="${code}">−</button>
-                            <input class="input-cantidad w-10 text-center text-sm font-semibold border border-slate-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-sky-500" data-code="${code}" value="${item.qty}" min="1" max="${item.stock}">
-                            <button class="btn-inc w-6 h-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors text-xs" data-code="${code}">+</button>
+                            <button class="btn-dec w-6 h-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors text-xs" data-key="${escapar(clave)}">−</button>
+                            <input class="input-cantidad w-10 text-center text-sm font-semibold border border-slate-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-sky-500" data-key="${escapar(clave)}" value="${item.qty}" min="1" max="${maxLinea(clave)}">
+                            <button class="btn-inc w-6 h-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors text-xs" data-key="${escapar(clave)}">+</button>
                         </div>
                     </td>
                     <td class="px-3 py-2.5 text-right text-xs text-slate-500">S/ ${item.price.toFixed(2)}</td>
                     <td class="px-4 py-2.5 text-right font-semibold text-slate-800">S/ ${importe}</td>
                     <td class="px-2 py-2.5">
-                        <button class="btn-quitar w-6 h-6 flex items-center justify-center rounded text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors" data-code="${code}">
+                        <button class="btn-quitar w-6 h-6 flex items-center justify-center rounded text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors" data-key="${escapar(clave)}">
                             <i class="fas fa-xmark text-xs"></i>
                         </button>
                     </td>
@@ -1209,11 +1276,14 @@ $('#btnTerminarVenta').on('click', function() {
     // Pago en efectivo: preguntar con cuánto paga y mostrar el vuelto antes de cerrar la venta
     if ($('#tipoPago').val() == 1 && !cobroListo) { abrirModalCobro(); return; }
 
-    const items = Object.entries(carrito).map(([code, item]) => ({
-        code:  code,
-        name:  item.name,
-        price: item.price,
-        qty:   item.qty,
+    // El servidor toma precio y unidades de la presentación desde la base de datos;
+    // el precio se envía solo para detectar si cambió mientras la página estaba abierta
+    const items = Object.values(carrito).map(item => ({
+        code:            item.code,
+        presentation_id: item.presentationId,
+        name:            item.name,
+        price:           item.price,
+        qty:             item.qty,
     }));
 
     const { sub, igv, total } = totalesVenta;
@@ -1303,8 +1373,13 @@ $('#btnTerminarVenta').on('click', function() {
 
 // ── Precargar la venta que se está editando ───────────────────
 if (EDIT_ORDER) {
+    // El nombre guardado ya incluye la presentación (ej. "Paracetamol (Blíster x10)"), por eso sin etiqueta aparte
     EDIT_ORDER.items.forEach(function(i) {
-        carrito[i.code] = { name: i.name, price: i.price, stock: i.stock, qty: i.qty, afectacion: String(i.afectacion) };
+        carrito[claveLinea(i.code, i.presentation_id)] = {
+            code: i.code, name: i.name, label: '', presentationId: i.presentation_id || null,
+            factor: parseFloat(i.factor) || 1, price: i.price, stock: i.stock, qty: i.qty,
+            afectacion: String(i.afectacion), receta: parseInt(i.receta) || 0,
+        };
     });
     renderCarrito();
 

@@ -79,11 +79,13 @@ class BranchReportController extends Controller
             ];
         });
 
-        // Más vendidos de toda la empresa
+        // Más vendidos de toda la empresa (cantidad en unidades base: un blíster x10 cuenta 10)
+        // El nombre sale del producto: product_name del ítem incluye la presentación vendida
         $top = DB::table('order_detail')->join('orders', 'orders.id', '=', 'order_detail.order_id')
+            ->leftJoin('products', 'products.code', '=', 'order_detail.product_code')
             ->where('orders.company_id', $company->id)->where('orders.status', 1)
             ->whereDate('orders.created_at', '>=', $from->toDateString())->whereDate('orders.created_at', '<=', $to->toDateString())
-            ->select('order_detail.product_code', DB::raw('MAX(order_detail.product_name) as name'), DB::raw('SUM(order_detail.quantity) as qty'), DB::raw('SUM(order_detail.subtotal) as net'))
+            ->select('order_detail.product_code', DB::raw('COALESCE(MAX(products.name), MAX(order_detail.product_name)) as name'), DB::raw('SUM(order_detail.quantity * order_detail.units_per_item) as qty'), DB::raw('SUM(order_detail.subtotal) as net'))
             ->groupBy('order_detail.product_code')->orderByDesc('qty')->limit(10)->get();
 
         if ($request->query('export') === 'csv') {

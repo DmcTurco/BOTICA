@@ -40,10 +40,11 @@ it('acepta el precio real del producto', function () {
         ->and($result['tax']['total'])->toBe(2.83); // 2.40 + IGV 0.43
 });
 
+// El precio y la presentación de cada línea los fija resolveLines() con la base de datos
 it('rechaza un precio alterado desde el navegador', function () {
     makeProduct();
 
-    $result = callOrderController('pricing', [['code' => 'P001', 'name' => 'x', 'price' => 0.01, 'qty' => 2]], 1, null);
+    $result = callOrderController('resolveLines', [['code' => 'P001', 'name' => 'x', 'price' => 0.01, 'qty' => 2]], 1);
 
     expect($result)->toHaveKey('error');
 });
@@ -51,7 +52,7 @@ it('rechaza un precio alterado desde el navegador', function () {
 it('rechaza productos de otra compañía', function () {
     makeProduct();
 
-    $result = callOrderController('pricing', [['code' => 'P001', 'name' => 'x', 'price' => 1.20, 'qty' => 1]], 99, null);
+    $result = callOrderController('resolveLines', [['code' => 'P001', 'name' => 'x', 'price' => 1.20, 'qty' => 1]], 99);
 
     expect($result)->toHaveKey('error');
 });

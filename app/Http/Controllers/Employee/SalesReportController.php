@@ -364,7 +364,11 @@ class SalesReportController extends Controller
 
     // ── Helpers ─────────────────────────────────────────────────
 
-    /** Cantidad vendida y venta neta por producto en un rango, de órdenes activas de la sede */
+    /**
+     * Cantidad vendida (en unidades base: un blíster x10 cuenta 10) y venta neta por producto
+     * en un rango, de órdenes activas de la sede. En unidades base para que el costo
+     * (precio de compra por unidad) de la ganancia cuadre con lo vendido.
+     */
     private function soldByProduct(Employee $employee, Carbon $from, Carbon $to)
     {
         return DB::table('order_detail')
@@ -376,7 +380,7 @@ class SalesReportController extends Controller
             ->whereDate('orders.created_at', '<=', $to->toDateString())
             ->select(
                 'order_detail.product_code',
-                DB::raw('SUM(order_detail.quantity) as qty'),
+                DB::raw('SUM(order_detail.quantity * order_detail.units_per_item) as qty'),
                 DB::raw('SUM(order_detail.subtotal) as net')
             )
             ->groupBy('order_detail.product_code');

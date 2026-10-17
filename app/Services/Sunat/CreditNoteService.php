@@ -98,7 +98,8 @@ class CreditNoteService
                 continue; // el producto ya no existe en la sede: no hay stock que devolver
             }
 
-            $stock->update(['stock_actual' => $stock->stock_actual + $item->quantity]);
+            // Se devuelven unidades base (un blíster x10 devuelve 10)
+            $stock->update(['stock_actual' => $stock->stock_actual + $item->base_quantity]);
 
             StockMovement::create([
                 'company_id'     => $order->company_id,
@@ -107,8 +108,8 @@ class CreditNoteService
                 'type'           => 'entrada',
                 'reference_type' => 'credit_note',
                 'reference_id'   => $note->id,
-                'quantity'       => (int) $item->quantity,
-                'unit_cost'      => $item->unit_price,
+                'quantity'       => (int) round($item->base_quantity),
+                'unit_cost'      => round((float) $item->unit_price / ((float) $item->units_per_item ?: 1), 2),
                 'balance'        => (int) $stock->stock_actual,
                 'notes'          => "Anulación {$order->voucher_number} (NC {$note->voucher_number})",
             ]);

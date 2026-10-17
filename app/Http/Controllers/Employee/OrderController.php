@@ -330,55 +330,165 @@ class OrderController extends Controller
     }
 
     /**
-     * Calcula el IGV y los totales de una venta con la afectación de cada producto
-     * leída de la base de datos (nunca del navegador).
-     * Devuelve ['tax' => cálculo, 'units' => código SUNAT de unidad por producto]
-     * o ['error' => mensaje] si algún producto no es de la compañía o los totales no coinciden.
+     * Arma las líneas de la venta con los datos de la base de datos (nunca del navegador): el
+     * navegador solo indica producto, presentación y cantidad. El precio, las unidades base que
+     * trae la presentación (blíster x10 = 10), su unidad SUNAT y el nombre salen de aquí.
+     * Una línea por producto + presentación: si llegan repetidas se suman, así la unidad y el
+     * blíster del mismo producto quedan en líneas separadas, cada una con su precio.
+     *
+     * Compatibilidad: un POS abierto antes de esta versión no envía presentation_id; si el precio
+     * enviado no es el de la unidad y coincide con una sola presentación activa, se usa esa.
+     *
+     * Devuelve ['lines' => [[code, name, qty, price, presentation_id, factor, units, unit_code], ...]]
+     * o ['error' => mensaje].
      */
-    private function pricing(array $items, int $companyId, mixed $clientTotal, float $discountPercent = 0, ?float $discountAmount = null): array
+    private function resolveLines(array $items, int $companyId): array
     {
-        $codes    = array_unique(array_column($items, 'code'));
-        $products = Product::with(['unit:id,sunat_code', 'presentations'])
+        $products = Product::with(['unit:id,sunat_code', 'presentations.unit:id,name,sunat_code'])
             ->where('company_id', $companyId)
-            ->whereIn('code', $codes)
+            ->whereIn('code', array_unique(array_column($items, 'code')))
             ->get()
             ->keyBy('code');
 
-        if ($products->count() !== count($codes)) {
-            return ['error' => 'Hay productos que no pertenecen a tu compañía.'];
-        }
+        $lines = [];
 
-        // El precio de cada línea debe ser uno que el producto realmente tiene en la base de datos
-        // (unidad base o una presentación activa); el navegador nunca fija el precio.
         foreach ($items as $item) {
-            $product = $products[$item['code']];
+            $product = $products->get($item['code']);
 
-            $allowed = collect([$product->unit_sale_price])
-                ->merge($product->presentations->where('status', 1)->pluck('sale_price'))
-                ->filter(fn ($price) => $price !== null)
-                ->map(fn ($price) => (float) $price);
-
-            if (!$allowed->contains(fn ($price) => abs($price - (float) $item['price']) < 0.005)) {
-                return ['error' => "El precio de «{$product->name}» no coincide con el precio actual. Actualiza la página e inténtalo de nuevo."];
+            if (!$product) {
+                return ['error' => 'Hay productos que no pertenecen a tu compañía.'];
             }
+
+            $active       = $product->presentations->where('status', 1);
+            $presentation = null;
+            $sentPrice    = isset($item['price']) ? (float) $item['price'] : null;
+
+            if (!empty($item['presentation_id'])) {
+                $presentation = $active->firstWhere('id', (int) $item['presentation_id']);
+
+                if (!$presentation) {
+                    return ['error' => "La presentación elegida de «{$product->name}» ya no está disponible. Actualiza la página e inténtalo de nuevo."];
+                }
+            } elseif ($sentPrice !== null && ($product->unit_sale_price === null || abs((float) $product->unit_sale_price - $sentPrice) >= 0.005)) {
+                $matches = $active->filter(fn ($p) => abs((float) $p->sale_price - $sentPrice) < 0.005);
+
+                if ($matches->count() !== 1) {
+                    return ['error' => "El precio de «{$product->name}» no coincide con el precio actual. Actualiza la página e inténtalo de nuevo."];
+                }
+
+                $presentation = $matches->first();
+            }
+
+            $price  = $presentation ? (float) $presentation->sale_price : (float) $product->unit_sale_price;
+            $factor = $presentation ? (float) $presentation->equivalent_amount : 1.0;
+
+            if ($factor <= 0 || ($presentation === null && $product->unit_sale_price === null)) {
+                return ['error' => "«{$product->name}» no tiene precio de venta configurado."];
+            }
+
+            $key = $product->code . '|' . ($presentation?->id ?? 'base');
+
+            if (isset($lines[$key])) {
+                $lines[$key]['qty']  += (float) $item['qty'];
+                $lines[$key]['units'] = round($lines[$key]['qty'] * $factor, 2);
+                continue;
+            }
+
+            // El nombre incluye la presentación: así sale en el comprobante, SUNAT y los reportes
+            $label = $presentation?->unit?->name ?? 'Presentación';
+            $name  = $presentation
+                ? $product->name . ' (' . $label . ($factor != 1 ? ' x' . rtrim(rtrim(number_format($factor, 2, '.', ''), '0'), '.') : '') . ')'
+                : $product->name;
+
+            $lines[$key] = [
+                'code'            => $product->code,
+                'name'            => mb_substr($name, 0, 150),
+                'qty'             => (float) $item['qty'],
+                'price'           => $price,
+                'presentation_id' => $presentation?->id,
+                'factor'          => $factor,
+                'units'           => round((float) $item['qty'] * $factor, 2),
+                'unit_code'       => $presentation?->unit?->sunat_code ?: ($product->unit?->sunat_code ?: 'NIU'),
+            ];
         }
 
-        $tax = app(TaxCalculator::class)->calculate(
-            $items,
-            $products->map(fn ($p) => $p->igv_affectation)->all(),
-            $discountPercent,
-            $discountAmount
-        );
+        return ['lines' => array_values($lines)];
+    }
+
+    /**
+     * Calcula el IGV y los totales de una venta con la afectación de cada producto
+     * leída de la base de datos (nunca del navegador). Las líneas vienen de resolveLines(),
+     * así que sus precios ya son los de la base de datos.
+     * Devuelve ['tax' => cálculo] o ['error' => mensaje] si los totales no coinciden.
+     */
+    private function pricing(array $lines, int $companyId, mixed $clientTotal, float $discountPercent = 0, ?float $discountAmount = null): array
+    {
+        $affectations = Product::where('company_id', $companyId)
+            ->whereIn('code', array_unique(array_column($lines, 'code')))
+            ->pluck('igv_affectation', 'code')
+            ->all();
+
+        $tax = app(TaxCalculator::class)->calculate($lines, $affectations, $discountPercent, $discountAmount);
 
         // El total que vio el cajero debe coincidir con el del servidor (tolerancia por redondeo)
-        if ($clientTotal !== null && abs($tax['total'] - (float) $clientTotal) > 0.01 * (count($items) + 1)) {
+        if ($clientTotal !== null && abs($tax['total'] - (float) $clientTotal) > 0.01 * (count($lines) + 1)) {
             return ['error' => 'Los totales no coinciden con los precios actuales. Actualiza la página e inténtalo de nuevo.'];
         }
 
-        return [
-            'tax'   => $tax,
-            'units' => $products->map(fn ($p) => $p->unit?->sunat_code ?? 'NIU')->all(),
-        ];
+        return ['tax' => $tax];
+    }
+
+    /**
+     * Registra una línea de la venta: el ítem (con su presentación), la salida de stock en
+     * unidades base (2 blísteres x10 = 20), su kardex y el consumo del lote que vence primero (FEFO).
+     * El stock de la sede ya debe estar bloqueado y verificado (lockStock + insufficientStock).
+     */
+    private function saveLine(Order $order, array $line, array $taxLine, $employee, string $referenceType, BatchService $batches, ?Carbon $movedAt = null): void
+    {
+        OrderItem::create([
+            'order_id'        => $order->id,
+            'product_code'    => $line['code'],
+            'product_name'    => $line['name'],
+            'presentation_id' => $line['presentation_id'],
+            'units_per_item'  => $line['factor'],
+            'unit_price'      => $line['price'],
+            'quantity'        => $line['qty'],
+            'discount_amount' => $taxLine['discount'],
+            'subtotal'        => $taxLine['base'],
+            'igv_affectation' => $taxLine['affectation'],
+            'igv_amount'      => $taxLine['igv'],
+            'unit_code'       => $line['unit_code'],
+        ]);
+
+        $branchStock = BranchStock::where('branch_id', $employee->branch_id)
+            ->where('product_code', $line['code'])
+            ->lockForUpdate()
+            ->first();
+
+        $nuevoStock = $branchStock->stock_actual - $line['units'];
+        $branchStock->update(['stock_actual' => $nuevoStock]);
+
+        // Kardex en unidades base; el costo registrado es el precio por unidad base
+        $movement = new StockMovement([
+            'company_id'     => $employee->company_id,
+            'branch_id'      => $employee->branch_id,
+            'product_code'   => $line['code'],
+            'type'           => 'salida',
+            'reference_type' => $referenceType,
+            'reference_id'   => $order->id,
+            'quantity'       => (int) round($line['units']),
+            'unit_cost'      => round($line['price'] / $line['factor'], 2),
+            'balance'        => (int) $nuevoStock,
+        ]);
+
+        if ($movedAt) {
+            $movement->created_at = $movedAt;
+            $movement->updated_at = $movedAt;
+        }
+
+        $movement->save();
+
+        $batches->consume($employee->branch_id, $line['code'], (float) $line['units'], 'order', $order->id);
     }
 
     /**
@@ -398,19 +508,19 @@ class OrderController extends Controller
     }
 
     /**
-     * Verifica que el stock alcance para los ítems, sumando las cantidades cuando
-     * un mismo producto aparece en varias líneas.
+     * Verifica que el stock alcance para las líneas, en unidades base y sumando todas las
+     * líneas del mismo producto (ej: 3 tabletas + 1 blíster x10 = 13 tabletas).
      * Devuelve el nombre del primer producto sin stock suficiente, o null si todo alcanza.
      */
-    private function insufficientStock(array $items, \Illuminate\Support\Collection $stocks, array $expired = []): ?string
+    private function insufficientStock(array $lines, \Illuminate\Support\Collection $stocks, array $expired = []): ?string
     {
         $required = [];
         $names    = [];
 
-        foreach ($items as $item) {
-            $code            = $item['code'];
-            $required[$code] = ($required[$code] ?? 0) + (float) $item['qty'];
-            $names[$code]  ??= $item['name'] ?? $code;
+        foreach ($lines as $line) {
+            $code            = $line['code'];
+            $required[$code] = ($required[$code] ?? 0) + (float) ($line['units'] ?? $line['qty']);
+            $names[$code]  ??= $line['name'] ?? $code;
         }
 
         foreach ($required as $code => $qty) {
@@ -587,6 +697,7 @@ class OrderController extends Controller
             'items'             => 'required|array|min:1',
             'items.*.code'      => 'required|exists:products,code',
             'items.*.qty'       => 'required|numeric|min:1',
+            'items.*.presentation_id' => 'nullable|integer',
             'items.*.price'     => 'required|numeric|min:0',
             'items.*.name'      => 'required|string',
             'payment_type'      => 'required|in:1,2,3,4,5',
@@ -639,20 +750,29 @@ class OrderController extends Controller
 
         $employee = auth()->guard('employee')->user();
 
-        [$discountPercent, $discountAmount, $discountError] = $this->discountInput($request, $request->items);
+        // Líneas con precio, presentación y unidades base tomados de la base de datos
+        $resolved = $this->resolveLines($request->items, $employee->company_id);
+
+        if (isset($resolved['error'])) {
+            return response()->json(['success' => false, 'message' => $resolved['error']], 422);
+        }
+
+        $lines = $resolved['lines'];
+
+        [$discountPercent, $discountAmount, $discountError] = $this->discountInput($request, $lines);
 
         if ($discountError) {
             return response()->json(['success' => false, 'message' => $discountError], 422);
         }
 
         // IGV y totales: se calculan aquí con la afectación real de cada producto
-        $pricing = $this->pricing($request->items, $employee->company_id, $request->total, $discountPercent, $discountAmount);
+        $pricing = $this->pricing($lines, $employee->company_id, $request->total, $discountPercent, $discountAmount);
 
         if (isset($pricing['error'])) {
             return response()->json(['success' => false, 'message' => $pricing['error']], 422);
         }
 
-        ['tax' => $tax, 'units' => $units] = $pricing;
+        $tax = $pricing['tax'];
 
         // Efectivo recibido (solo pago en efectivo): debe cubrir lo que se cobra
         [$amountReceived, $receivedError] = $this->cashReceived($request, $tax['total']);
@@ -684,7 +804,7 @@ class OrderController extends Controller
         }
 
         // Productos con receta o controlados: la venta exige los datos de la receta
-        $rxLevel          = $this->recipeLevel($request->items, $employee->company_id);
+        $rxLevel          = $this->recipeLevel($lines, $employee->company_id);
         $prescriptionData = null;
 
         if ($rxLevel > 0) {
@@ -713,11 +833,11 @@ class OrderController extends Controller
         try {
             // Bloquear el stock de todos los productos en orden por código (evita bloqueos
             // cruzados entre ventas) y verificar que alcance antes de registrar nada
-            $stocks = $this->lockStock($employee->branch_id, array_column($request->items, 'code'));
+            $stocks = $this->lockStock($employee->branch_id, array_column($lines, 'code'));
 
             $batches = app(BatchService::class);
 
-            if ($faltante = $this->insufficientStock($request->items, $stocks, $batches->expiredMap($employee->branch_id, array_column($request->items, 'code')))) {
+            if ($faltante = $this->insufficientStock($lines, $stocks, $batches->expiredMap($employee->branch_id, array_column($lines, 'code')))) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
@@ -775,52 +895,9 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Registrar ítems, descontar stock en branch_stock y registrar kardex
-            foreach ($request->items as $i => $item) {
-                OrderItem::create([
-                    'order_id'        => $order->id,
-                    'product_code'    => $item['code'],
-                    'product_name'    => $item['name'],
-                    'unit_price'      => $item['price'],
-                    'quantity'        => $item['qty'],
-                    'discount_amount' => $tax['lines'][$i]['discount'],
-                    'subtotal'        => $tax['lines'][$i]['base'],
-                    'igv_affectation' => $tax['lines'][$i]['affectation'],
-                    'igv_amount'      => $tax['lines'][$i]['igv'],
-                    'unit_code'       => $units[$item['code']],
-                ]);
-
-                // Descontar stock en branch_stock
-                $branchStock = BranchStock::where('branch_id', $employee->branch_id)
-                    ->where('product_code', $item['code'])
-                    ->lockForUpdate()
-                    ->first();
-
-                $nuevoStock = $branchStock->stock_actual - $item['qty'];
-                $branchStock->update(['stock_actual' => $nuevoStock]);
-
-                // Registrar salida en el kardex
-                $movement = new StockMovement([
-                    'company_id'     => $employee->company_id,
-                    'branch_id'      => $employee->branch_id,
-                    'product_code'   => $item['code'],
-                    'type'           => 'salida',
-                    'reference_type' => 'order',
-                    'reference_id'   => $order->id,
-                    'quantity'       => (int) $item['qty'],
-                    'unit_cost'      => $item['price'],
-                    'balance'        => (int) $nuevoStock,
-                ]);
-
-                if ($movedAt) {
-                    $movement->created_at = $movedAt;
-                    $movement->updated_at = $movedAt;
-                }
-
-                $movement->save();
-
-                // Sale del lote que vence primero (FEFO)
-                $batches->consume($employee->branch_id, $item['code'], (float) $item['qty'], 'order', $order->id);
+            // Registrar ítems, descontar stock (en unidades base), kardex y lotes
+            foreach ($lines as $i => $line) {
+                $this->saveLine($order, $line, $tax['lines'][$i], $employee, 'order', $batches, $movedAt);
             }
 
             DB::commit();
@@ -917,23 +994,30 @@ class OrderController extends Controller
             'auto_print'       => false,
         ], $branch->getSettingGroup('printing'));
 
-        // Ítems actuales de la orden para precargar el carrito. El stock máximo de cada
-        // uno es el stock actual de la sede más lo que la orden ya tiene descontado.
+        // Ítems actuales de la orden para precargar el carrito. El stock disponible de cada
+        // producto (en unidades base) es el stock actual de la sede más lo que la orden ya
+        // descontó de ese producto en todas sus líneas (unidad, blíster, caja...).
         $stocks = BranchStock::where('branch_id', $branchId)
             ->whereIn('product_code', $order->items->pluck('product_code'))
             ->pluck('stock_actual', 'product_code');
 
-        // Afectación actual de cada producto (el total se recalcula al guardar)
-        $affectations = Product::whereIn('code', $order->items->pluck('product_code'))
-            ->pluck('igv_affectation', 'code');
+        $alreadyTaken = $order->items->groupBy('product_code')->map(fn ($items) => $items->sum('base_quantity'));
+
+        // Afectación y nivel de receta actuales de cada producto (el total se recalcula al guardar)
+        $orderProducts = Product::whereIn('code', $order->items->pluck('product_code'))
+            ->get(['code', 'igv_affectation', 'requires_recipe', 'controlled_type'])
+            ->keyBy('code');
 
         $editItems = $order->items->map(fn ($item) => [
-            'code'       => $item->product_code,
-            'name'       => $item->product_name,
-            'price'      => (float) $item->unit_price,
-            'qty'        => (int) $item->quantity,
-            'stock'      => (int) (($stocks[$item->product_code] ?? 0) + $item->quantity),
-            'afectacion' => $affectations[$item->product_code] ?? '20',
+            'code'            => $item->product_code,
+            'name'            => $item->product_name,
+            'price'           => (float) $item->unit_price,
+            'qty'             => (int) $item->quantity,
+            'presentation_id' => $item->presentation_id,
+            'factor'          => (float) ($item->units_per_item ?: 1),
+            'stock'           => (int) (($stocks[$item->product_code] ?? 0) + ($alreadyTaken[$item->product_code] ?? 0)),
+            'afectacion'      => $orderProducts[$item->product_code]->igv_affectation ?? '20',
+            'receta'          => $orderProducts[$item->product_code]->recipe_level ?? 0,
         ])->values();
 
         return view('employee.pages.orders.index', [
@@ -957,6 +1041,7 @@ class OrderController extends Controller
             'items'             => 'required|array|min:1',
             'items.*.code'      => 'required|exists:products,code',
             'items.*.qty'       => 'required|numeric|min:1',
+            'items.*.presentation_id' => 'nullable|integer',
             'items.*.price'     => 'required|numeric|min:0',
             'items.*.name'      => 'required|string',
             'payment_type'      => 'required|in:1,2,3,4',
@@ -977,7 +1062,16 @@ class OrderController extends Controller
         abort_if($order->sunat_status === Order::SUNAT_ACCEPTED, 403,
             'Este comprobante ya fue aceptado por SUNAT y no se puede editar. Emite una nota de crédito.');
 
-        [$discountPercent, $discountAmount, $discountError] = $this->discountInput($request, $request->items);
+        // Líneas con precio, presentación y unidades base tomados de la base de datos
+        $resolved = $this->resolveLines($request->items, $employee->company_id);
+
+        if (isset($resolved['error'])) {
+            return response()->json(['success' => false, 'message' => $resolved['error']], 422);
+        }
+
+        $lines = $resolved['lines'];
+
+        [$discountPercent, $discountAmount, $discountError] = $this->discountInput($request, $lines);
 
         if ($discountError) {
             return response()->json(['success' => false, 'message' => $discountError], 422);
@@ -989,13 +1083,13 @@ class OrderController extends Controller
         }
 
         // IGV y totales: se recalculan con la afectación real de cada producto
-        $pricing = $this->pricing($request->items, $employee->company_id, $request->total, $discountPercent, $discountAmount);
+        $pricing = $this->pricing($lines, $employee->company_id, $request->total, $discountPercent, $discountAmount);
 
         if (isset($pricing['error'])) {
             return response()->json(['success' => false, 'message' => $pricing['error']], 422);
         }
 
-        ['tax' => $tax, 'units' => $units] = $pricing;
+        $tax = $pricing['tax'];
 
         // Efectivo recibido (solo pago en efectivo): debe cubrir lo que se cobra
         [$amountReceived, $receivedError] = $this->cashReceived($request, $tax['total']);
@@ -1005,7 +1099,7 @@ class OrderController extends Controller
         }
 
         // Si la venta editada incluye productos con receta, ya debe tener su receta registrada
-        if ($this->recipeLevel($request->items, $employee->company_id) > 0 && !$order->prescription()->exists()) {
+        if ($this->recipeLevel($lines, $employee->company_id) > 0 && !$order->prescription()->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Esta venta incluye productos con receta pero no tiene receta registrada. Regístrala de nuevo desde el punto de venta con los datos de la receta.',
@@ -1031,10 +1125,11 @@ class OrderController extends Controller
             // 0. Bloquear de una vez el stock de los ítems actuales y nuevos, en orden por código
             $stocks = $this->lockStock($employee->branch_id, array_merge(
                 $order->items->pluck('product_code')->all(),
-                array_column($request->items, 'code')
+                array_column($lines, 'code')
             ));
 
-            // 1. Devolver stock de los ítems actuales de la orden (y sus unidades a los lotes de origen)
+            // 1. Devolver stock de los ítems actuales de la orden, en unidades base
+            //    (y sus unidades a los lotes de origen)
             $batches = app(BatchService::class);
             $batches->restore('order', $order->id);
 
@@ -1045,7 +1140,7 @@ class OrderController extends Controller
                     ->first();
 
                 if ($branchStock) {
-                    $stockRestored = $branchStock->stock_actual + $oldItem->quantity;
+                    $stockRestored = $branchStock->stock_actual + $oldItem->base_quantity;
                     $branchStock->update(['stock_actual' => $stockRestored]);
 
                     StockMovement::create([
@@ -1055,8 +1150,8 @@ class OrderController extends Controller
                         'type'           => 'entrada',
                         'reference_type' => 'order_edit_reversal',
                         'reference_id'   => $order->id,
-                        'quantity'       => (int) $oldItem->quantity,
-                        'unit_cost'      => $oldItem->unit_price,
+                        'quantity'       => (int) round($oldItem->base_quantity),
+                        'unit_cost'      => round((float) $oldItem->unit_price / ((float) $oldItem->units_per_item ?: 1), 2),
                         'balance'        => (int) $stockRestored,
                     ]);
                 }
@@ -1064,11 +1159,11 @@ class OrderController extends Controller
 
             // 2. Verificar stock suficiente para los nuevos ítems (con el stock ya devuelto)
             $stocks = BranchStock::where('branch_id', $employee->branch_id)
-                ->whereIn('product_code', array_column($request->items, 'code'))
+                ->whereIn('product_code', array_column($lines, 'code'))
                 ->get()
                 ->keyBy('product_code');
 
-            if ($faltante = $this->insufficientStock($request->items, $stocks, $batches->expiredMap($employee->branch_id, array_column($request->items, 'code')))) {
+            if ($faltante = $this->insufficientStock($lines, $stocks, $batches->expiredMap($employee->branch_id, array_column($lines, 'code')))) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
@@ -1079,41 +1174,8 @@ class OrderController extends Controller
             // 3. Eliminar ítems anteriores y crear los nuevos
             $order->items()->delete();
 
-            foreach ($request->items as $i => $item) {
-                OrderItem::create([
-                    'order_id'        => $order->id,
-                    'product_code'    => $item['code'],
-                    'product_name'    => $item['name'],
-                    'unit_price'      => $item['price'],
-                    'quantity'        => $item['qty'],
-                    'discount_amount' => $tax['lines'][$i]['discount'],
-                    'subtotal'        => $tax['lines'][$i]['base'],
-                    'igv_affectation' => $tax['lines'][$i]['affectation'],
-                    'igv_amount'      => $tax['lines'][$i]['igv'],
-                    'unit_code'       => $units[$item['code']],
-                ]);
-
-                $branchStock  = BranchStock::where('branch_id', $employee->branch_id)
-                    ->where('product_code', $item['code'])
-                    ->lockForUpdate()
-                    ->first();
-
-                $nuevoStock = $branchStock->stock_actual - $item['qty'];
-                $branchStock->update(['stock_actual' => $nuevoStock]);
-
-                StockMovement::create([
-                    'company_id'     => $employee->company_id,
-                    'branch_id'      => $employee->branch_id,
-                    'product_code'   => $item['code'],
-                    'type'           => 'salida',
-                    'reference_type' => 'order_edit',
-                    'reference_id'   => $order->id,
-                    'quantity'       => (int) $item['qty'],
-                    'unit_cost'      => $item['price'],
-                    'balance'        => (int) $nuevoStock,
-                ]);
-
-                $batches->consume($employee->branch_id, $item['code'], (float) $item['qty'], 'order', $order->id);
+            foreach ($lines as $i => $line) {
+                $this->saveLine($order, $line, $tax['lines'][$i], $employee, 'order_edit', $batches);
             }
 
             // 4. Actualizar totales de la orden

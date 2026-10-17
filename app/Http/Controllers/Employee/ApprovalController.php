@@ -98,7 +98,8 @@ class ApprovalController extends Controller
                         ->first();
 
                     if ($branchStock) {
-                        $nuevoStock = $branchStock->stock_actual + $item->quantity;
+                        // Se devuelven unidades base (un blíster x10 devuelve 10)
+                        $nuevoStock = $branchStock->stock_actual + $item->base_quantity;
                         $branchStock->update(['stock_actual' => $nuevoStock]);
 
                         // Registrar reversión en el kardex
@@ -109,8 +110,8 @@ class ApprovalController extends Controller
                             'type'           => 'entrada',
                             'reference_type' => 'order_reversal',
                             'reference_id'   => $order->id,
-                            'quantity'       => (int) $item->quantity,
-                            'unit_cost'      => $item->unit_price,
+                            'quantity'       => (int) round($item->base_quantity),
+                            'unit_cost'      => round((float) $item->unit_price / ((float) $item->units_per_item ?: 1), 2),
                             'balance'        => (int) $nuevoStock,
                         ]);
                     }
