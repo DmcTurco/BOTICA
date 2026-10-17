@@ -58,8 +58,8 @@
                         <div class="flex items-center gap-1 mx-auto">
                             <button type="button" class="btn-restar w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-red-100 hover:text-red-600 text-slate-600 font-bold text-base transition-colors shrink-0 select-none">−</button>
                             <input type="number" name="{{ $key }}" id="{{ $key }}" min="0" value="{{ $cantidad }}"
-                                   class="campo-cantidad w-12 text-center text-sm font-bold text-slate-800 bg-white border border-slate-300 rounded-lg py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            <button type="button" class="btn-sumar w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-emerald-100 hover:text-emerald-700 text-slate-600 font-bold text-base transition-colors shrink-0 select-none">+</button>
+                                   class="campo-cantidad w-12 text-center text-sm font-bold text-slate-800 bg-white border border-slate-300 rounded-lg py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                            <button type="button" class="btn-sumar w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-sky-100 hover:text-sky-700 text-slate-600 font-bold text-base transition-colors shrink-0 select-none">+</button>
                         </div>
                         <span class="campo-subtotal text-xs font-semibold text-slate-600 shrink-0 w-16 text-right">
                             S/ {{ number_format($cantidad * $valor, 2) }}
@@ -94,8 +94,8 @@
                         <div class="flex items-center gap-1 mx-auto">
                             <button type="button" class="btn-restar w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-red-100 hover:text-red-600 text-slate-600 font-bold text-base transition-colors shrink-0 select-none">−</button>
                             <input type="number" name="{{ $key }}" id="{{ $key }}" min="0" value="{{ $cantidad }}"
-                                   class="campo-cantidad w-12 text-center text-sm font-bold text-slate-800 bg-white border border-slate-300 rounded-lg py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                            <button type="button" class="btn-sumar w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-emerald-100 hover:text-emerald-700 text-slate-600 font-bold text-base transition-colors shrink-0 select-none">+</button>
+                                   class="campo-cantidad w-12 text-center text-sm font-bold text-slate-800 bg-white border border-slate-300 rounded-lg py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                            <button type="button" class="btn-sumar w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-sky-100 hover:text-sky-700 text-slate-600 font-bold text-base transition-colors shrink-0 select-none">+</button>
                         </div>
                         <span class="campo-subtotal text-xs font-semibold text-slate-600 shrink-0 w-16 text-right">
                             S/ {{ number_format($cantidad * $valor, 2) }}
@@ -109,12 +109,12 @@
             <div class="md:col-span-2 xl:col-span-1 space-y-4">
 
                 {{-- Total --}}
-                <div class="bg-emerald-600 rounded-2xl p-5 text-white">
-                    <p class="text-xs font-semibold text-emerald-300 uppercase tracking-wider mb-1">Total en caja</p>
+                <div class="bg-sky-600 rounded-2xl p-5 text-white">
+                    <p class="text-xs font-semibold text-sky-300 uppercase tracking-wider mb-1">Total en caja</p>
                     <p id="total-display" class="text-4xl font-black tracking-tight leading-none">
                         S/ {{ number_format($caja->opening_amount, 2) }}
                     </p>
-                    <div class="mt-4 pt-4 border-t border-emerald-500 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-emerald-200">
+                    <div class="mt-4 pt-4 border-t border-sky-500 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-sky-200">
                         <span>Subtotal billetes</span>
                         <span id="total-billetes" class="text-right font-semibold">S/ 0.00</span>
                         <span>Subtotal monedas</span>
@@ -132,14 +132,14 @@
                         </label>
                         <textarea name="notes" rows="3"
                                   class="w-full text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-2 resize-none
-                                         focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                         focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                   placeholder="Ej: se corrigió el conteo inicial...">{{ old('notes', $caja->notes) }}</textarea>
                     </div>
 
                     {{-- Botones --}}
                     <div class="space-y-2">
                         <button type="submit"
-                                class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl
+                                class="w-full py-3.5 bg-sky-600 hover:bg-sky-700 active:scale-95 text-white font-bold rounded-xl
                                        transition-all flex items-center justify-center gap-2 shadow-sm text-sm">
                             <i class="fas fa-floppy-disk"></i>
                             Guardar Cambios
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fila.querySelector('.campo-subtotal').textContent = 'S/ ' + subtotal.toFixed(2);
 
             const activa = cantidad > 0;
-            fila.classList.toggle('border-emerald-300', activa);
+            fila.classList.toggle('border-sky-300', activa);
             fila.classList.toggle('bg-emerald-50',      activa);
             fila.classList.toggle('border-slate-200',   !activa);
             fila.classList.toggle('bg-slate-50',        !activa);

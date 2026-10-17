@@ -46,7 +46,7 @@
             <select name="method" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">@foreach(\App\Models\CashRegister::PAYMENT_METHODS as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select></div>
         <div><label class="block text-xs text-slate-500 mb-1">Fecha</label><input type="date" name="paid_at" value="{{ today()->toDateString() }}" max="{{ today()->toDateString() }}" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"></div>
         <div><label class="block text-xs text-slate-500 mb-1">Referencia</label><input type="text" name="reference" maxlength="50" placeholder="N° operación" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"></div>
-        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">Registrar pago</button>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg">Registrar pago</button>
     </form>
     @endif
 </div>

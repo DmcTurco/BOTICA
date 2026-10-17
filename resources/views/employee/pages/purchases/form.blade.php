@@ -36,7 +36,7 @@
                     {{-- Resumen visible solo con el bloque plegado --}}
                     <p id="resumenDocumento" class="hidden flex-1 min-w-0 truncate text-xs text-slate-600"></p>
                     <button type="button" id="btnPlegarDocumento"
-                        class="shrink-0 inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors">
+                        class="shrink-0 inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors">
                         <span>Ocultar</span> <i class="fas fa-chevron-up text-[10px]"></i>
                     </button>
                 </div>
@@ -46,7 +46,7 @@
                         <label class="block text-xs font-medium text-slate-600 mb-1">Tipo <span
                                 class="text-red-500">*</span></label>
                         <select name="document_type"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                             <option value="1" {{ old('document_type', 1) == 1 ? 'selected' : '' }}>Boleta</option>
                             <option value="2" {{ old('document_type') == 2 ? 'selected' : '' }}>Factura</option>
                             <option value="3" {{ old('document_type') == 3 ? 'selected' : '' }}>Nota de ingreso
@@ -57,7 +57,7 @@
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">N° Documento</label>
                         <input type="text" name="document_number" value="{{ old('document_number') }}"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                             placeholder="Ej: B001-00123">
                     </div>
 
@@ -70,7 +70,7 @@
                         <label class="block text-xs font-medium text-slate-600 mb-1">Proveedor</label>
                         <input type="hidden" name="supplier_id" id="supplierId" value="{{ $selectedSupplierId }}">
                         <input type="text" name="supplier" id="supplierText" value="{{ $supplierName }}" autocomplete="off"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                             placeholder="Buscar o escribir un proveedor nuevo">
                         <div id="supplierList"
                             class="absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-auto hidden"></div>
@@ -80,12 +80,12 @@
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Condición de pago</label>
                         <select name="payment_condition" id="paymentCondition"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                             <option value="cash" {{ old('payment_condition', 'cash') === 'cash' ? 'selected' : '' }}>Contado</option>
                             <option value="credit" {{ old('payment_condition') === 'credit' ? 'selected' : '' }}>Crédito</option>
                         </select>
                         <input type="date" name="due_date" id="dueDate" value="{{ old('due_date', date('Y-m-d', strtotime('+30 days'))) }}"
-                            class="mt-1 w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent hidden"
+                            class="mt-1 w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent hidden"
                             title="Fecha límite de pago">
                     </div>
 
@@ -93,13 +93,13 @@
                         <label class="block text-xs font-medium text-slate-600 mb-1">Fecha <span
                                 class="text-red-500">*</span></label>
                         <input type="date" name="purchased_at" value="{{ old('purchased_at', date('Y-m-d')) }}"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     </div>
 
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-xs font-medium text-slate-600 mb-1">Observaciones</label>
                         <input type="text" name="notes" value="{{ old('notes') }}"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                             placeholder="Notas opcionales...">
                     </div>
 
@@ -109,13 +109,13 @@
             {{-- Pestañas (tablet y laptops angostas, < 1280 px): un panel a la vez, a pantalla completa --}}
             <div class="xl:hidden shrink-0 grid grid-cols-2 gap-1 p-1 bg-slate-200/70 rounded-xl" id="pestanasCompra">
                 <button type="button" data-panel="catalogo"
-                    class="pestana-compra px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 bg-white text-emerald-700 shadow-sm">
+                    class="pestana-compra px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 bg-white text-sky-700 shadow-sm">
                     <i class="fas fa-boxes-stacked text-xs"></i> Catálogo
                 </button>
                 <button type="button" data-panel="seleccionados"
                     class="pestana-compra px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 text-slate-600">
                     <i class="fas fa-cart-shopping text-xs"></i> Seleccionados
-                    <span id="contadorPestana" class="px-1.5 py-0.5 bg-emerald-600 text-white rounded-full text-[10px] font-bold">0</span>
+                    <span id="contadorPestana" class="px-1.5 py-0.5 bg-sky-600 text-white rounded-full text-[10px] font-bold">0</span>
                 </button>
             </div>
 
@@ -134,7 +134,7 @@
                             <i
                                 class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                             <input type="text" id="buscadorProducto"
-                                class="w-full pl-8 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                class="w-full pl-8 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                 placeholder="Buscar por nombre o código...">
                         </div>
                     </div>
@@ -166,7 +166,7 @@
                                             'amount' => (float) $x->equivalent_amount,
                                         ])->values();
                                     @endphp
-                                    <tr class="hover:bg-emerald-50 transition-colors cursor-pointer fila-producto"
+                                    <tr class="hover:bg-sky-50 transition-colors cursor-pointer fila-producto"
                                         data-code="{{ $p->code }}" data-barcode="{{ $p->barcode }}" data-name="{{ $p->name }}"
                                         data-unit="{{ $p->unit?->name ?? 'Unidad' }}"
                                         data-presentations="{{ json_encode($presData) }}"
@@ -187,7 +187,7 @@
                                         </td>
                                         <td class="px-4 py-2.5 text-center">
                                             <button type="button"
-                                                class="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-colors btn-agregar mx-auto"
+                                                class="w-7 h-7 flex items-center justify-center rounded-lg bg-sky-100 text-sky-600 hover:bg-sky-600 hover:text-white transition-colors btn-agregar mx-auto"
                                                 title="Agregar a la compra">
                                                 <i class="fas fa-plus text-[10px]"></i>
                                             </button>
@@ -255,7 +255,7 @@
                                     class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">S/.</span>
                                 <input type="number" id="tax" name="tax" min="0" step="0.01"
                                     value="{{ old('tax', 0) }}"
-                                    class="w-full pl-7 pr-2 py-1 text-xs border border-slate-300 rounded-lg bg-white text-right focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    class="w-full pl-7 pr-2 py-1 text-xs border border-slate-300 rounded-lg bg-white text-right focus:outline-none focus:ring-2 focus:ring-sky-500"
                                     oninput="recalcularTotales()">
                             </div>
                         </div>
@@ -264,7 +264,7 @@
                                 Total <span id="resumenTotal" class="ml-1 text-lg text-emerald-700">S/. 0.00</span>
                             </p>
                             <button type="submit"
-                                class="px-5 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2">
+                                class="px-5 py-2.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2">
                                 <i class="fas fa-save text-xs"></i> Registrar compra
                             </button>
                         </div>
@@ -322,7 +322,7 @@
             provLista.innerHTML = '';
             coincidencias.forEach(p => {
                 const op = document.createElement('div');
-                op.className = 'px-3 py-2 text-sm cursor-pointer hover:bg-emerald-50 flex justify-between gap-2';
+                op.className = 'px-3 py-2 text-sm cursor-pointer hover:bg-sky-50 flex justify-between gap-2';
                 op.innerHTML = '<span></span><span class="text-xs text-slate-400 font-mono"></span>';
                 op.children[0].textContent = p.name;
                 op.children[1].textContent = p.ruc || '';
@@ -428,7 +428,7 @@
                 </div>
                 ${item.presentations.length ? `
                 <select name="items[${idx}][presentation_id]" data-code="${code}" data-field="presentation"
-                    class="input-seleccionado w-40 shrink-0 px-2 py-1 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    class="input-seleccionado w-40 shrink-0 px-2 py-1 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                     <option value="" data-factor="1">${item.unit} (1 unidad)</option>
                     ${item.presentations.map(p => `<option value="${p.id}" data-factor="${p.amount}">${p.label} (${p.amount} unid.)</option>`).join('')}
                 </select>` : ''}
@@ -447,7 +447,7 @@
                     <input type="number" name="items[${idx}][quantity]"
                         value="${item.quantity}" min="1" step="1" required
                         data-code="${code}" data-field="quantity"
-                        class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 input-seleccionado">
+                        class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-sky-500 input-seleccionado">
                 </label>
                 <label class="block">
                     <span class="block text-[10px] font-medium text-slate-500 mb-0.5">Costo c/u</span>
@@ -456,18 +456,18 @@
                         <input type="number" name="items[${idx}][unit_cost]"
                             value="${item.unitCost.toFixed(2)}" min="0" step="0.01" required
                             data-code="${code}" data-field="unitCost"
-                            class="w-full pl-6 pr-2 py-1.5 text-xs border border-slate-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-emerald-500 input-seleccionado">
+                            class="w-full pl-6 pr-2 py-1.5 text-xs border border-slate-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-sky-500 input-seleccionado">
                     </span>
                 </label>
                 <label class="block">
                     <span class="block text-[10px] font-medium text-slate-500 mb-0.5">Vencimiento</span>
                     <input type="date" name="items[${idx}][expiration_date]"
-                        class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                 </label>
                 <label class="block">
                     <span class="block text-[10px] font-medium text-slate-500 mb-0.5">Lote</span>
                     <input type="text" name="items[${idx}][batch]"
-                        class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="Ej: L-24">
                 </label>
             </div>
@@ -571,7 +571,7 @@
             pestanas.forEach(b => {
                 const activa = b.dataset.panel === panel;
                 b.classList.toggle('bg-white', activa);
-                b.classList.toggle('text-emerald-700', activa);
+                b.classList.toggle('text-sky-700', activa);
                 b.classList.toggle('shadow-sm', activa);
                 b.classList.toggle('text-slate-600', !activa);
             });

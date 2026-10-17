@@ -23,7 +23,7 @@
                 <div class="flex-1 relative">
                     <i class="fas fa-pills absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     <select data-search name="producto" id="selectProducto"
-                            class="w-full pl-8 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            class="w-full pl-8 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                         <option value="">— Seleccionar producto —</option>
                         @foreach($productos as $p)
                             <option value="{{ $p->code }}" {{ request('producto') == $p->code ? 'selected' : '' }}>
@@ -36,17 +36,17 @@
                 {{-- Fecha desde --}}
                 <div>
                     <input type="date" name="fecha_desde" value="{{ $fechaDesde }}"
-                           class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
 
                 {{-- Fecha hasta --}}
                 <div>
                     <input type="date" name="fecha_hasta" value="{{ $fechaHasta }}"
-                           class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
 
                 <button type="submit"
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
+                        class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
                     <i class="fas fa-search text-xs"></i> Consultar
                 </button>
 

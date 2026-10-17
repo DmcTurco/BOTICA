@@ -16,14 +16,14 @@
         <form action="{{ route('employee.reports.commissions') }}" method="GET" class="flex items-center gap-2 flex-wrap">
             <input type="date" name="fecha_desde" value="{{ $from->toDateString() }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
             <input type="date" name="fecha_hasta" value="{{ $to->toDateString() }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
         </form>
     </div>
 
     @include('employee.partials.alerts')
     @include('employee.partials.export-button')
 
-    <div class="bg-emerald-600 rounded-xl p-4 text-white shrink-0 max-w-xs"><p class="text-xs text-emerald-200">Total de comisiones</p><p class="text-xl font-bold">{{ $money($totalCommission) }}</p></div>
+    <div class="bg-sky-600 rounded-xl p-4 text-white shrink-0 max-w-xs"><p class="text-xs text-sky-200">Total de comisiones</p><p class="text-xl font-bold">{{ $money($totalCommission) }}</p></div>
 
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <table class="w-full text-sm">

@@ -44,7 +44,7 @@
                             <option value="0" {{ !$s->active ? 'selected' : '' }}>No</option>
                         </select>
                     </td>
-                    <td class="px-5 py-3 text-right"><button form="fs{{ $s->id }}" type="submit" class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg">Guardar</button></td>
+                    <td class="px-5 py-3 text-right"><button form="fs{{ $s->id }}" type="submit" class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-sky-100 rounded-lg">Guardar</button></td>
                 </tr>
                 @empty
                 <tr><td colspan="6" class="px-5 py-10 text-center text-sm text-slate-400">Tu sede aún no tiene series configuradas</td></tr>

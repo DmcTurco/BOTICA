@@ -18,8 +18,8 @@
         {{-- ── Sección: Ventas ── --}}
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-4">
             <div class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
-                <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center shrink-0">
-                    <i class="fas fa-cash-register text-emerald-600 text-sm"></i>
+                <div class="w-9 h-9 bg-sky-50 rounded-lg flex items-center justify-center shrink-0">
+                    <i class="fas fa-cash-register text-sky-600 text-sm"></i>
                 </div>
                 <div>
                     <h2 class="text-sm font-semibold text-slate-800">Ventas y cobro</h2>
@@ -37,8 +37,8 @@
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
                         <input type="checkbox" name="cash_rounding" value="1" class="sr-only peer" {{ $salesConfig['cash_rounding'] ? 'checked' : '' }}>
-                        <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer
-                                    peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-sky-500 rounded-full peer
+                                    peer-checked:bg-sky-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px]
                                     after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
                                     peer-checked:after:translate-x-full"></div>
                     </label>
@@ -55,8 +55,8 @@
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
                         <input type="checkbox" name="amount_discount" value="1" class="sr-only peer" {{ $salesConfig['amount_discount'] ? 'checked' : '' }}>
-                        <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer
-                                    peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-sky-500 rounded-full peer
+                                    peer-checked:bg-sky-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px]
                                     after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
                                     peer-checked:after:translate-x-full"></div>
                     </label>
@@ -69,8 +69,8 @@
 
             {{-- Card header --}}
             <div class="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
-                <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center shrink-0">
-                    <i class="fas fa-print text-emerald-600 text-sm"></i>
+                <div class="w-9 h-9 bg-sky-50 rounded-lg flex items-center justify-center shrink-0">
+                    <i class="fas fa-print text-sky-600 text-sm"></i>
                 </div>
                 <div>
                     <h2 class="text-sm font-semibold text-slate-800">Impresión de comprobantes</h2>
@@ -95,17 +95,17 @@
                         Formato de impresión por defecto
                     </label>
                     <input type="hidden" name="default_template" value="{{ $printConfig['default_template'] }}">
-                    <div class="flex items-center justify-between gap-4 p-4 border-2 border-emerald-500 bg-emerald-50 rounded-xl">
+                    <div class="flex items-center justify-between gap-4 p-4 border-2 border-sky-500 bg-sky-50 rounded-xl">
                         <div>
                             <div class="flex items-center gap-2">
-                                <i class="fas {{ $current['icon'] }} text-emerald-500 text-xs"></i>
+                                <i class="fas {{ $current['icon'] }} text-sky-500 text-xs"></i>
                                 <span class="text-sm font-semibold text-slate-700">{{ $current['title'] }}</span>
                             </div>
                             <p class="text-xs text-slate-400 mt-0.5">{{ $current['desc'] }}</p>
                         </div>
                         <a href="{{ route('employee.settings.format') }}"
                            class="shrink-0 px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors">
-                            <i class="fas fa-eye text-emerald-500 mr-1"></i> Ver y cambiar formato
+                            <i class="fas fa-eye text-sky-500 mr-1"></i> Ver y cambiar formato
                         </a>
                     </div>
                     @error('default_template')
@@ -126,8 +126,8 @@
                     <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
                         <input type="checkbox" name="auto_print" value="1" class="sr-only peer"
                                {{ $printConfig['auto_print'] ? 'checked' : '' }}>
-                        <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer
-                                    peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-sky-500 rounded-full peer
+                                    peer-checked:bg-sky-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px]
                                     after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
                                     peer-checked:after:translate-x-full"></div>
                     </label>
@@ -142,7 +142,7 @@
                             Número de copias
                         </label>
                         <select name="copies"
-                                class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                                class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white">
                             @for($i = 1; $i <= 5; $i++)
                             <option value="{{ $i }}" {{ $printConfig['copies'] == $i ? 'selected' : '' }}>{{ $i }}</option>
                             @endfor
@@ -156,7 +156,7 @@
                         <input type="text" name="printer_name"
                                value="{{ old('printer_name', $printConfig['printer_name']) }}"
                                placeholder="Ej: EPSON TM-T20"
-                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                               class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     </div>
                 </div>
 
@@ -165,7 +165,7 @@
             {{-- Footer --}}
             <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center gap-3">
                 <button type="submit"
-                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+                        class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
                     Guardar configuración
                 </button>
                 <a href="{{ route('employee.home') }}"

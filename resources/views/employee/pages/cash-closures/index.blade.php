@@ -48,7 +48,7 @@
                 </select>
             </div>
             <label class="flex items-center gap-2 text-sm text-slate-600 pb-2"><input type="checkbox" name="con_diferencia" value="1" {{ request()->boolean('con_diferencia') ? 'checked' : '' }} class="rounded border-slate-300 text-emerald-600"> Solo con diferencia</label>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-filter text-xs"></i> Filtrar</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-filter text-xs"></i> Filtrar</button>
         </form>
     </div>
 

@@ -13,7 +13,7 @@
             <p class="text-sm text-slate-500 mt-0.5">Historial de ingresos de stock</p>
         </div>
         <a href="{{ route('employee.purchases.create') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i> Nueva Compra
         </a>
     </div>
@@ -25,18 +25,18 @@
                 <div class="flex-1 relative">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     <input type="text" name="buscar" value="{{ request('buscar') }}"
-                           class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                           class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                            placeholder="Proveedor o número de documento...">
                 </div>
                 <select name="tipo"
-                        class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     <option value="">Todos los tipos</option>
                     <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Boleta</option>
                     <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>Factura</option>
                     <option value="3" {{ request('tipo') == '3' ? 'selected' : '' }}>Nota de ingreso</option>
                 </select>
                 <button type="submit"
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
+                        class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
                     <i class="fas fa-search text-xs"></i> Filtrar
                 </button>
                 @if(request()->hasAny(['buscar','tipo']))

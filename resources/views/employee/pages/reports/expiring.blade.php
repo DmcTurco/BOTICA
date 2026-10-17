@@ -23,7 +23,7 @@
                 @foreach([30, 60, 90, 180, 365] as $n)<option value="{{ $n }}" {{ !$all && $days === $n ? 'selected' : '' }}>Vencen en {{ $n }} días</option>@endforeach
                 <option value="todos" {{ $all ? 'selected' : '' }}>Todos los lotes</option>
             </select>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
         </form>
     </div>
 
@@ -53,7 +53,7 @@
                     <td class="px-5 py-2.5"><p class="text-xs font-medium text-slate-800">{{ $r['name'] }}</p><p class="text-[10px] text-slate-400">Stock total: {{ $fmt($r['stock']) }}</p></td>
                     <td class="px-5 py-2.5 text-xs text-slate-600 hidden sm:table-cell">
                         <span class="font-mono">{{ $r['batch'] ?: 'sin lote' }}</span>
-                        <p class="text-[10px] text-slate-400">@if($r['link'])<a href="{{ $r['link'] }}" class="hover:text-emerald-600">{{ $r['origin'] }}</a>@else{{ $r['origin'] }}@endif</p>
+                        <p class="text-[10px] text-slate-400">@if($r['link'])<a href="{{ $r['link'] }}" class="hover:text-sky-600">{{ $r['origin'] }}</a>@else{{ $r['origin'] }}@endif</p>
                     </td>
                     <td class="px-5 py-2.5 text-center text-xs font-semibold text-slate-700">{{ $fmt($r['qty']) }}</td>
                     <td class="px-5 py-2.5 text-center text-xs text-slate-700">{{ $r['expires'] ? $r['expires']->format('d/m/Y') : '—' }}</td>

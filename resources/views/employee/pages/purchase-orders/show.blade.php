@@ -19,7 +19,7 @@
         <div class="flex items-center gap-2">
             <button type="button" onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg"><i class="fas fa-print text-xs"></i> Imprimir</button>
             @if($order->status === 'pending')
-            <a href="{{ route('employee.purchases.create', ['order' => $order->id]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm"><i class="fas fa-truck-ramp-box text-xs"></i> Recibir mercadería</a>
+            <a href="{{ route('employee.purchases.create', ['order' => $order->id]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg shadow-sm"><i class="fas fa-truck-ramp-box text-xs"></i> Recibir mercadería</a>
             <form action="{{ route('employee.purchase-orders.cancel', $order) }}" method="POST" class="inline"
                   data-confirm-title="¿Anular la orden {{ $order->number }}?" data-confirm="La orden quedará anulada y ya no se podrá recibir mercadería con ella." data-confirm-ok="Anular">@csrf
                 <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-red-50 border border-red-200 text-red-600 text-sm font-medium rounded-lg"><i class="fas fa-ban text-xs"></i> Anular</button>

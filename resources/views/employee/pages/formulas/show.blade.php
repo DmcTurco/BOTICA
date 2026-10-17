@@ -31,7 +31,7 @@
         <div class="flex items-center gap-2">
             @if($emp->hasPrivilege(\App\Models\Employee::PRIV_PRODUCIR_FORMULAS) && $formula->status)
             <a href="{{ route('employee.productions.create', ['formula' => $formula->id]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+               class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
                 <i class="fas fa-flask-vial text-xs"></i> Preparar lote
             </a>
             @endif

@@ -19,7 +19,7 @@
         <form action="{{ route('employee.reports.profit') }}" method="GET" class="flex items-center gap-2 flex-wrap">
             <input type="date" name="fecha_desde" value="{{ $from->toDateString() }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
             <input type="date" name="fecha_hasta" value="{{ $to->toDateString() }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
         </form>
     </div>
 
@@ -29,7 +29,7 @@
     <div class="grid grid-cols-3 gap-3 shrink-0">
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Ventas netas (sin IGV)</p><p class="text-lg font-bold text-slate-800">{{ $money($sales) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Costo de lo vendido</p><p class="text-lg font-bold text-slate-800">{{ $money($cost) }}</p></div>
-        <div class="bg-emerald-600 rounded-xl p-4 text-white"><p class="text-xs text-emerald-200">Utilidad {{ $sales > 0 ? '· ' . round($profit / $sales * 100, 1) . '%' : '' }}</p><p class="text-lg font-bold">{{ $money($profit) }}</p></div>
+        <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Utilidad {{ $sales > 0 ? '· ' . round($profit / $sales * 100, 1) . '%' : '' }}</p><p class="text-lg font-bold">{{ $money($profit) }}</p></div>
     </div>
 
     <p class="text-xs text-slate-400 shrink-0"><i class="fas fa-circle-info mr-1"></i> El costo se calcula con el precio de compra actual de cada producto, no con el precio al que se compró cada lote.</p>

@@ -13,7 +13,7 @@
             <p class="text-sm text-slate-500 mt-0.5">Recetas del laboratorio: insumos, cantidades y producto final</p>
         </div>
         <a href="{{ route('employee.formulas.create') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i> Nueva Fórmula
         </a>
     </div>
@@ -25,17 +25,17 @@
                 <div class="flex-1 relative">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     <input type="text" name="buscar" value="{{ request('buscar') }}"
-                           class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                           class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                            placeholder="Código, nombre o forma farmacéutica...">
                 </div>
                 <select name="status"
-                        class="sm:w-44 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        class="sm:w-44 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     <option value="">Todos los estados</option>
                     <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Activas</option>
                     <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inactivas</option>
                 </select>
                 <button type="submit"
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
+                        class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
                     <i class="fas fa-search text-xs"></i> Filtrar
                 </button>
                 @if(request()->hasAny(['buscar','status']))
@@ -74,7 +74,7 @@
                     @forelse($formulas as $formula)
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-5 py-3">
-                            <a href="{{ route('employee.formulas.show', $formula) }}" class="font-medium text-slate-800 hover:text-emerald-600">{{ $formula->name }}</a>
+                            <a href="{{ route('employee.formulas.show', $formula) }}" class="font-medium text-slate-800 hover:text-sky-600">{{ $formula->name }}</a>
                             <p class="text-[10px] text-slate-400 font-mono">{{ $formula->code }}</p>
                         </td>
                         <td class="px-5 py-3 text-xs text-slate-600 hidden md:table-cell">{{ $formula->pharmaceutical_form ?: '—' }}</td>
@@ -102,7 +102,7 @@
                             <div class="flex items-center justify-end gap-1">
                                 @if(auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_PRODUCIR_FORMULAS) && $formula->status)
                                 <a href="{{ route('employee.productions.create', ['formula' => $formula->id]) }}"
-                                   class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Preparar lote">
+                                   class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-sky-50 hover:text-sky-600 transition-colors" title="Preparar lote">
                                     <i class="fas fa-flask-vial text-xs"></i>
                                 </a>
                                 @endif

@@ -5,8 +5,14 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
-/* Color de marca: emerald (botones, foco, navegación) en los paneles de empresa y empleado.
-   El panel admin usa violeta a propósito, y sky queda solo para lo informativo (avisos, ayudas). */
+/* Color de marca por panel: empresa verde (emerald), empleado celeste (sky), admin violeta.
+   En cada panel, el verde con significado (éxito, stock OK, pagado, montos) se mantiene.
+   Los componentes compartidos (buscador desplegable, Select2) usan las variables --brand-*:
+   :root = empresa; la clase del <body> (panel-employee / panel-admin) las redefine. */
+:root          { --brand-50: #ecfdf5; --brand-100: #d1fae5; --brand-500: #10b981; --brand-700: #047857; }
+.panel-employee { --brand-50: #f0f9ff; --brand-100: #e0f2fe; --brand-500: #0ea5e9; --brand-700: #0369a1; }
+.panel-admin    { --brand-50: #f5f3ff; --brand-100: #ede9fe; --brand-500: #8b5cf6; --brand-700: #6d28d9; }
+
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
@@ -63,7 +69,7 @@
     animation: ping-once 0.35s ease-out;
 }
 
-/* Select2 — skin sin Bootstrap (foco y resaltado con el verde de marca: emerald 500/50/700) */
+/* Select2 — skin sin Bootstrap (foco y resaltado con el color de marca del panel) */
 .select2-container--default .select2-selection--single {
     height: 38px;
     border: 1px solid #cbd5e1;
@@ -83,8 +89,8 @@
 }
 .select2-container--default.select2-container--focus .select2-selection--single,
 .select2-container--default.select2-container--open .select2-selection--single {
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px #d1fae5;
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px var(--brand-100);
     outline: none;
 }
 .select2-dropdown {
@@ -94,8 +100,8 @@
     font-size: 0.875rem;
 }
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
-    background-color: #ecfdf5;
-    color: #047857;
+    background-color: var(--brand-50);
+    color: var(--brand-700);
 }
 .select2-search--dropdown .select2-search__field {
     border: 1px solid #e2e8f0;

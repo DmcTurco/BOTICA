@@ -127,7 +127,7 @@
                             data-action="{{ route('employee.approvals.approve', $caja) }}"
                             data-fecha="{{ $caja->register_date->format('d/m/Y') }}"
                             data-empleado="{{ $caja->employee->name }}"
-                            class="btn-aprobar inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm">
+                            class="btn-aprobar inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition-colors shadow-sm">
                         <i class="fas fa-circle-check"></i> Aprobar caja
                     </button>
                 </div>
@@ -218,7 +218,7 @@
                 Cancelar
             </button>
             <button type="submit"
-                    class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
+                    class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors">
                 Aprobar
             </button>
         </form>

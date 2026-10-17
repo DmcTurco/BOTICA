@@ -13,7 +13,7 @@
             <p class="text-sm text-slate-500 mt-0.5">Gestiona el personal asignado a tu sede</p>
         </div>
         <a href="{{ route('employee.employees.create') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i>
             Nuevo Empleado
         </a>
@@ -38,7 +38,7 @@
             <p class="text-sm font-medium text-slate-500">Sin empleados registrados</p>
             <p class="text-xs text-slate-400 mt-1">Crea el primer empleado para esta sede</p>
             <a href="{{ route('employee.employees.create') }}"
-               class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors">
+               class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors">
                 <i class="fas fa-plus text-xs"></i> Nuevo Empleado
             </a>
         </div>
@@ -86,7 +86,7 @@
                         <td class="px-5 py-3 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('employee.employees.edit', $employee) }}"
-                                   class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 transition-colors"
+                                   class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-600 transition-colors"
                                    title="Editar">
                                     <i class="fas fa-pen text-xs"></i>
                                 </a>

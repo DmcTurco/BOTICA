@@ -17,7 +17,7 @@
             <select name="anio" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                 @foreach($years as $y)<option value="{{ $y }}" {{ $y === $year ? 'selected' : '' }}>{{ $y }}</option>@endforeach
             </select>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
         </form>
     </div>
 
@@ -27,7 +27,7 @@
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Documentos</p><p class="text-lg font-bold text-slate-800">{{ $totals['count'] }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Subtotal (sin IGV)</p><p class="text-lg font-bold text-slate-800">{{ $money($totals['sub']) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">IGV</p><p class="text-lg font-bold text-slate-800">{{ $money($totals['igv']) }}</p></div>
-        <div class="bg-emerald-600 rounded-xl p-4 text-white"><p class="text-xs text-emerald-200">Total {{ $year }}</p><p class="text-lg font-bold">{{ $money($totals['total']) }}</p></div>
+        <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Total {{ $year }}</p><p class="text-lg font-bold">{{ $money($totals['total']) }}</p></div>
     </div>
 
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -44,13 +44,13 @@
                 @foreach($months as $m)
                 <tr class="{{ $m['count'] ? 'hover:bg-slate-50' : 'text-slate-300' }}">
                     <td class="px-5 py-2.5 text-xs capitalize">
-                        @if($m['count'])<a href="{{ route('employee.reports.monthly', ['mes' => $m['date']->format('Y-m')]) }}" class="text-slate-700 hover:text-emerald-600">{{ $m['date']->translatedFormat('F') }}</a>@else{{ $m['date']->translatedFormat('F') }}@endif
+                        @if($m['count'])<a href="{{ route('employee.reports.monthly', ['mes' => $m['date']->format('Y-m')]) }}" class="text-slate-700 hover:text-sky-600">{{ $m['date']->translatedFormat('F') }}</a>@else{{ $m['date']->translatedFormat('F') }}@endif
                     </td>
                     <td class="px-5 py-2.5 text-center text-xs">{{ $m['count'] ?: '—' }}</td>
                     <td class="px-5 py-2.5 text-right text-xs hidden md:table-cell">{{ $m['count'] ? $money($m['sub']) : '—' }}</td>
                     <td class="px-5 py-2.5 text-right text-xs hidden md:table-cell">{{ $m['count'] ? $money($m['igv']) : '—' }}</td>
                     <td class="px-5 py-2.5 text-right text-xs font-semibold {{ $m['count'] ? 'text-slate-800' : '' }}">{{ $m['count'] ? $money($m['total']) : '—' }}</td>
-                    <td class="px-5 py-2.5 hidden sm:table-cell"><div class="h-2 bg-emerald-500 rounded" style="width: {{ round($m['total'] / $max * 100) }}%"></div></td>
+                    <td class="px-5 py-2.5 hidden sm:table-cell"><div class="h-2 bg-sky-500 rounded" style="width: {{ round($m['total'] / $max * 100) }}%"></div></td>
                 </tr>
                 @endforeach
             </tbody>

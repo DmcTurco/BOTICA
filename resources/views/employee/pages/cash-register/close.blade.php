@@ -51,12 +51,12 @@
             {{-- ── EFECTIVO ESPERADO + CONTADO ──────────────── --}}
             <div class="space-y-4">
 
-                <div class="bg-emerald-600 rounded-2xl p-5 text-white">
-                    <p class="text-xs font-semibold text-emerald-300 uppercase tracking-wider mb-1">Efectivo esperado</p>
+                <div class="bg-sky-600 rounded-2xl p-5 text-white">
+                    <p class="text-xs font-semibold text-sky-300 uppercase tracking-wider mb-1">Efectivo esperado</p>
                     <p class="text-4xl font-black tracking-tight leading-none">
                         S/ {{ number_format($expectedCash, 2) }}
                     </p>
-                    <div class="mt-4 pt-4 border-t border-emerald-500 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-emerald-200">
+                    <div class="mt-4 pt-4 border-t border-sky-500 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-sky-200">
                         <span>Apertura</span>
                         <span class="text-right font-semibold">S/ {{ number_format($caja->opening_amount, 2) }}</span>
                         <span>+ Ventas en efectivo</span>
@@ -81,7 +81,7 @@
                             <input type="number" name="closing_amount" id="closing_amount" step="0.01" min="0" required
                                    value="{{ old('closing_amount', number_format($expectedCash, 2, '.', '')) }}" placeholder="0.00"
                                    class="w-full pl-9 pr-4 py-3 text-lg font-semibold border border-slate-300 rounded-xl
-                                          focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                          focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                         </div>
                         <p id="diferencia" class="text-xs mt-2 text-slate-400">Diferencia: —</p>
                     </div>
@@ -93,7 +93,7 @@
                         </label>
                         <textarea name="notes" rows="3"
                                   class="w-full text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-2 resize-none
-                                         focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                         focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                   placeholder="Ej: faltante por vuelto, etc.">{{ old('notes') }}</textarea>
                     </div>
                 </div>

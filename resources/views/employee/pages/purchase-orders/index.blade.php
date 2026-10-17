@@ -11,7 +11,7 @@
             <h1 class="text-xl font-bold text-slate-800">Órdenes de Compra</h1>
             <p class="text-sm text-slate-500 mt-0.5">Pedidos a proveedores</p>
         </div>
-        <a href="{{ route('employee.purchase-orders.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"><i class="fas fa-plus text-xs"></i> Nueva Orden</a>
+        <a href="{{ route('employee.purchase-orders.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"><i class="fas fa-plus text-xs"></i> Nueva Orden</a>
     </div>
 
     @include('employee.partials.alerts')
@@ -22,7 +22,7 @@
                 <option value="">Todos los estados</option>
                 @foreach(\App\Models\PurchaseOrder::STATUS_LABELS as $k => $l)<option value="{{ $k }}" {{ request('estado') === $k ? 'selected' : '' }}>{{ $l }}</option>@endforeach
             </select>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-filter text-xs"></i> Filtrar</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-filter text-xs"></i> Filtrar</button>
         </form>
     </div>
 

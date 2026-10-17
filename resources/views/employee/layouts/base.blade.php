@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 @include('employee/inc/head')
-<body class="bg-slate-50 antialiased">
+<body class="panel-employee bg-slate-50 antialiased">
     @include('partials/sidebar-collapse')
 
     <div id="sidebar-overlay" onclick="toggleSidebar()"

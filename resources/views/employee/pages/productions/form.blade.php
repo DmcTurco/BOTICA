@@ -33,7 +33,7 @@
                 <div class="sm:col-span-3">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Fórmula <span class="text-red-500">*</span></label>
                     <select data-search name="formula_id" id="formulaId" required
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                         <option value="">— Selecciona una fórmula —</option>
                         @foreach($formulasData as $f)
                             <option value="{{ $f['id'] }}">{{ $f['name'] }} ({{ $f['code'] }})</option>
@@ -46,7 +46,7 @@
                     <div class="flex items-center gap-2">
                         <input type="number" name="quantity_produced" id="cantidad" required min="0.01" step="0.01"
                                value="{{ old('quantity_produced') }}"
-                               class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                               class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                         <span id="unidadCantidad" class="text-sm text-slate-500 w-12"></span>
                     </div>
                     <p id="ayudaCantidad" class="text-xs text-slate-400 mt-1">Por defecto, el rendimiento de la fórmula base.</p>
@@ -56,14 +56,14 @@
                     <label class="block text-xs font-medium text-slate-600 mb-1">Fecha de elaboración <span class="text-red-500">*</span></label>
                     <input type="date" name="produced_at" id="fechaElaboracion" required max="{{ date('Y-m-d') }}"
                            value="{{ old('produced_at', date('Y-m-d')) }}"
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
 
                 <div class="sm:col-span-2">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Vencimiento</label>
                     <input type="date" name="expiration_date" id="fechaVencimiento"
                            value="{{ old('expiration_date') }}"
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     <p id="ayudaVencimiento" class="text-xs text-slate-400 mt-1">Se calcula con la vida útil de la fórmula.</p>
                 </div>
 
@@ -71,14 +71,14 @@
                     <label class="block text-xs font-medium text-slate-600 mb-1">N° de lote</label>
                     <input type="text" name="batch" maxlength="30" value="{{ old('batch') }}"
                            placeholder="Automático"
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
 
                 <div class="sm:col-span-6">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Observaciones</label>
                     <input type="text" name="notes" maxlength="500" value="{{ old('notes') }}"
                            placeholder="Notas opcionales (ej. paciente, solicitud del médico)..."
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
             </div>
         </div>
@@ -135,7 +135,7 @@
             <a href="{{ route('employee.productions.index') }}"
                class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">Cancelar</a>
             <button type="submit" id="btnGuardar"
-                    class="px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                    class="px-5 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm flex items-center gap-2">
                 <i class="fas fa-save text-xs"></i> Registrar preparación
             </button>
         </div>

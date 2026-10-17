@@ -16,7 +16,7 @@
         </div>
         @if($canManage)
         <a href="{{ route('employee.products.create') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i> Nuevo Producto
         </a>
         @endif
@@ -29,11 +29,11 @@
                 <div class="flex-1 relative">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     <input type="text" name="buscar" value="{{ request('buscar') }}"
-                           class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                           class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                            placeholder="Código, código de barras, nombre o principio activo...">
                 </div>
                 <select data-search name="categoria"
-                        class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     <option value="">Todas las categorías</option>
                     @foreach($categories as $categoria)
                         <option value="{{ $categoria->id }}" {{ request('categoria') == $categoria->id ? 'selected' : '' }}>
@@ -42,7 +42,7 @@
                     @endforeach
                 </select>
                 <select data-search name="laboratorio"
-                        class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     <option value="">Todos los laboratorios</option>
                     @foreach($laboratories as $lab)
                         <option value="{{ $lab->id }}" {{ request('laboratorio') == $lab->id ? 'selected' : '' }}>
@@ -51,7 +51,7 @@
                     @endforeach
                 </select>
                 <button type="submit"
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
+                        class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
                     <i class="fas fa-search text-xs"></i> Filtrar
                 </button>
                 @if(request()->hasAny(['buscar','categoria','laboratorio','estado']))
@@ -149,7 +149,7 @@
                             <div class="flex items-center justify-end gap-1">
 @if($canManage)
                                 <a href="{{ route('employee.products.edit', $producto->code) }}"
-                                   class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Editar">
+                                   class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-sky-50 hover:text-sky-600 transition-colors" title="Editar">
                                     <i class="fas fa-pencil text-xs"></i>
                                 </a>
                                 <button type="button"

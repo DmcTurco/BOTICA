@@ -20,7 +20,7 @@
             </button>
             @endif
             <a href="{{ route('employee.orders.index') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+               class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
                 <i class="fas fa-cash-register text-xs"></i> Punto de Venta
             </a>
         </div>
@@ -34,18 +34,18 @@
                     <div class="flex-1 relative">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                         <input type="text" name="buscar" value="{{ request('buscar') }}"
-                               class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                               class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                placeholder="Cliente, documento o N° venta...">
                     </div>
                     <select name="tipo_comprobante"
-                            class="sm:w-44 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            class="sm:w-44 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                         <option value="">Comprobante</option>
                         <option value="1" {{ request('tipo_comprobante') == '1' ? 'selected' : '' }}>Boleta</option>
                         <option value="2" {{ request('tipo_comprobante') == '2' ? 'selected' : '' }}>Factura</option>
                         <option value="3" {{ request('tipo_comprobante') == '3' ? 'selected' : '' }}>Nota de Venta</option>
                     </select>
                     <select name="tipo_pago"
-                            class="sm:w-40 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            class="sm:w-40 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                         <option value="">Tipo de pago</option>
                         <option value="1" {{ request('tipo_pago') == '1' ? 'selected' : '' }}>Efectivo</option>
                         <option value="2" {{ request('tipo_pago') == '2' ? 'selected' : '' }}>Tarjeta</option>
@@ -58,16 +58,16 @@
                     <div class="flex items-center gap-2">
                         <label class="text-xs text-slate-500 whitespace-nowrap">Desde</label>
                         <input type="date" name="fecha_desde" value="{{ $fechaDesde }}"
-                               class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                               class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     </div>
                     <div class="flex items-center gap-2">
                         <label class="text-xs text-slate-500 whitespace-nowrap">Hasta</label>
                         <input type="date" name="fecha_hasta" value="{{ $fechaHasta }}"
-                               class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                               class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     </div>
                     <div class="flex gap-2 sm:ml-auto">
                         <button type="submit"
-                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+                                class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
                             <i class="fas fa-search text-xs"></i> Filtrar
                         </button>
                         @if(request()->hasAny(['buscar','tipo_comprobante','tipo_pago','fecha_desde','fecha_hasta']))
@@ -189,7 +189,7 @@
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1">
                                 <button type="button"
-                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors btn-detalle"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-sky-50 hover:text-sky-600 transition-colors btn-detalle"
                                         data-id="{{ $order->id }}" title="Ver detalle">
                                     <i class="fas fa-eye text-xs"></i>
                                 </button>
@@ -351,7 +351,7 @@
         <div class="px-6 py-4 border-t border-slate-200 shrink-0 flex items-center justify-between">
             <button type="button" id="btn-imprimir-modal"
                     onclick="printCurrentSale()"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors">
                 <i class="fas fa-print text-xs"></i> Imprimir
             </button>
             <button onclick="closeDetailModal()"

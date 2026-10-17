@@ -22,17 +22,17 @@
             <div class="flex-1 relative">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                 <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Nombre o código..."
-                       class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
-            <select data-search name="category" class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <select data-search name="category" class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <option value="">Todas las categorías</option>
                 @foreach($categories as $c)<option value="{{ $c->id }}" {{ request('category') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>@endforeach
             </select>
-            <select data-search name="laboratory" class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <select data-search name="laboratory" class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <option value="">Todos los laboratorios</option>
                 @foreach($laboratories as $l)<option value="{{ $l->id }}" {{ request('laboratory') == $l->id ? 'selected' : '' }}>{{ $l->name }}</option>@endforeach
             </select>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2">
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg flex items-center gap-2">
                 <i class="fas fa-search text-xs"></i> Filtrar
             </button>
         </form>
@@ -43,7 +43,7 @@
         <div class="px-5 py-3 border-b border-slate-200 shrink-0 flex items-center justify-between gap-3">
             <p class="text-sm font-semibold text-slate-800">Por reponer <span class="ml-2 text-xs font-normal text-slate-400">{{ $rows->total() }} productos</span></p>
             @if($canBuy && $rows->count())
-            <button type="submit" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg"><i class="fas fa-file-circle-check text-[10px]"></i> Orden de compra con los marcados</button>
+            <button type="submit" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg"><i class="fas fa-file-circle-check text-[10px]"></i> Orden de compra con los marcados</button>
             @endif
         </div>
         <div class="flex-1 min-h-0 overflow-auto">
@@ -78,7 +78,7 @@
                         <td class="px-5 py-3 text-right">
                             @if($canBuy)
                             <a href="{{ route('employee.purchases.create', ['product' => $row->product_code]) }}"
-                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors">
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-sky-100 rounded-lg transition-colors">
                                 <i class="fas fa-cart-plus text-[10px]"></i> Comprar
                             </a>
                             @endif

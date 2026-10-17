@@ -12,7 +12,7 @@
             <p class="text-sm text-slate-500 mt-0.5">Mercadería enviada y recibida por tu sede</p>
         </div>
         <a href="{{ route('employee.transfers.create') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i> Nuevo Traspaso
         </a>
     </div>
@@ -21,12 +21,12 @@
 
     <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-sm shrink-0">
         <form action="{{ route('employee.transfers.index') }}" method="GET" class="flex gap-3">
-            <select name="direccion" class="sm:w-56 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <select name="direccion" class="sm:w-56 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <option value="">Enviados y recibidos</option>
                 <option value="enviados" {{ request('direccion') === 'enviados' ? 'selected' : '' }}>Solo enviados</option>
                 <option value="recibidos" {{ request('direccion') === 'recibidos' ? 'selected' : '' }}>Solo recibidos</option>
             </select>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2">
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg flex items-center gap-2">
                 <i class="fas fa-filter text-xs"></i> Filtrar
             </button>
         </form>

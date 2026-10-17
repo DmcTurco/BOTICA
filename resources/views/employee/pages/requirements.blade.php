@@ -35,7 +35,7 @@
 
                 @if(!$item['ok'] && $item['url'])
                 <a href="{{ $item['url'] }}"
-                   class="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors shrink-0">
+                   class="inline-flex items-center gap-2 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold rounded-lg transition-colors shrink-0">
                     <i class="fas fa-plus text-xs"></i> {{ $item['action'] }}
                 </a>
                 @elseif($item['ok'])

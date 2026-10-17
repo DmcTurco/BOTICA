@@ -15,7 +15,7 @@
         </div>
         <form action="{{ route('employee.reports.monthly') }}" method="GET" class="flex items-center gap-2">
             <input type="month" name="mes" value="{{ $month->format('Y-m') }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
         </form>
     </div>
 
@@ -25,7 +25,7 @@
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Documentos</p><p class="text-lg font-bold text-slate-800">{{ $totals['count'] }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Subtotal (sin IGV)</p><p class="text-lg font-bold text-slate-800">{{ $money($totals['sub']) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">IGV</p><p class="text-lg font-bold text-slate-800">{{ $money($totals['igv']) }}</p></div>
-        <div class="bg-emerald-600 rounded-xl p-4 text-white"><p class="text-xs text-emerald-200">Total vendido</p><p class="text-lg font-bold">{{ $money($totals['total']) }}</p></div>
+        <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Total vendido</p><p class="text-lg font-bold">{{ $money($totals['total']) }}</p></div>
     </div>
 
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -46,7 +46,7 @@
                     <td class="px-5 py-2 text-right text-xs hidden md:table-cell">{{ $d['count'] ? $money($d['sub']) : '—' }}</td>
                     <td class="px-5 py-2 text-right text-xs hidden md:table-cell">{{ $d['count'] ? $money($d['igv']) : '—' }}</td>
                     <td class="px-5 py-2 text-right text-xs font-semibold {{ $d['count'] ? 'text-slate-800' : '' }}">{{ $d['count'] ? $money($d['total']) : '—' }}</td>
-                    <td class="px-5 py-2 hidden sm:table-cell"><div class="h-2 bg-emerald-500 rounded" style="width: {{ round($d['total'] / $max * 100) }}%"></div></td>
+                    <td class="px-5 py-2 hidden sm:table-cell"><div class="h-2 bg-sky-500 rounded" style="width: {{ round($d['total'] / $max * 100) }}%"></div></td>
                 </tr>
                 @endforeach
             </tbody>

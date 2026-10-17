@@ -21,7 +21,7 @@
     <div class="grid grid-cols-3 gap-3 shrink-0">
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Línea de crédito</p><p class="text-lg font-bold text-slate-800">{{ $money($client->credit_limit) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Debe</p><p class="text-lg font-bold text-red-600">{{ $money($debt) }}</p></div>
-        <div class="bg-emerald-600 rounded-xl p-4 text-white"><p class="text-xs text-emerald-200">Crédito disponible</p><p class="text-lg font-bold">{{ $money($client->creditAvailable()) }}</p></div>
+        <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Crédito disponible</p><p class="text-lg font-bold">{{ $money($client->creditAvailable()) }}</p></div>
     </div>
 
     @if($debt > 0)
@@ -34,7 +34,7 @@
                 <select name="method" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">@foreach(\App\Models\CashRegister::PAYMENT_METHODS as $k => $l)<option value="{{ $k }}" {{ old('method') == $k ? 'selected' : '' }}>{{ $l }}</option>@endforeach</select></div>
             <div><label class="block text-xs text-slate-500 mb-1">Fecha</label><input type="date" name="paid_at" value="{{ today()->toDateString() }}" max="{{ today()->toDateString() }}" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"></div>
             <div><label class="block text-xs text-slate-500 mb-1">Referencia</label><input type="text" name="reference" maxlength="50" placeholder="N° operación" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"></div>
-            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">Cobrar</button>
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg">Cobrar</button>
         </div>
         <p class="px-5 pb-4 text-xs text-slate-400">El abono se aplica primero a las ventas más antiguas. @unless($hasCaja)<span class="text-amber-600">No tienes caja abierta: solo podrás recibir abonos que no sean en efectivo.</span>@endunless</p>
     </form>

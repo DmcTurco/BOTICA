@@ -31,7 +31,7 @@
                 <option value="">Todas</option>
                 <option value="vencidas" {{ request('estado') === 'vencidas' ? 'selected' : '' }}>Solo vencidas</option>
             </select>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-filter text-xs"></i> Filtrar</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-filter text-xs"></i> Filtrar</button>
         </form>
     </div>
 
@@ -64,7 +64,7 @@
                     <td class="px-5 py-3 text-center"><span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ $p->isOverdue() ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-600' }}">{{ $p->due_date?->format('d/m/Y') ?? '—' }}</span></td>
                     <td class="px-5 py-3 text-right text-xs text-slate-600 hidden md:table-cell">{{ $money($p->total) }}</td>
                     <td class="px-5 py-3 text-right text-xs font-bold text-red-600">{{ $money($p->balance) }}</td>
-                    <td class="px-5 py-3 text-right"><a href="{{ route('employee.purchases.show', $p) }}" class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg">Pagar</a></td>
+                    <td class="px-5 py-3 text-right"><a href="{{ route('employee.purchases.show', $p) }}" class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-sky-100 rounded-lg">Pagar</a></td>
                 </tr>
                 @empty
                 <tr><td colspan="6" class="px-5 py-14 text-center text-sm text-slate-400"><i class="fas fa-circle-check text-3xl text-emerald-400 mb-2"></i><p>No tienes deudas pendientes con proveedores</p></td></tr>

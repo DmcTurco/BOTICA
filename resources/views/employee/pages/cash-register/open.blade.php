@@ -66,8 +66,8 @@
                             <div class="flex items-center gap-1.5 mx-auto">
                                 <button type="button" class="btn-restar w-7 h-7 flex items-center justify-center rounded-md bg-slate-100 hover:bg-red-100 hover:text-red-600 text-slate-500 font-bold transition-colors shrink-0 select-none text-sm">−</button>
                                 <input type="number" name="{{ $key }}" min="0" value="0"
-                                       class="campo-cantidad w-11 text-center text-sm font-bold text-slate-800 bg-white border border-slate-200 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                <button type="button" class="btn-sumar w-7 h-7 flex items-center justify-center rounded-md bg-slate-100 hover:bg-emerald-100 hover:text-emerald-700 text-slate-500 font-bold transition-colors shrink-0 select-none text-sm">+</button>
+                                       class="campo-cantidad w-11 text-center text-sm font-bold text-slate-800 bg-white border border-slate-200 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                                <button type="button" class="btn-sumar w-7 h-7 flex items-center justify-center rounded-md bg-slate-100 hover:bg-sky-100 hover:text-sky-700 text-slate-500 font-bold transition-colors shrink-0 select-none text-sm">+</button>
                             </div>
                             <span class="campo-subtotal text-xs font-semibold text-slate-400 w-16 text-right shrink-0">S/ 0.00</span>
                         </div>
@@ -93,8 +93,8 @@
                             <div class="flex items-center gap-1.5 mx-auto">
                                 <button type="button" class="btn-restar w-7 h-7 flex items-center justify-center rounded-md bg-slate-100 hover:bg-red-100 hover:text-red-600 text-slate-500 font-bold transition-colors shrink-0 select-none text-sm">−</button>
                                 <input type="number" name="{{ $key }}" min="0" value="0"
-                                       class="campo-cantidad w-11 text-center text-sm font-bold text-slate-800 bg-white border border-slate-200 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                                <button type="button" class="btn-sumar w-7 h-7 flex items-center justify-center rounded-md bg-slate-100 hover:bg-emerald-100 hover:text-emerald-700 text-slate-500 font-bold transition-colors shrink-0 select-none text-sm">+</button>
+                                       class="campo-cantidad w-11 text-center text-sm font-bold text-slate-800 bg-white border border-slate-200 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                                <button type="button" class="btn-sumar w-7 h-7 flex items-center justify-center rounded-md bg-slate-100 hover:bg-sky-100 hover:text-sky-700 text-slate-500 font-bold transition-colors shrink-0 select-none text-sm">+</button>
                             </div>
                             <span class="campo-subtotal text-xs font-semibold text-slate-400 w-16 text-right shrink-0">S/ 0.00</span>
                         </div>
@@ -116,7 +116,7 @@
                            value="{{ old('register_date', $maxDate) }}"
                            max="{{ $maxDate }}"
                            class="w-full text-sm text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5
-                                  focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                  focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     <p class="text-xs text-slate-400">No puedes abrir una caja para una fecha futura.</p>
                     <p id="nota-precarga" class="hidden text-xs text-sky-700 bg-sky-50 border border-sky-200 rounded-lg px-2.5 py-1.5">
                         <i class="fas fa-rotate-left mr-1"></i>
@@ -137,10 +137,10 @@
                 </div>
 
                 {{-- Total --}}
-                <div id="panel-total" class="bg-emerald-600 rounded-2xl p-5 text-white">
-                    <p class="text-xs font-semibold text-emerald-300 uppercase tracking-widest mb-2">Total en caja</p>
+                <div id="panel-total" class="bg-sky-600 rounded-2xl p-5 text-white">
+                    <p class="text-xs font-semibold text-sky-300 uppercase tracking-widest mb-2">Total en caja</p>
                     <p id="total-display" class="text-5xl font-black tracking-tight">S/ 0.00</p>
-                    <div class="mt-4 pt-4 border-t border-emerald-500 space-y-1.5 text-xs text-emerald-200">
+                    <div class="mt-4 pt-4 border-t border-sky-500 space-y-1.5 text-xs text-sky-200">
                         <div class="flex justify-between">
                             <span>Billetes</span>
                             <span id="total-billetes" class="font-semibold text-white">S/ 0.00</span>
@@ -159,13 +159,13 @@
                     </label>
                     <textarea name="notes" rows="3"
                               class="w-full text-sm text-slate-700 border border-slate-200 rounded-xl px-3 py-2.5 resize-none
-                                     focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                     focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                               placeholder="Ej: efectivo del turno anterior..."></textarea>
                 </div>
 
                 {{-- Botón --}}
                 <button type="submit" id="btn-abrir"
-                        class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[.98] text-white font-bold rounded-2xl
+                        class="w-full py-4 bg-sky-600 hover:bg-sky-700 active:scale-[.98] text-white font-bold rounded-2xl
                                transition-all flex items-center justify-center gap-2 shadow-md text-sm tracking-wide">
                     <i class="fas fa-lock-open"></i>
                     <span id="btn-label">Abrir Caja y Comenzar</span>
@@ -202,7 +202,7 @@
                 No, revisar
             </button>
             <button type="button" id="btnConfirmarAperturaCero" onclick="confirmarAperturaCero()"
-                    class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
+                    class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors">
                 Sí, abrir con S/ 0.00
             </button>
         </div>
@@ -235,16 +235,16 @@ document.addEventListener('DOMContentLoaded', function () {
         avisoHistorica.classList.toggle('hidden', !esHistorica);
 
         if (esHistorica) {
-            panelTotal.classList.remove('bg-emerald-600');
+            panelTotal.classList.remove('bg-sky-600');
             panelTotal.classList.add('bg-amber-500');
-            btnAbrir.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+            btnAbrir.classList.remove('bg-sky-600', 'hover:bg-sky-700');
             btnAbrir.classList.add('bg-amber-500', 'hover:bg-amber-600');
             btnLabel.textContent = 'Abrir Caja Histórica';
         } else {
             panelTotal.classList.remove('bg-amber-500');
-            panelTotal.classList.add('bg-emerald-600');
+            panelTotal.classList.add('bg-sky-600');
             btnAbrir.classList.remove('bg-amber-500', 'hover:bg-amber-600');
-            btnAbrir.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+            btnAbrir.classList.add('bg-sky-600', 'hover:bg-sky-700');
             btnLabel.textContent = 'Abrir Caja y Comenzar';
         }
     }

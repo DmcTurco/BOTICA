@@ -35,7 +35,7 @@
                     @foreach(\App\Models\Order::SUNAT_LABELS as $k => $l)<option value="{{ $k }}" {{ request('sunat') === $k ? 'selected' : '' }}>{{ $l }}</option>@endforeach
                 </select>
             </div>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-filter text-xs"></i> Filtrar</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-filter text-xs"></i> Filtrar</button>
         </form>
     </div>
 

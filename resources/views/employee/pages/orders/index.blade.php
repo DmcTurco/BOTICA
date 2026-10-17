@@ -68,7 +68,7 @@
         {{-- ── Topbar ──────────────────────────────────────────── --}}
         <div class="shrink-0 flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-lg bg-sky-600 flex items-center justify-center">
                     <i class="fas fa-cash-register text-white text-sm"></i>
                 </div>
                 <div>
@@ -106,7 +106,7 @@
                     <div class="relative">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                         <input id="inputBusqueda" type="text"
-                               class="w-full pl-8 pr-10 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                               class="w-full pl-8 pr-10 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                placeholder="Escanea el código de barras o busca por nombre...">
                         <button id="btnLimpiarBusqueda"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors hidden">
@@ -137,7 +137,7 @@
                         </thead>
                         <tbody id="tablaProductos" class="divide-y divide-slate-100">
                             @forelse($products as $product)
-                            <tr class="hover:bg-emerald-50/40 transition-colors cursor-default producto-row"
+                            <tr class="hover:bg-sky-50/40 transition-colors cursor-default producto-row"
                                 data-code="{{ $product->code }}"
                                 data-barcode="{{ $product->barcode }}"
                                 data-search="{{ strtolower($product->name . ' ' . $product->code . ' ' . $product->barcode . ' ' . $product->active_ingredient) }}"
@@ -175,7 +175,7 @@
                                             ];
                                         })->values();
                                     @endphp
-                                    <button class="btn-agregar w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all"
+                                    <button class="btn-agregar w-7 h-7 flex items-center justify-center rounded-lg bg-sky-600 hover:bg-sky-700 active:scale-95 text-white transition-all"
                                             data-code="{{ $product->code }}"
                                             data-name="{{ $product->name }}"
                                             data-price="{{ $product->unit_sale_price }}"
@@ -337,7 +337,7 @@
                         <div class="relative">
                             <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs pointer-events-none"></i>
                             <input type="text" id="cliente" autocomplete="off"
-                                   class="w-full pl-8 pr-8 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                   class="w-full pl-8 pr-8 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                                    placeholder="Buscar o escribir nombre...">
                             <button type="button" id="btnLimpiarCliente"
                                     class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors hidden"
@@ -365,7 +365,7 @@
                             @foreach($documentTypes as $dt)
                             <button type="button"
                                     class="btn-tipo-doc px-2.5 py-1 rounded-lg border text-xs font-medium transition-all
-                                           border-slate-200 bg-white text-slate-500 hover:border-emerald-400 hover:text-emerald-700"
+                                           border-slate-200 bg-white text-slate-500 hover:border-sky-400 hover:text-sky-700"
                                     data-id="{{ $dt->id }}"
                                     data-digits="{{ $dt->digits ?? '' }}"
                                     data-name="{{ $dt->name }}">
@@ -377,7 +377,7 @@
                         {{-- Número de documento --}}
                         <div class="relative">
                             <input type="text" id="documento" maxlength="15"
-                                   class="w-full pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                   class="w-full pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                                    placeholder="Número de documento">
                             <span id="dniEstado" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm hidden"></span>
                         </div>
@@ -390,7 +390,7 @@
                             <i class="fas fa-hashtag"></i> Nro Operación
                         </label>
                         <input type="text" id="nroOperacion"
-                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                               class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                                placeholder="Ref. de pago">
                     </div>
 
@@ -403,22 +403,22 @@
         <div class="shrink-0 flex items-center justify-between border-t border-slate-200 px-5 py-3 bg-white gap-6">
 
             <button id="btnTerminarVenta"
-                    class="px-8 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm"
+                    class="px-8 py-2.5 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm"
                     disabled>
                 <i class="fas fa-circle-check text-sm"></i>
                 {{ $editOrder ? 'Guardar Cambios' : 'Confirmar Venta' }}
-                <kbd class="text-emerald-200 text-xs font-normal bg-white/10 px-1.5 py-0.5 rounded ml-1">F5</kbd>
+                <kbd class="text-sky-200 text-xs font-normal bg-white/10 px-1.5 py-0.5 rounded ml-1">F5</kbd>
             </button>
 
             @if($canDiscount)
             <div class="flex items-center gap-2" title="Descuento porcentual aplicado a todos los productos (máx. 50%)">
                 <label for="descuentoPct" class="text-xs font-medium text-slate-500">Desc. %</label>
                 <input type="number" id="descuentoPct" min="0" max="50" step="1" inputmode="numeric" value="0"
-                       class="w-16 px-2 py-1.5 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-16 px-2 py-1.5 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
                 @if($salesCfg['amount_discount'])
                 <span class="text-xs text-slate-400">ó S/</span>
                 <input type="number" id="descuentoMonto" min="0" step="0.10" inputmode="decimal" value="0" title="Descuento en soles sobre toda la venta (antes de IGV)"
-                       class="w-20 px-2 py-1.5 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-20 px-2 py-1.5 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
                 @endif
                 <span class="text-xs text-slate-400 leading-tight">
                     @if($salesCfg['amount_discount'])
@@ -467,18 +467,18 @@
         </div>
         <div class="p-5 grid grid-cols-2 gap-3">
             <input type="hidden" id="recetaNivel" value="1">
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Paciente <span class="text-red-500">*</span></label><input type="text" id="recetaPaciente" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Documento del paciente <span class="receta-controlado text-red-500">*</span></label><input type="text" id="recetaDocPaciente" maxlength="15" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Médico <span class="text-red-500">*</span></label><input type="text" id="recetaMedico" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">N° colegiatura (CMP) <span class="text-red-500">*</span></label><input type="text" id="recetaCmp" maxlength="20" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">N° de receta <span class="receta-controlado text-red-500">*</span></label><input type="text" id="recetaNumero" maxlength="30" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
-            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Fecha de la receta <span class="text-red-500">*</span></label><input type="date" id="recetaFecha" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
-            <div class="col-span-2"><label class="block text-xs font-medium text-slate-600 mb-1">Establecimiento de salud</label><input type="text" id="recetaEstablecimiento" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Paciente <span class="text-red-500">*</span></label><input type="text" id="recetaPaciente" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Documento del paciente <span class="receta-controlado text-red-500">*</span></label><input type="text" id="recetaDocPaciente" maxlength="15" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Médico <span class="text-red-500">*</span></label><input type="text" id="recetaMedico" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">N° colegiatura (CMP) <span class="text-red-500">*</span></label><input type="text" id="recetaCmp" maxlength="20" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">N° de receta <span class="receta-controlado text-red-500">*</span></label><input type="text" id="recetaNumero" maxlength="30" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block text-xs font-medium text-slate-600 mb-1">Fecha de la receta <span class="text-red-500">*</span></label><input type="date" id="recetaFecha" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div class="col-span-2"><label class="block text-xs font-medium text-slate-600 mb-1">Establecimiento de salud</label><input type="text" id="recetaEstablecimiento" maxlength="150" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
             <p id="recetaError" class="hidden col-span-2 text-xs text-red-600"></p>
         </div>
         <div class="flex justify-end gap-3 px-5 py-4 border-t border-slate-100">
             <button type="button" onclick="cerrarModalReceta()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg">Cancelar</button>
-            <button type="button" id="btnGuardarReceta" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">Guardar y confirmar venta</button>
+            <button type="button" id="btnGuardarReceta" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg">Guardar y confirmar venta</button>
         </div>
     </div>
 </div>
@@ -504,7 +504,7 @@
                 <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-slate-400">S/</span>
                     <input type="number" id="cobroPagaCon" min="0" step="0.10" inputmode="decimal" autocomplete="off"
-                           class="w-full pl-11 pr-3 py-3 text-2xl font-bold text-center text-slate-800 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                           class="w-full pl-11 pr-3 py-3 text-2xl font-bold text-center text-slate-800 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
                            placeholder="0.00">
                 </div>
                 <div id="cobroRapidos" class="flex flex-wrap justify-center gap-1.5 mt-2.5"></div>
@@ -529,7 +529,7 @@
 
         <div class="flex justify-end gap-3 px-5 py-4 border-t border-slate-100 bg-slate-50">
             <button type="button" onclick="cerrarModalCobro()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg">Cancelar</button>
-            <button type="button" id="btnConfirmarCobro" class="px-5 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm">
+            <button type="button" id="btnConfirmarCobro" class="px-5 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm">
                 <i class="fas fa-check mr-1"></i> Confirmar venta
             </button>
         </div>
@@ -569,7 +569,7 @@
                         −
                     </button>
                     <input id="modalCantidad" type="number" min="1" value="1"
-                           class="flex-1 text-center text-xl font-bold border border-slate-200 rounded-lg py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                           class="flex-1 text-center text-xl font-bold border border-slate-200 rounded-lg py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500">
                     <button id="modalBtnInc"
                             class="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors text-lg font-light select-none">
                         +
@@ -593,7 +593,7 @@
                     <p id="modalPrecio" class="text-2xl font-bold text-slate-800">S/ 0.00</p>
                 </div>
                 <button id="modalBtnAgregar"
-                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-bold rounded-xl transition-colors flex items-center gap-2 shadow-sm">
+                        class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white text-sm font-bold rounded-xl transition-colors flex items-center gap-2 shadow-sm">
                     <i class="fas fa-plus text-xs"></i> Agregar
                 </button>
             </div>
@@ -625,7 +625,7 @@
         {{-- Acciones --}}
         <div class="px-6 py-5 flex flex-col gap-3">
             <button type="button" id="btnPrintSale"
-                    class="w-full flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors">
+                    class="w-full flex items-center justify-center gap-2 px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors">
                 <i class="fas fa-print text-xs"></i>
                 Imprimir comprobante
             </button>
@@ -644,9 +644,9 @@
 @section('scripts')
 <script>
 // ── Estilos de botones de pago / comprobante / tipo de doc ───
-const PAGO_ACTIVO   = ['border-emerald-500','bg-emerald-50','text-emerald-700'];
+const PAGO_ACTIVO   = ['border-sky-500','bg-sky-50','text-sky-700'];
 const PAGO_INACTIVO = ['border-slate-200','bg-white','text-slate-500'];
-const DOC_ACTIVO    = ['border-emerald-500','bg-emerald-50','text-emerald-700'];
+const DOC_ACTIVO    = ['border-sky-500','bg-sky-50','text-sky-700'];
 const DOC_INACTIVO  = ['border-slate-200','bg-white','text-slate-500'];
 
 function activarBtn(selector, $clicked) {
@@ -772,7 +772,7 @@ function filtrarProductos() {
 // ── Alternativas por principio activo ────────────────────────
 function pintarAlternativas($destino, lista) {
     $destino.html(lista.length ? lista.map(p => `
-        <button type="button" class="alt-item w-full text-left px-3 py-2 rounded-lg border border-slate-200 hover:bg-emerald-50 hover:border-emerald-300 transition-colors" data-name="${$('<div>').text(p.name).html()}">
+        <button type="button" class="alt-item w-full text-left px-3 py-2 rounded-lg border border-slate-200 hover:bg-sky-50 hover:border-sky-300 transition-colors" data-name="${$('<div>').text(p.name).html()}">
             <span class="block text-xs font-medium text-slate-800">${$('<div>').text(p.name).html()}</span>
             <span class="block text-[10px] text-slate-500">${$('<div>').text(p.laboratory || 'sin laboratorio').html()} · S/ ${p.price.toFixed(2)} · stock ${p.stock}</span>
         </button>`).join('') : '<p class="text-xs text-slate-400">No hay otros productos con ese principio activo y stock.</p>');
@@ -837,7 +837,7 @@ $(document).on('click', '.btn-agregar', function() {
 });
 
 function opcionPresentacion(val, label, sub, price, checked) {
-    const active = checked ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300';
+    const active = checked ? 'border-sky-500 bg-sky-50' : 'border-slate-200 hover:border-slate-300';
     return `
         <label class="flex items-center gap-2.5 p-2.5 rounded-lg border ${active} cursor-pointer presentacion-opcion transition-colors">
             <input type="radio" name="modalPresentacion" value="${val}" data-price="${price}" ${checked ? 'checked' : ''}
@@ -855,7 +855,7 @@ $(document).on('change', 'input[name="modalPresentacion"]', function() {
     $('#modalPrecio').text('S/ ' + modalPrecio.toFixed(2));
     $('.presentacion-opcion').each(function() {
         const checked = $(this).find('input').is(':checked');
-        $(this).toggleClass('border-emerald-500 bg-emerald-50', checked)
+        $(this).toggleClass('border-sky-500 bg-sky-50', checked)
                .toggleClass('border-slate-200', !checked);
     });
 });
@@ -957,7 +957,7 @@ function renderCarrito() {
                     <td class="px-3 py-2.5">
                         <div class="flex items-center justify-center gap-1">
                             <button class="btn-dec w-6 h-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors text-xs" data-code="${code}">−</button>
-                            <input class="input-cantidad w-10 text-center text-sm font-semibold border border-slate-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-emerald-500" data-code="${code}" value="${item.qty}" min="1" max="${item.stock}">
+                            <input class="input-cantidad w-10 text-center text-sm font-semibold border border-slate-200 rounded py-0.5 focus:outline-none focus:ring-1 focus:ring-sky-500" data-code="${code}" value="${item.qty}" min="1" max="${item.stock}">
                             <button class="btn-inc w-6 h-6 flex items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors text-xs" data-code="${code}">+</button>
                         </div>
                     </td>
@@ -1296,7 +1296,7 @@ $('#btnTerminarVenta').on('click', function() {
             montoRecibido = null;
             const hasItems = Object.keys(carrito).length > 0;
             $btn.prop('disabled', !hasItems)
-                .html('<i class="fas fa-circle-check text-sm"></i> ' + BTN_LABEL + ' <kbd class="text-emerald-200 text-xs font-normal bg-white/10 px-1.5 py-0.5 rounded ml-1">F5</kbd>');
+                .html('<i class="fas fa-circle-check text-sm"></i> ' + BTN_LABEL + ' <kbd class="text-sky-200 text-xs font-normal bg-white/10 px-1.5 py-0.5 rounded ml-1">F5</kbd>');
         }
     });
 });
@@ -1381,7 +1381,7 @@ $('#modalSaleSuccess').on('click', function(e) {
 
 // ── Toast de notificación ─────────────────────────────────────
 function mostrarToast(tipo, mensaje, subtitulo = '') {
-    const color = tipo === 'success' ? 'bg-emerald-600' : 'bg-red-600';
+    const color = tipo === 'success' ? 'bg-sky-600' : 'bg-red-600';
     const icon  = tipo === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
     const sub   = subtitulo
         ? `<p class="text-xs text-white/80 font-mono mt-0.5">${subtitulo}</p>`
@@ -1436,7 +1436,7 @@ $('#cliente').on('input', function() {
                     : '';
                 $dd.append(`
                     <button type="button"
-                            class="cliente-opcion w-full text-left px-4 py-2.5 hover:bg-emerald-50 transition-colors border-b border-slate-100 last:border-0"
+                            class="cliente-opcion w-full text-left px-4 py-2.5 hover:bg-sky-50 transition-colors border-b border-slate-100 last:border-0"
                             data-id="${c.id}"
                             data-name="${c.name}"
                             data-doc-type-id="${c.document_type_id ?? ''}"

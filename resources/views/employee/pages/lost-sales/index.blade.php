@@ -23,27 +23,27 @@
             <div class="sm:col-span-3">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Producto pedido <span class="text-red-500">*</span></label>
                 <input type="text" name="product_name" id="productName" required maxlength="150" list="catalogo" value="{{ old('product_name') }}" placeholder="Nombre del producto (del catálogo o libre)"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <input type="hidden" name="product_code" id="productCode" value="{{ old('product_code') }}">
                 <datalist id="catalogo">@foreach($products as $p)<option value="{{ $p['name'] }}">@endforeach</datalist>
             </div>
             <div class="sm:col-span-1">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Cantidad <span class="text-red-500">*</span></label>
                 <input type="number" name="quantity" required min="0.01" step="0.01" value="{{ old('quantity', 1) }}"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
             <div class="sm:col-span-2">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Motivo <span class="text-red-500">*</span></label>
-                <select name="reason" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <select name="reason" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                     @foreach(\App\Models\LostSale::REASONS as $k => $label)<option value="{{ $k }}" {{ old('reason') === $k ? 'selected' : '' }}>{{ $label }}</option>@endforeach
                 </select>
             </div>
             <div class="sm:col-span-5">
                 <input type="text" name="notes" maxlength="255" value="{{ old('notes') }}" placeholder="Nota opcional (ej. el cliente aceptó una alternativa)"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
             <div class="sm:col-span-1">
-                <button type="submit" class="w-full px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm flex items-center justify-center gap-2"><i class="fas fa-save text-xs"></i> Registrar</button>
+                <button type="submit" class="w-full px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm flex items-center justify-center gap-2"><i class="fas fa-save text-xs"></i> Registrar</button>
             </div>
         </div>
     </form>
@@ -67,7 +67,7 @@
                 <form action="{{ route('employee.lost-sales.index') }}" method="GET" class="flex items-center gap-2">
                     <input type="date" name="fecha_desde" value="{{ $desde }}" class="px-2 py-1.5 text-xs border border-slate-300 rounded-lg">
                     <input type="date" name="fecha_hasta" value="{{ $hasta }}" class="px-2 py-1.5 text-xs border border-slate-300 rounded-lg">
-                    <button class="px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg">Filtrar</button>
+                    <button class="px-3 py-1.5 text-xs bg-sky-600 hover:bg-sky-700 text-white rounded-lg">Filtrar</button>
                 </form>
             </div>
             <table class="w-full text-sm">

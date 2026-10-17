@@ -86,7 +86,7 @@
                                     <i class="fas fa-barcode absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                                     <input type="text" id="codigo_barras" name="codigo_barras" maxlength="30"
                                         value="{{ old('codigo_barras', $products->barcode ?? '') }}"
-                                        class="w-full pl-8 pr-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        class="w-full pl-8 pr-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                         placeholder="Escanea la caja o escríbelo">
                                 </div>
                                 @error('codigo_barras')
@@ -101,7 +101,7 @@
                                     Categoría <span class="text-red-500">*</span>
                                 </label>
                                 <select data-search id="categoria_id" name="categoria_id" required
-                                    class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                    class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                                     <option value="">Seleccionar categoría</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}"
@@ -122,7 +122,7 @@
                             </label>
                             <input type="text" id="nombre" name="nombre" required maxlength="150"
                                 value="{{ old('nombre', $products->name ?? '') }}"
-                                class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                 placeholder="Nombre completo del producto">
                             @error('nombre')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -133,7 +133,7 @@
                             <label for="descripcion"
                                 class="block text-sm font-medium text-slate-700 mb-1.5">Descripción</label>
                             <textarea id="descripcion" name="descripcion" rows="2" maxlength="255"
-                                class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                                class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-none"
                                 placeholder="Descripción opcional...">{{ old('descripcion', $products->description ?? '') }}</textarea>
                             @error('descripcion')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -145,7 +145,7 @@
                                 <label for="laboratorio_id"
                                     class="block text-sm font-medium text-slate-700 mb-1.5">Laboratorio</label>
                                 <select data-search id="laboratorio_id" name="laboratorio_id"
-                                    class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                    class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                                     <option value="">Seleccionar laboratorio</option>
                                     @foreach ($laboratories as $laboratory)
                                         <option value="{{ $laboratory->id }}"
@@ -163,12 +163,12 @@
                                 <input type="text" id="registro_sanitario" name="registro_sanitario" maxlength="30"
                                     value="{{ old('registro_sanitario', $products->sanitary_registry ?? '') }}"
                                     placeholder="Ej: EE-01234"
-                                    class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
                             </div>
                             <div>
                                 <label for="tipo_controlado" class="block text-sm font-medium text-slate-700 mb-1.5">Producto controlado</label>
                                 <select id="tipo_controlado" name="tipo_controlado"
-                                    class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                                     <option value="">No es controlado</option>
                                     @foreach (\App\Models\Product::CONTROLLED_LABELS as $k => $l)
                                         <option value="{{ $k }}" {{ old('tipo_controlado', $products->controlled_type ?? '') === $k ? 'selected' : '' }}>{{ $l }}</option>
@@ -181,7 +181,7 @@
                                     class="block text-sm font-medium text-slate-700 mb-1.5">Principio Activo</label>
                                 <input type="text" id="principio_activo" name="principio_activo" maxlength="100"
                                     value="{{ old('principio_activo', $products->active_ingredient ?? '') }}"
-                                    class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                    class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                     placeholder="Ej: Ibuprofeno">
                                 @error('principio_activo')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -196,7 +196,7 @@
                                     <span class="font-normal text-slate-400">(la más pequeña que vendes)</span>
                                 </label>
                                 <select data-search id="unidad_medida_id" name="unidad_medida_id" required
-                                    class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                    class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                                     <option value="">Seleccionar unidad</option>
                                     @foreach ($units as $unit)
                                         <option value="{{ $unit->id }}"
@@ -221,7 +221,7 @@
                             <div class="flex items-center gap-2.5">
                                 <label for="afectacion_igv" class="text-sm text-slate-700">Afectación IGV</label>
                                 <select name="afectacion_igv" id="afectacion_igv"
-                                        class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                                     @foreach(\App\Models\Product::IGV_LABELS as $code => $label)
                                     <option value="{{ $code }}" {{ old('afectacion_igv', $products->igv_affectation ?? '20') == $code ? 'selected' : '' }}>{{ $label }}</option>
                                     @endforeach
@@ -230,7 +230,7 @@
                             <label class="flex items-center gap-2.5 cursor-pointer">
                                 <input type="checkbox" name="requiere_receta" value="1"
                                     {{ old('requiere_receta', $products->requires_recipe ?? 0) ? 'checked' : '' }}
-                                    class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                    class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-sky-500">
                                 <span class="text-sm text-slate-700">Requiere receta médica</span>
                             </label>
                         </div>
@@ -313,7 +313,7 @@
                                                 {{ $products->branchStocks->first()?->stock_actual ?? 0 }}
                                             </span>
                                             <a href="{{ route('employee.purchases.create', ['product' => $products->code]) }}"
-                                                class="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1">
+                                                class="text-xs text-emerald-600 hover:text-sky-700 font-medium flex items-center gap-1">
                                                 <i class="fas fa-plus-circle text-[10px]"></i> Registrar compra
                                             </a>
                                         </div>
@@ -328,7 +328,7 @@
                                         </label>
                                         <input type="number" id="stock_inicial" name="stock_inicial" min="0" step="0.01"
                                             value="{{ old('stock_inicial') }}"
-                                            class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                            class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                             placeholder="0">
                                         @error('stock_inicial')
                                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -343,7 +343,7 @@
                                     <input type="number" id="stock_minimo" name="stock_minimo" min="0"
                                         step="1"
                                         value="{{ old('stock_minimo', isset($products) ? $products->branchStocks->first()?->stock_minimum ?? '' : '') }}"
-                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                         placeholder="0">
                                     @error('stock_minimo')
                                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -355,7 +355,7 @@
                                     <input type="number" id="stock_maximo" name="stock_maximo" min="0"
                                         step="1"
                                         value="{{ old('stock_maximo', isset($products) ? $products->branchStocks->first()?->stock_maximum ?? '' : '') }}"
-                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                         placeholder="0">
                                     @error('stock_maximo')
                                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -370,7 +370,7 @@
                                         <label for="lote_inicial" class="block text-sm font-medium text-slate-700 mb-1.5">Lote del stock inicial</label>
                                         <input type="text" id="lote_inicial" name="lote_inicial" maxlength="50"
                                             value="{{ old('lote_inicial') }}"
-                                            class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                            class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                             placeholder="Opcional">
                                         @error('lote_inicial')
                                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -380,7 +380,7 @@
                                         <label for="vencimiento_inicial" class="block text-sm font-medium text-slate-700 mb-1.5">Vencimiento del stock inicial</label>
                                         <input type="date" id="vencimiento_inicial" name="vencimiento_inicial"
                                             value="{{ old('vencimiento_inicial') }}"
-                                            class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                                            class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                                         @error('vencimiento_inicial')
                                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                         @enderror
@@ -401,7 +401,7 @@
                                 El precio de compra siempre es por unidad.
                             </p>
                             <button type="button" id="btn-agregar-presentacion"
-                                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-600 border border-emerald-300 rounded-lg hover:bg-emerald-50 transition-colors">
+                                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-600 border border-emerald-300 rounded-lg hover:bg-sky-50 transition-colors">
                                 <i class="fas fa-plus text-[10px]"></i> Agregar
                             </button>
                         </div>
@@ -426,7 +426,7 @@
                                             Unidad de Medida <span class="text-red-500">*</span>
                                         </label>
                                         <select data-search
-                                            class="unidad-medida-select w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                            class="unidad-medida-select w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                             required>
                                             <option value="">Seleccione</option>
                                             @foreach ($units as $unit)
@@ -439,7 +439,7 @@
                                             Cantidad Equivalente <span class="text-red-500">*</span>
                                         </label>
                                         <input type="number"
-                                            class="cantidad-equivalente w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                            class="cantidad-equivalente w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                             required min="1" step="0.01" placeholder="Ej: 10">
                                         <p class="text-xs text-slate-400 mt-1">¿Cuántas unidades base contiene?</p>
                                     </div>
@@ -460,7 +460,7 @@
                                 <div class="mt-3">
                                     <label class="flex items-center gap-2.5 cursor-pointer">
                                         <input type="checkbox"
-                                            class="es-presentacion-principal w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                            class="es-presentacion-principal w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-sky-500"
                                             value="1">
                                         <span class="es-presentacion-principal-label text-sm text-slate-700">Es la
                                             presentación principal</span>
@@ -479,7 +479,7 @@
                         Cancelar
                     </a>
                     <button type="submit"
-                        class="px-5 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
+                        class="px-5 py-2.5 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
                         <i class="fas fa-save text-xs"></i>
                         {{ isset($products) ? 'Actualizar Producto' : 'Guardar Producto' }}
                     </button>
@@ -529,7 +529,7 @@
         });
 
         function inicializarTabs() {
-            const btnActive = 'bg-white text-emerald-600 border border-slate-200 border-b-white shadow-sm -mb-px';
+            const btnActive = 'bg-white text-sky-600 border border-slate-200 border-b-white shadow-sm -mb-px';
             const btnInactive = 'text-slate-500 hover:text-slate-700';
 
             document.querySelectorAll('.tab-btn').forEach(btn => {

@@ -5,7 +5,7 @@
 
 @section('content-area')
 @php
-    $inputClass = 'w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent';
+    $inputClass = 'w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent';
 @endphp
 <div class="flex-1 flex flex-col gap-3 min-h-0">
 
@@ -110,11 +110,11 @@
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="status" name="status" value="1" class="sr-only peer"
                                {{ old('status', isset($supplier) ? $supplier->status : 1) == 1 ? 'checked' : '' }}>
-                        <div class="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer
+                        <div class="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-500 rounded-full peer
                                     peer-checked:after:translate-x-full peer-checked:after:border-white
                                     after:content-[''] after:absolute after:top-0.5 after:left-0.5
                                     after:bg-white after:border-slate-300 after:border after:rounded-full
-                                    after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                    after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
                     </label>
                     <label for="status" class="text-sm font-medium text-slate-700 cursor-pointer">Proveedor activo</label>
                 </div>
@@ -153,7 +153,7 @@
                     Cancelar
                 </a>
                 <button type="submit"
-                        class="px-5 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
+                        class="px-5 py-2.5 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
                     <i class="fas fa-save text-xs"></i>
                     {{ isset($supplier) ? 'Actualizar Proveedor' : 'Guardar Proveedor' }}
                 </button>

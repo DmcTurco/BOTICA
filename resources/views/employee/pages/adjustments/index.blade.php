@@ -26,7 +26,7 @@
                 <label class="block text-xs font-medium text-slate-600 mb-1">Producto <span class="text-red-500">*</span></label>
                 <input type="hidden" name="product_code" id="productCode" value="{{ old('product_code') }}">
                 <input type="text" id="buscadorProducto" autocomplete="off" placeholder="Busca por nombre o código..."
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 <div id="resultados" class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-auto"></div>
                 <p id="infoStock" class="text-xs text-slate-500 mt-1"></p>
             </div>
@@ -34,7 +34,7 @@
             <div class="sm:col-span-3">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Tipo de ajuste <span class="text-red-500">*</span></label>
                 <select name="mode" id="mode"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                     <option value="set" {{ old('mode', 'set') === 'set' ? 'selected' : '' }}>Fijar el stock contado (inventario físico)</option>
                     <option value="add" {{ old('mode') === 'add' ? 'selected' : '' }}>Sumar unidades</option>
                     <option value="subtract" {{ old('mode') === 'subtract' ? 'selected' : '' }}>Restar unidades</option>
@@ -44,14 +44,14 @@
             <div class="sm:col-span-2">
                 <label class="block text-xs font-medium text-slate-600 mb-1" id="lblCantidad">Cantidad contada <span class="text-red-500">*</span></label>
                 <input type="number" name="quantity" id="quantity" min="0" step="0.01" required value="{{ old('quantity') }}"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <p id="previsualizacion" class="text-xs mt-1 text-slate-500"></p>
             </div>
 
             <div class="sm:col-span-2">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Motivo <span class="text-red-500">*</span></label>
                 <select name="reason"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                     @foreach($reasons as $key => $label)
                         <option value="{{ $key }}" {{ old('reason') === $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
@@ -61,23 +61,23 @@
             <div class="sm:col-span-2">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Nota</label>
                 <input type="text" name="notes" maxlength="255" value="{{ old('notes') }}" placeholder="Detalle opcional"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
 
             <div class="sm:col-span-3">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Lote (al sumar unidades)</label>
                 <input type="text" name="batch" maxlength="30" value="{{ old('batch') }}" placeholder="Opcional"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
             <div class="sm:col-span-3">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Vencimiento (al sumar unidades)</label>
                 <input type="date" name="expiration_date" value="{{ old('expiration_date') }}"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
 
             <div class="sm:col-span-6 flex justify-end">
                 <button type="submit"
-                        class="px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                        class="px-5 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors shadow-sm flex items-center gap-2">
                     <i class="fas fa-save text-xs"></i> Registrar ajuste
                 </button>
             </div>
@@ -157,7 +157,7 @@ inpBuscar.addEventListener('input', () => {
     if (!q) { lista.classList.add('hidden'); return; }
     const hallados = productos.filter(p => (p.name + ' ' + p.code).toLowerCase().includes(q)).slice(0, 30);
     lista.innerHTML = hallados.length ? hallados.map(p => `
-        <button type="button" data-code="${esc(p.code)}" class="item w-full text-left px-3 py-2 hover:bg-emerald-50 border-b border-slate-100 last:border-0">
+        <button type="button" data-code="${esc(p.code)}" class="item w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-slate-100 last:border-0">
             <p class="text-xs font-medium text-slate-800">${esc(p.name)}</p>
             <p class="text-[10px] text-slate-400 font-mono">${esc(p.code)} · stock ${p.stock}</p>
         </button>`).join('') : '<p class="px-3 py-3 text-xs text-slate-400">Sin resultados</p>';

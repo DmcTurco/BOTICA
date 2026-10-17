@@ -17,7 +17,7 @@
             <p class="text-sm text-slate-500 mt-0.5">Lotes elaborados en el laboratorio, con su vencimiento</p>
         </div>
         <a href="{{ route('employee.productions.create') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i> Preparar Lote
         </a>
     </div>
@@ -29,17 +29,17 @@
                 <div class="flex-1 relative">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     <input type="text" name="buscar" value="{{ request('buscar') }}"
-                           class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                           class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                            placeholder="N° de lote o nombre de la fórmula...">
                 </div>
                 <select name="vencimiento"
-                        class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     <option value="">Todos los vencimientos</option>
                     <option value="por_vencer" {{ request('vencimiento') === 'por_vencer' ? 'selected' : '' }}>Por vencer (30 días)</option>
                     <option value="vencido" {{ request('vencimiento') === 'vencido' ? 'selected' : '' }}>Vencidos</option>
                 </select>
                 <button type="submit"
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
+                        class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
                     <i class="fas fa-search text-xs"></i> Filtrar
                 </button>
                 @if(request()->hasAny(['buscar','vencimiento']))

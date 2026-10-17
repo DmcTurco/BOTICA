@@ -27,7 +27,7 @@
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Ventas en efectivo</p><p class="text-lg font-bold text-slate-800">{{ $money($caja->totalCash()) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Otros ingresos</p><p class="text-lg font-bold text-emerald-700">+ {{ $money($caja->otherIncome()) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Gastos</p><p class="text-lg font-bold text-red-600">− {{ $money($caja->expenses()) }}</p></div>
-        <div class="bg-emerald-600 rounded-xl p-4 text-white"><p class="text-xs text-emerald-200">Efectivo en caja</p><p class="text-lg font-bold">{{ $money($caja->expectedCash()) }}</p></div>
+        <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Efectivo en caja</p><p class="text-lg font-bold">{{ $money($caja->expectedCash()) }}</p></div>
     </div>
 
     <form action="{{ route('employee.cash-movements.store') }}" method="POST" class="bg-white rounded-xl border border-slate-200 shadow-sm shrink-0">
@@ -39,7 +39,7 @@
         <div class="p-5 grid grid-cols-1 sm:grid-cols-6 gap-4">
             <div class="sm:col-span-2">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Tipo <span class="text-red-500">*</span></label>
-                <select name="type" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <select name="type" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                     @if($canExpense)<option value="expense" {{ $defaultType === 'expense' ? 'selected' : '' }}>Gasto (sale dinero)</option>@endif
                     @if($canIncome)<option value="income" {{ $defaultType === 'income' ? 'selected' : '' }}>Otro ingreso (entra dinero)</option>@endif
                 </select>
@@ -47,19 +47,19 @@
             <div class="sm:col-span-2">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Concepto <span class="text-red-500">*</span></label>
                 <input type="text" name="concept" required maxlength="150" value="{{ old('concept') }}" placeholder="Ej: Pago de flete, sencillo recibido"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
             <div class="sm:col-span-2">
                 <label class="block text-xs font-medium text-slate-600 mb-1">Monto (S/) <span class="text-red-500">*</span></label>
                 <input type="number" name="amount" required min="0.01" step="0.01" value="{{ old('amount') }}"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
             <div class="sm:col-span-5">
                 <input type="text" name="notes" maxlength="500" value="{{ old('notes') }}" placeholder="Nota opcional"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
             <div class="sm:col-span-1 flex justify-end">
-                <button type="submit" class="w-full px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm flex items-center justify-center gap-2">
+                <button type="submit" class="w-full px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm flex items-center justify-center gap-2">
                     <i class="fas fa-save text-xs"></i> Registrar
                 </button>
             </div>
@@ -75,7 +75,7 @@
         <form action="{{ route('employee.cash-movements.index') }}" method="GET" class="flex flex-col sm:flex-row gap-3 items-end">
             <div><label class="block text-xs text-slate-500 mb-1">Desde</label><input type="date" name="fecha_desde" value="{{ $desde }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg"></div>
             <div><label class="block text-xs text-slate-500 mb-1">Hasta</label><input type="date" name="fecha_hasta" value="{{ $hasta }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg"></div>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-filter text-xs"></i> Filtrar</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-filter text-xs"></i> Filtrar</button>
         </form>
     </div>
 

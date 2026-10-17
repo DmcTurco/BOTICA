@@ -19,7 +19,7 @@
         </div>
         @if($emp->hasPrivilege(\App\Models\Employee::PRIV_VER_VENTAS))
         <a href="{{ route('employee.orders.index') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
             <i class="fas fa-cash-register text-xs"></i>
             Nueva Venta
         </a>
@@ -97,11 +97,11 @@
 
                 @if($hasSales)
                 <a href="{{ route('employee.orders.index') }}"
-                   class="flex flex-col items-center gap-2 p-3.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors group">
-                    <div class="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                   class="flex flex-col items-center gap-2 p-3.5 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50 transition-colors group">
+                    <div class="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-sky-200 transition-colors">
                         <i class="fas fa-cash-register text-emerald-600 text-sm"></i>
                     </div>
-                    <span class="text-xs font-medium text-slate-600 group-hover:text-emerald-700 text-center leading-tight">Nueva Venta</span>
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-sky-700 text-center leading-tight">Nueva Venta</span>
                 </a>
                 @endif
 

@@ -8,7 +8,7 @@
 
     {{-- Header --}}
     <div class="shrink-0">
-        <a href="{{ route('employee.settings.index') }}" class="text-xs text-slate-500 hover:text-emerald-600">
+        <a href="{{ route('employee.settings.index') }}" class="text-xs text-slate-500 hover:text-sky-600">
             <i class="fas fa-arrow-left mr-1"></i> Volver a configuración
         </a>
         <h1 class="text-xl font-bold text-slate-800 mt-1">Formato de impresión</h1>
@@ -28,15 +28,15 @@
                         @foreach($templateLabels as $key => $info)
                         @php $selected = $currentTemplate === $key; @endphp
                         <label class="flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all
-                                      {{ $selected ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50' }}"
+                                      {{ $selected ? 'border-sky-500 bg-sky-50' : 'border-slate-200 hover:border-sky-200 hover:bg-slate-50' }}"
                                id="tpl-label-{{ $key }}">
                             <input type="radio" name="default_template" value="{{ $key }}"
-                                   class="mt-0.5 text-emerald-600 focus:ring-emerald-500"
+                                   class="mt-0.5 text-sky-600 focus:ring-sky-500"
                                    {{ $selected ? 'checked' : '' }}
                                    onchange="selectTemplate(this)">
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <i class="fas {{ $info['icon'] }} text-emerald-500 text-xs"></i>
+                                    <i class="fas {{ $info['icon'] }} text-sky-500 text-xs"></i>
                                     <span class="text-sm font-semibold text-slate-700">{{ $info['title'] }}</span>
                                 </div>
                                 <p class="text-xs text-slate-400 mt-0.5">{{ $info['desc'] }}</p>
@@ -68,7 +68,7 @@
 
             <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center gap-3" style="flex-shrink:0;">
                 <button type="submit"
-                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+                        class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
                     Usar este formato
                 </button>
                 <a href="{{ route('employee.settings.index') }}"
@@ -133,12 +133,12 @@
     function selectTemplate(radio) {
         showPreview(radio.value);
         document.querySelectorAll('[id^="tpl-label-"]').forEach(label => {
-            label.classList.remove('border-emerald-500', 'bg-emerald-50');
+            label.classList.remove('border-sky-500', 'bg-sky-50');
             label.classList.add('border-slate-200');
         });
         const selected = document.getElementById('tpl-label-' + radio.value);
         if (selected) {
-            selected.classList.add('border-emerald-500', 'bg-emerald-50');
+            selected.classList.add('border-sky-500', 'bg-sky-50');
             selected.classList.remove('border-slate-200');
         }
     }

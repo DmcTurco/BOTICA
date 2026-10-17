@@ -48,7 +48,7 @@
                     </label>
                     <input type="text" id="name" name="name" required maxlength="150"
                            value="{{ old('name', $client->name ?? '') }}"
-                           class="w-full px-3 py-2.5 text-sm border {{ $errors->has('name') ? 'border-red-400' : 'border-slate-300' }} rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                           class="w-full px-3 py-2.5 text-sm border {{ $errors->has('name') ? 'border-red-400' : 'border-slate-300' }} rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                            placeholder="Ej: Juan Pérez García">
                     @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
@@ -60,14 +60,14 @@
                         <button type="button"
                                 data-id=""
                                 onclick="seleccionarTipoDoc(this)"
-                                class="chip-doc px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors border-slate-300 bg-white text-slate-500 hover:border-emerald-500 hover:text-emerald-700">
+                                class="chip-doc px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors border-slate-300 bg-white text-slate-500 hover:border-sky-500 hover:text-sky-700">
                             Sin documento
                         </button>
                         @foreach($documentTypes as $dt)
                         <button type="button"
                                 data-id="{{ $dt->id }}"
                                 onclick="seleccionarTipoDoc(this)"
-                                class="chip-doc px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors border-slate-300 bg-white text-slate-500 hover:border-emerald-500 hover:text-emerald-700">
+                                class="chip-doc px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors border-slate-300 bg-white text-slate-500 hover:border-sky-500 hover:text-sky-700">
                             {{ $dt->name }}
                         </button>
                         @endforeach
@@ -82,7 +82,7 @@
                         <label for="document_number" class="block text-sm font-medium text-slate-700 mb-1.5">Número de documento</label>
                         <input type="text" id="document_number" name="document_number" maxlength="20"
                                value="{{ old('document_number', $client->document_number ?? '') }}"
-                               class="w-full px-3 py-2.5 text-sm border {{ $errors->has('document_number') ? 'border-red-400' : 'border-slate-300' }} rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                               class="w-full px-3 py-2.5 text-sm border {{ $errors->has('document_number') ? 'border-red-400' : 'border-slate-300' }} rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                placeholder="Ej: 12345678">
                         @error('document_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
@@ -94,7 +94,7 @@
                         </label>
                         <input type="text" id="phone" name="phone" maxlength="20"
                                value="{{ old('phone', $client->phone ?? '') }}"
-                               class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                               class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                placeholder="Ej: 999 888 777">
                         @error('phone') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
@@ -108,7 +108,7 @@
                         </label>
                         <input type="email" id="email" name="email" maxlength="100"
                                value="{{ old('email', $client->email ?? '') }}"
-                               class="w-full px-3 py-2.5 text-sm border {{ $errors->has('email') ? 'border-red-400' : 'border-slate-300' }} rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                               class="w-full px-3 py-2.5 text-sm border {{ $errors->has('email') ? 'border-red-400' : 'border-slate-300' }} rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                placeholder="Ej: cliente@correo.com">
                         @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
@@ -119,7 +119,7 @@
                         </label>
                         <input type="text" id="address" name="address" maxlength="200"
                                value="{{ old('address', $client->address ?? '') }}"
-                               class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                               class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                placeholder="Ej: Av. Principal 123, Lima">
                         @error('address') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
@@ -128,7 +128,7 @@
                         <label for="credit_limit" class="block text-sm font-medium text-slate-700 mb-1.5">Línea de crédito (fiado) S/</label>
                         <input type="number" id="credit_limit" name="credit_limit" min="0" step="0.01"
                                value="{{ old('credit_limit', isset($client) ? (float) $client->credit_limit : 0) }}"
-                               class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
                         <p class="text-xs text-slate-400 mt-1">0 = no puede comprar a crédito. Es lo máximo que puede deber a la vez.</p>
                         @error('credit_limit') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
@@ -139,11 +139,11 @@
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="statusToggle" name="status" value="1" class="sr-only peer"
                                {{ old('status', isset($client) ? $client->status : '1') == '1' ? 'checked' : '' }}>
-                        <div class="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer
+                        <div class="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-500 rounded-full peer
                                     peer-checked:after:translate-x-full peer-checked:after:border-white
                                     after:content-[''] after:absolute after:top-0.5 after:left-0.5
                                     after:bg-white after:border-slate-300 after:border after:rounded-full
-                                    after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                    after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
                     </label>
                     <label for="statusToggle" class="text-sm font-medium text-slate-700 cursor-pointer">Cliente activo</label>
                 </div>
@@ -178,7 +178,7 @@
                     Cancelar
                 </a>
                 <button type="submit"
-                        class="px-5 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
+                        class="px-5 py-2.5 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
                     <i class="fas fa-save text-xs"></i>
                     {{ isset($client) ? 'Actualizar Cliente' : 'Guardar Cliente' }}
                 </button>
@@ -192,7 +192,7 @@
 @section('scripts')
 <script>
 // ── Chips de tipo de documento ──────────────────────────────────
-const CHIP_ACTIVO   = ['border-emerald-500', 'bg-emerald-50', 'text-emerald-700'];
+const CHIP_ACTIVO   = ['border-sky-500', 'bg-sky-50', 'text-sky-700'];
 const CHIP_INACTIVO = ['border-slate-300',   'bg-white',      'text-slate-500'];
 
 function seleccionarTipoDoc(btn) {

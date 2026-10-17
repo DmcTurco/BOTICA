@@ -26,13 +26,13 @@
                 <tr>
                     <td class="px-5 py-2.5 text-xs font-medium text-slate-800">{{ $e->name }}</td>
                     <td class="px-5 py-2.5 text-xs text-slate-500 hidden sm:table-cell">{{ $e->email }}</td>
-                    <td class="px-5 py-2.5 text-right"><input type="number" name="rates[{{ $e->id }}]" min="0" max="100" step="0.01" value="{{ old('rates.' . $e->id, (float) $e->commission_rate) }}" class="w-28 px-2 py-1.5 text-sm text-right border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></td>
+                    <td class="px-5 py-2.5 text-right"><input type="number" name="rates[{{ $e->id }}]" min="0" max="100" step="0.01" value="{{ old('rates.' . $e->id, (float) $e->commission_rate) }}" class="w-28 px-2 py-1.5 text-sm text-right border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
         <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex justify-end">
-            <button type="submit" class="px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm flex items-center gap-2"><i class="fas fa-save text-xs"></i> Guardar</button>
+            <button type="submit" class="px-5 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm flex items-center gap-2"><i class="fas fa-save text-xs"></i> Guardar</button>
         </div>
     </form>
 </div>

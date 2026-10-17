@@ -13,7 +13,7 @@
             <p class="text-sm text-slate-500 mt-0.5">Registro de clientes de la botica</p>
         </div>
         <a href="{{ route('employee.clients.create') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+           class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i> Nuevo Cliente
         </a>
     </div>
@@ -25,17 +25,17 @@
                 <div class="flex-1 relative">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     <input type="text" name="buscar" value="{{ request('buscar') }}"
-                           class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                           class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                            placeholder="Nombre, documento, código o teléfono...">
                 </div>
                 <select name="status"
-                        class="sm:w-44 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        class="sm:w-44 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     <option value="">Todos los estados</option>
                     <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Activo</option>
                     <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inactivo</option>
                 </select>
                 <button type="submit"
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+                        class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
                     <i class="fas fa-search text-xs"></i> Filtrar
                 </button>
                 @if(request()->hasAny(['buscar','status']))
@@ -105,7 +105,7 @@
                         <td class="px-5 py-3">
                             <div class="flex items-center justify-end gap-1">
                                 <a href="{{ route('employee.clients.edit', $client) }}"
-                                   class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Editar">
+                                   class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-sky-50 hover:text-sky-600 transition-colors" title="Editar">
                                     <i class="fas fa-pencil text-xs"></i>
                                 </a>
                             </div>

@@ -18,7 +18,7 @@
     <div class="relative max-w-xl">
         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
         <input type="text" id="pickerSearch" autocomplete="off" placeholder="Busca un producto para agregarlo..."
-               class="w-full pl-8 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+               class="w-full pl-8 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
         <div id="pickerResults" class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-auto"></div>
     </div>
 
@@ -70,11 +70,11 @@
                 <div class="flex items-center gap-1">
                     <input type="number" name="${prefijo}[${i}][quantity]" value="${cantidad ?? ''}" min="0.01" step="0.01" required
                            ${limitar && p.stock != null ? `max="${p.stock}"` : ''}
-                           class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                           class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-sky-500">
                     <span class="text-xs text-slate-400 w-8">${esc(p.unit || '')}</span>
                 </div>
             </td>
-            ${conCosto ? `<td class="px-3 py-2"><input type="number" name="${prefijo}[${i}][unit_cost]" value="${costo ?? p.cost ?? ''}" min="0" step="0.01" class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-emerald-500"></td>` : ''}
+            ${conCosto ? `<td class="px-3 py-2"><input type="number" name="${prefijo}[${i}][unit_cost]" value="${costo ?? p.cost ?? ''}" min="0" step="0.01" class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-sky-500"></td>` : ''}
             <td class="px-3 py-2 text-center">
                 <button type="button" class="picker-quitar w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 mx-auto">
                     <i class="fas fa-trash text-[10px] pointer-events-none"></i>
@@ -98,7 +98,7 @@
         if (!q) { resultados.classList.add('hidden'); return; }
         const hallados = productos.filter(p => (p.name + ' ' + p.code).toLowerCase().includes(q)).slice(0, 30);
         resultados.innerHTML = hallados.length ? hallados.map(p => `
-            <button type="button" data-code="${esc(p.code)}" class="picker-item w-full text-left px-3 py-2 hover:bg-emerald-50 border-b border-slate-100 last:border-0">
+            <button type="button" data-code="${esc(p.code)}" class="picker-item w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-slate-100 last:border-0">
                 <p class="text-xs font-medium text-slate-800">${esc(p.name)}</p>
                 <p class="text-[10px] text-slate-400 font-mono">${esc(p.code)}${p.stock != null ? ' · stock ' + p.stock : ''}</p>
             </button>`).join('') : '<p class="px-3 py-3 text-xs text-slate-400">Sin resultados</p>';

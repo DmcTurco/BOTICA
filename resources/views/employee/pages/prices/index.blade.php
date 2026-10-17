@@ -20,7 +20,7 @@
         <form action="{{ route('employee.prices.index') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
             <div class="flex-1 relative">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Nombre o código..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Nombre o código..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
             <select data-search name="category" class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                 <option value="">Todas las categorías</option>
@@ -30,7 +30,7 @@
                 <option value="">Todos los laboratorios</option>
                 @foreach($laboratories as $l)<option value="{{ $l->id }}" {{ request('laboratory') == $l->id ? 'selected' : '' }}>{{ $l->name }}</option>@endforeach
             </select>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-search text-xs"></i> Filtrar</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-search text-xs"></i> Filtrar</button>
         </form>
     </div>
 
@@ -65,8 +65,8 @@
                     @forelse($products as $p)
                     <tr class="hover:bg-slate-50">
                         <td class="px-5 py-2"><p class="text-xs font-medium text-slate-800">{{ $p->name }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $p->code }}@if($p->laboratory) · {{ $p->laboratory->name }}@endif</p></td>
-                        <td class="px-5 py-2 text-right"><input type="number" step="0.01" min="0" name="prices[{{ $p->code }}][purchase_price]" value="{{ $money($p->purchase_price) }}" class="precio-compra w-28 px-2 py-1.5 text-xs text-right border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></td>
-                        <td class="px-5 py-2 text-right"><input type="number" step="0.01" min="0" name="prices[{{ $p->code }}][unit_sale_price]" value="{{ $money($p->unit_sale_price) }}" class="precio-venta w-28 px-2 py-1.5 text-xs text-right border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></td>
+                        <td class="px-5 py-2 text-right"><input type="number" step="0.01" min="0" name="prices[{{ $p->code }}][purchase_price]" value="{{ $money($p->purchase_price) }}" class="precio-compra w-28 px-2 py-1.5 text-xs text-right border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></td>
+                        <td class="px-5 py-2 text-right"><input type="number" step="0.01" min="0" name="prices[{{ $p->code }}][unit_sale_price]" value="{{ $money($p->unit_sale_price) }}" class="precio-venta w-28 px-2 py-1.5 text-xs text-right border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></td>
                         <td class="px-5 py-2 text-right text-xs font-medium hidden sm:table-cell margen">—</td>
                     </tr>
                     @empty
@@ -78,7 +78,7 @@
         <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
             <div>{{ $products->links() }}</div>
             @if($products->count())
-            <button type="submit" class="px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm flex items-center gap-2"><i class="fas fa-save text-xs"></i> Guardar precios de esta página</button>
+            <button type="submit" class="px-5 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm flex items-center gap-2"><i class="fas fa-save text-xs"></i> Guardar precios de esta página</button>
             @endif
         </div>
     </form>

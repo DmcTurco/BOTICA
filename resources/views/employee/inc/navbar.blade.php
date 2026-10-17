@@ -20,7 +20,7 @@
 
     <div class="flex items-center gap-2 pl-3 border-l border-slate-200">
 
-        <div class="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center shrink-0">
+        <div class="w-8 h-8 bg-sky-600 rounded-full flex items-center justify-center shrink-0">
             <span class="text-white text-xs font-semibold">
                 {{ strtoupper(substr(auth()->guard('employee')->user()?->name ?? 'E', 0, 1)) }}
             </span>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 @include('admin/inc/head')
-<body class="bg-slate-50 antialiased h-screen app-shell overflow-hidden">
+<body class="panel-admin bg-slate-50 antialiased h-screen app-shell overflow-hidden">
     @include('partials/sidebar-collapse')
 
     <div id="sidebar-overlay" onclick="toggleSidebar()"

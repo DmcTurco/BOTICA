@@ -25,10 +25,10 @@
         @csrf
         <div class="px-5 py-3 bg-slate-50 border-b border-slate-200 rounded-t-xl text-xs font-semibold text-slate-600 uppercase tracking-wider">Registrar o actualizar</div>
         <div class="p-5 grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-            <div><label class="block text-xs font-medium text-slate-600 mb-1">Fecha</label><input type="date" name="rate_date" required max="{{ today()->toDateString() }}" value="{{ old('rate_date', today()->toDateString()) }}" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
-            <div><label class="block text-xs font-medium text-slate-600 mb-1">Compra</label><input type="number" name="buy_rate" required step="0.0001" min="0.0001" value="{{ old('buy_rate', $today?->buy_rate) }}" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
-            <div><label class="block text-xs font-medium text-slate-600 mb-1">Venta</label><input type="number" name="sell_rate" required step="0.0001" min="0.0001" value="{{ old('sell_rate', $today?->sell_rate) }}" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
-            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm flex items-center justify-center gap-2"><i class="fas fa-save text-xs"></i> Guardar</button>
+            <div><label class="block text-xs font-medium text-slate-600 mb-1">Fecha</label><input type="date" name="rate_date" required max="{{ today()->toDateString() }}" value="{{ old('rate_date', today()->toDateString()) }}" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div><label class="block text-xs font-medium text-slate-600 mb-1">Compra</label><input type="number" name="buy_rate" required step="0.0001" min="0.0001" value="{{ old('buy_rate', $today?->buy_rate) }}" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <div><label class="block text-xs font-medium text-slate-600 mb-1">Venta</label><input type="number" name="sell_rate" required step="0.0001" min="0.0001" value="{{ old('sell_rate', $today?->sell_rate) }}" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm flex items-center justify-center gap-2"><i class="fas fa-save text-xs"></i> Guardar</button>
         </div>
     </form>
 

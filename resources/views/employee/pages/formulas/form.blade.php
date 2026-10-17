@@ -55,7 +55,7 @@
                     <input type="text" name="name" required maxlength="150"
                            value="{{ old('name', $formula->name ?? '') }}"
                            placeholder="Ej: Crema de urea al 10%"
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
 
                 <div class="sm:col-span-3">
@@ -63,7 +63,7 @@
                     <input type="text" name="pharmaceutical_form" maxlength="50" list="formas"
                            value="{{ old('pharmaceutical_form', $formula->pharmaceutical_form ?? '') }}"
                            placeholder="Crema, jarabe, cápsulas, solución..."
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                     <datalist id="formas">
                         @foreach(['Crema', 'Ungüento', 'Gel', 'Loción', 'Solución', 'Jarabe', 'Suspensión', 'Cápsulas', 'Tabletas', 'Óvulos', 'Polvo'] as $forma)
                             <option value="{{ $forma }}">
@@ -76,13 +76,13 @@
                     <input type="number" name="yield_quantity" required min="0.01" step="0.01"
                            value="{{ old('yield_quantity', $formula->yield_quantity ?? '') }}"
                            placeholder="Ej: 100"
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
 
                 <div class="sm:col-span-2">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Unidad del resultado</label>
                     <select data-search name="yield_unit_id"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                         <option value="">— Sin unidad —</option>
                         @foreach($units as $unit)
                             <option value="{{ $unit->id }}" {{ (string) old('yield_unit_id', $formula->yield_unit_id ?? '') === (string) $unit->id ? 'selected' : '' }}>
@@ -97,13 +97,13 @@
                     <input type="number" name="shelf_life_days" min="1" max="3650" step="1"
                            value="{{ old('shelf_life_days', $formula->shelf_life_days ?? '') }}"
                            placeholder="30"
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
 
                 <div class="sm:col-span-1">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Estado</label>
                     <select name="status"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                         <option value="1" {{ (string) old('status', $formula->status ?? 1) === '1' ? 'selected' : '' }}>Activa</option>
                         <option value="0" {{ (string) old('status', $formula->status ?? 1) === '0' ? 'selected' : '' }}>Inactiva</option>
                     </select>
@@ -114,7 +114,7 @@
                     <input type="text" name="storage" maxlength="255"
                            value="{{ old('storage', $formula->storage ?? '') }}"
                            placeholder="Ej: Envase hermético, proteger de la luz, T° ambiente"
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
 
                 <div class="sm:col-span-3">
@@ -122,7 +122,7 @@
                     <input type="text" name="description" maxlength="1000"
                            value="{{ old('description', $formula->description ?? '') }}"
                            placeholder="Uso o indicación del preparado"
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
             </div>
         </div>
@@ -136,7 +136,7 @@
             <div class="p-5 space-y-4">
                 <label class="flex items-start gap-3 cursor-pointer">
                     <input type="checkbox" name="sell_in_pos" value="1" id="sellInPos" {{ $sellInPos ? 'checked' : '' }}
-                           class="mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                           class="mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-sky-500">
                     <span>
                         <span class="block text-sm font-medium text-slate-700">Este preparado se vende en el POS</span>
                         <span class="block text-xs text-slate-500">Al preparar un lote, el resultado ingresa al stock del producto elegido y se vende como cualquier otro. Si lo dejas apagado, solo se registra el lote y se descuentan los insumos.</span>
@@ -146,7 +146,7 @@
                 <div id="bloqueProducto" class="{{ $sellInPos ? '' : 'hidden' }} max-w-xl">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Producto del catálogo que recibe el stock <span class="text-red-500">*</span></label>
                     <select data-search name="product_code" id="productCode"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                         <option value="">— Selecciona un producto —</option>
                         @foreach($products as $p)
                             <option value="{{ $p->code }}" {{ (string) old('product_code', $formula->product_code ?? '') === (string) $p->code ? 'selected' : '' }}>
@@ -174,7 +174,7 @@
                 <div class="relative max-w-xl">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     <input type="text" id="buscadorInsumo" autocomplete="off"
-                           class="w-full pl-8 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                           class="w-full pl-8 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                            placeholder="Busca un producto para agregarlo como insumo...">
                     <div id="resultadosInsumo"
                          class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-auto"></div>
@@ -206,7 +206,7 @@
             <div class="p-5">
                 <textarea name="procedure" rows="5" maxlength="5000"
                           placeholder="1. Fundir la fase oleosa a 70 °C...&#10;2. Incorporar la fase acuosa agitando..."
-                          class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">{{ old('procedure', $formula->procedure ?? '') }}</textarea>
+                          class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">{{ old('procedure', $formula->procedure ?? '') }}</textarea>
             </div>
         </div>
 
@@ -214,7 +214,7 @@
             <a href="{{ $isEdit ? route('employee.formulas.show', $formula) : route('employee.formulas.index') }}"
                class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">Cancelar</a>
             <button type="submit"
-                    class="px-5 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                    class="px-5 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors shadow-sm flex items-center gap-2">
                 <i class="fas fa-save text-xs"></i> {{ $isEdit ? 'Guardar cambios' : 'Registrar fórmula' }}
             </button>
         </div>
@@ -255,13 +255,13 @@ function agregarInsumo(codigo, cantidad, nota) {
         <td class="px-3 py-2">
             <div class="flex items-center gap-1">
                 <input type="number" name="ingredients[${i}][quantity]" value="${cantidad ?? ''}" min="0.01" step="0.01" required
-                       class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-sky-500">
                 <span class="text-xs text-slate-400 w-8">${escapar(p.unit || '')}</span>
             </div>
         </td>
         <td class="px-3 py-2">
             <input type="text" name="ingredients[${i}][notes]" value="${escapar(nota || '')}" maxlength="255"
-                   class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                   class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                    placeholder="Ej: tamizar, disolver en caliente">
         </td>
         <td class="px-3 py-2 text-center">
@@ -296,7 +296,7 @@ function mostrarResultados() {
     resultados.innerHTML = hallados.length
         ? hallados.map(p => `
             <button type="button" data-code="${escapar(p.code)}"
-                    class="item-resultado w-full text-left px-3 py-2 hover:bg-emerald-50 border-b border-slate-100 last:border-0">
+                    class="item-resultado w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-slate-100 last:border-0">
                 <p class="text-xs font-medium text-slate-800">${escapar(p.name)}</p>
                 <p class="text-[10px] text-slate-400 font-mono">${escapar(p.code)} · ${escapar(p.unit || 'sin unidad')}</p>
             </button>`).join('')

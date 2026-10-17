@@ -11,7 +11,7 @@
             <h1 class="text-xl font-bold text-slate-800">Proveedores</h1>
             <p class="text-sm text-slate-500 mt-0.5">Droguerías y distribuidores a los que les compras</p>
         </div>
-        <a href="{{ route('employee.suppliers.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+        <a href="{{ route('employee.suppliers.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
             <i class="fas fa-plus text-xs"></i> Nuevo Proveedor
         </a>
     </div>
@@ -22,9 +22,9 @@
         <form action="{{ route('employee.suppliers.index') }}" method="GET" class="flex gap-3">
             <div class="flex-1 relative">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Nombre, RUC o contacto..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Nombre, RUC o contacto..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-search text-xs"></i> Filtrar</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-search text-xs"></i> Filtrar</button>
         </form>
     </div>
 

@@ -5,8 +5,8 @@
     .ss-list { position: fixed; z-index: 60; background: #fff; border: 1px solid #e2e8f0; border-radius: .5rem;
                box-shadow: 0 10px 25px -5px rgba(0,0,0,.15); max-height: 14rem; overflow: auto; display: none; }
     .ss-item { padding: .5rem .75rem; font-size: .875rem; color: #334155; cursor: pointer; }
-    .ss-item.ss-active, .ss-item:hover { background: #ecfdf5; }
-    .ss-item.ss-selected { font-weight: 600; color: #047857; }
+    .ss-item.ss-active, .ss-item:hover { background: var(--brand-50, #ecfdf5); }
+    .ss-item.ss-selected { font-weight: 600; color: var(--brand-700, #047857); }
     .ss-empty-option { color: #94a3b8; border-bottom: 1px solid #f1f5f9; }
     .ss-none { padding: .5rem .75rem; font-size: .8rem; color: #94a3b8; }
 </style>

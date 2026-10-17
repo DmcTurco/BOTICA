@@ -16,7 +16,7 @@
         <form action="{{ route('employee.reports.range') }}" method="GET" class="flex items-center gap-2 flex-wrap">
             <input type="date" name="fecha_desde" value="{{ $from->toDateString() }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
             <input type="date" name="fecha_hasta" value="{{ $to->toDateString() }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
         </form>
     </div>
 
@@ -27,7 +27,7 @@
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Subtotal</p><p class="text-lg font-bold text-slate-800">{{ $money($totals['sub']) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">IGV</p><p class="text-lg font-bold text-slate-800">{{ $money($totals['igv']) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Descuentos</p><p class="text-lg font-bold text-slate-800">{{ $money($totals['discount']) }}</p></div>
-        <div class="bg-emerald-600 rounded-xl p-4 text-white"><p class="text-xs text-emerald-200">Total</p><p class="text-lg font-bold">{{ $money($totals['total']) }}</p></div>
+        <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Total</p><p class="text-lg font-bold">{{ $money($totals['total']) }}</p></div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -38,7 +38,7 @@
             @foreach($data as $row)
             <div class="mb-3 last:mb-0">
                 <div class="flex justify-between text-xs mb-1"><span class="text-slate-600">{{ $row['label'] }} <span class="text-slate-400">({{ $row['count'] }})</span></span><span class="font-semibold text-slate-800">{{ $money($row['total']) }}</span></div>
-                <div class="h-2 bg-slate-100 rounded"><div class="h-2 bg-emerald-500 rounded" style="width: {{ round($row['total'] / $top * 100) }}%"></div></div>
+                <div class="h-2 bg-slate-100 rounded"><div class="h-2 bg-sky-500 rounded" style="width: {{ round($row['total'] / $top * 100) }}%"></div></div>
             </div>
             @endforeach
         </div>

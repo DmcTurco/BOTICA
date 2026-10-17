@@ -28,7 +28,7 @@
         <form action="{{ route($routeName) }}" method="GET" class="flex flex-col sm:flex-row gap-3">
             <div class="flex-1 relative">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Nombre o código..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Nombre o código..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
             </div>
             <select data-search name="category" class="sm:w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                 <option value="">Todas las categorías</option>
@@ -38,7 +38,7 @@
                 <option value="">Todos los laboratorios</option>
                 @foreach($laboratories as $l)<option value="{{ $l->id }}" {{ request('laboratory') == $l->id ? 'selected' : '' }}>{{ $l->name }}</option>@endforeach
             </select>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-search text-xs"></i> Filtrar</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg flex items-center gap-2"><i class="fas fa-search text-xs"></i> Filtrar</button>
         </form>
     </div>
 
@@ -46,7 +46,7 @@
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Productos</p><p class="text-lg font-bold text-slate-800">{{ $productCount }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Unidades en stock</p><p class="text-lg font-bold text-slate-800">{{ $fmt($totalUnits) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Valor a costo</p><p class="text-lg font-bold text-slate-800">{{ $money($totalCost) }}</p></div>
-        <div class="bg-emerald-600 rounded-xl p-4 text-white"><p class="text-xs text-emerald-200">Valor a precio de venta</p><p class="text-lg font-bold">{{ $money($totalSale) }}</p></div>
+        <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Valor a precio de venta</p><p class="text-lg font-bold">{{ $money($totalSale) }}</p></div>
     </div>
 
     @forelse($groups as $groupName => $items)

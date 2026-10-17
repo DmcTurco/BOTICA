@@ -15,7 +15,7 @@
         </div>
         <form action="{{ route('employee.accounting.purchases') }}" method="GET" class="flex items-center gap-2">
             <input type="month" name="mes" value="{{ $month->format('Y-m') }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
             <a href="{{ route('employee.accounting.purchases', ['mes' => $month->format('Y-m'), 'export' => 'csv']) }}" class="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg"><i class="fas fa-file-excel text-xs mr-1 text-emerald-600"></i> Exportar a Excel</a>
         </form>
     </div>
@@ -25,7 +25,7 @@
     <div class="grid grid-cols-3 gap-3 shrink-0">
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Subtotal</p><p class="text-base font-bold text-slate-800">S/ {{ $money($totals['subtotal']) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">IGV</p><p class="text-base font-bold text-slate-800">S/ {{ $money($totals['tax']) }}</p></div>
-        <div class="bg-emerald-600 rounded-xl p-4 text-white"><p class="text-xs text-emerald-200">Total compras</p><p class="text-base font-bold">S/ {{ $money($totals['total']) }}</p></div>
+        <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Total compras</p><p class="text-base font-bold">S/ {{ $money($totals['total']) }}</p></div>
     </div>
 
     <div class="flex-1 min-h-0 overflow-auto bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -42,7 +42,7 @@
                 @forelse($purchases as $p)
                 <tr class="hover:bg-slate-50 {{ (int) $p->status === 0 ? 'text-slate-300 line-through' : '' }}">
                     <td class="px-4 py-2 text-xs">{{ $p->purchased_at->format('d/m/Y') }}</td>
-                    <td class="px-4 py-2 text-xs"><a href="{{ route('employee.purchases.show', $p) }}" class="hover:text-emerald-600">{{ $p->document_type_label }} {{ $p->document_number }}</a></td>
+                    <td class="px-4 py-2 text-xs"><a href="{{ route('employee.purchases.show', $p) }}" class="hover:text-sky-600">{{ $p->document_type_label }} {{ $p->document_number }}</a></td>
                     <td class="px-4 py-2 text-xs hidden md:table-cell">{{ $p->supplierRecord?->name ?? $p->supplier ?: '—' }}<span class="text-[10px] text-slate-400"> {{ $p->supplierRecord?->ruc }}</span></td>
                     <td class="px-4 py-2 text-right text-xs hidden lg:table-cell">{{ $money($p->tax) }}</td>
                     <td class="px-4 py-2 text-right text-xs font-semibold">{{ $money($p->total) }}</td>

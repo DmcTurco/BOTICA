@@ -22,7 +22,7 @@
             <select name="top" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                 @foreach([10, 20, 50, 100] as $n)<option value="{{ $n }}" {{ $limit === $n ? 'selected' : '' }}>Top {{ $n }}</option>@endforeach
             </select>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
         </form>
     </div>
 
@@ -45,7 +45,7 @@
                     <td class="px-5 py-2.5"><p class="text-xs font-medium text-slate-800">{{ $names[$r->product_code] ?? $r->product_code }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $r->product_code }}</p></td>
                     <td class="px-5 py-2.5 text-center text-xs font-semibold text-slate-800">{{ $fmt($r->qty) }}</td>
                     <td class="px-5 py-2.5 text-right text-xs text-slate-700">{{ $money($r->net) }}</td>
-                    <td class="px-5 py-2.5 hidden sm:table-cell"><div class="h-2 bg-emerald-500 rounded" style="width: {{ round($r->qty / $max * 100) }}%"></div></td>
+                    <td class="px-5 py-2.5 hidden sm:table-cell"><div class="h-2 bg-sky-500 rounded" style="width: {{ round($r->qty / $max * 100) }}%"></div></td>
                 </tr>
                 @empty
                 <tr><td colspan="5" class="px-5 py-12 text-center text-sm text-slate-400">No hay ventas en el rango</td></tr>
