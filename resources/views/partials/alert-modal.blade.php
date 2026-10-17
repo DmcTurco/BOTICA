@@ -85,11 +85,16 @@
     modal.addEventListener('click', function (e) { if (e.target === modal) closeAlertModal(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAlertModal(); });
 
-    // Enter dentro de un campo no envía ni confirma el formulario: solo se confirma con el botón
+    // Enter dentro de un campo no envía ni confirma el formulario: solo se confirma con el botón.
+    // Excepción: los formularios de búsqueda/filtro (method="GET" explícito) sí buscan con Enter,
+    // porque solo consultan; los de guardar/editar (POST/PUT) siguen protegidos.
+    // Un formulario GET que no sea de búsqueda se excluye con el atributo data-no-enter.
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Enter') return;
         var t = e.target;
-        if (t && t.tagName === 'INPUT' && t.form && !/^(submit|button|reset)$/.test(t.type)) e.preventDefault();
+        if (!t || t.tagName !== 'INPUT' || !t.form || /^(submit|button|reset)$/.test(t.type)) return;
+        var isSearchForm = (t.form.getAttribute('method') || '').toLowerCase() === 'get' && !t.form.hasAttribute('data-no-enter');
+        if (!isSearchForm) e.preventDefault();
     });
 
     // La validación la hace el servidor (Form Request): se desactiva la validación nativa del navegador

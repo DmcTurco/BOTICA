@@ -38,7 +38,8 @@
         </form>
     </div>
 
-    <form action="{{ route('employee.purchase-orders.create') }}" method="GET" class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-0">
+    {{-- data-no-enter: Enter en una cantidad no debe saltar a la orden de compra --}}
+    <form action="{{ route('employee.purchase-orders.create') }}" method="GET" data-no-enter class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-0">
         <div class="px-5 py-3 border-b border-slate-200 shrink-0 flex items-center justify-between gap-3">
             <p class="text-sm font-semibold text-slate-800">Por reponer <span class="ml-2 text-xs font-normal text-slate-400">{{ $rows->total() }} productos</span></p>
             @if($canBuy && $rows->count())
