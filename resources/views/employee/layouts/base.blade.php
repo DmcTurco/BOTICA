@@ -8,10 +8,11 @@
 
     @include('employee/inc/sidebar')
 
-    <div class="lg:ml-64 flex flex-col h-screen">
+    {{-- app-shell / app-main: alto visible real y alto mínimo de página (ver resources/css/app.css) --}}
+    <div class="lg:ml-64 flex flex-col h-screen app-shell overflow-hidden">
         @include('employee/inc/navbar')
         @include('partials/subscription-banner', ['company' => auth()->guard('employee')->user()?->company])
-        <main class="flex-1 min-h-0 flex flex-col @yield('main-padding', 'p-4 md:p-6') @yield('main-class', 'overflow-auto')">
+        <main class="app-main flex-1 min-h-0 flex flex-col @yield('main-padding', 'p-4 md:p-6')">
             @yield('content-area')
         </main>
     </div>

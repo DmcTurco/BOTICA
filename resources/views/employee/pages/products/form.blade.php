@@ -3,7 +3,6 @@
 @section('title', isset($products) ? 'Editar Producto' : 'Nuevo Producto')
 
 @section('main-padding', 'p-2 md:p-3')
-@section('main-class', 'overflow-hidden')
 
 @section('content-area')
     {{-- La pestaña de presentaciones llena el alto del cuadro y solo su lista hace scroll (no empuja los botones) --}}

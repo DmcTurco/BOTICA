@@ -3,7 +3,6 @@
 
 @section('title', isset($employee) ? 'Editar Empleado' : 'Nuevo Empleado')
 @section('main-padding', 'p-2 md:p-3')
-@section('main-class', 'overflow-hidden')
 
 @section('content-area')
 <div class="flex-1 flex flex-col gap-3 min-h-0">

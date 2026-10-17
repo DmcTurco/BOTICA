@@ -1,7 +1,6 @@
 @extends('admin/layouts/base')
 
 @section('title', 'Suscripciones')
-@section('main-class', 'overflow-hidden')
 
 @php
     use App\Models\Company;

@@ -1,5 +1,5 @@
 <aside id="sidebar"
-       class="fixed top-0 left-0 h-screen w-64 bg-emerald-950 flex flex-col z-30 transition-transform duration-300 lg:translate-x-0 -translate-x-full">
+       class="fixed top-0 left-0 h-full w-64 bg-emerald-950 flex flex-col z-30 transition-transform duration-300 lg:translate-x-0 -translate-x-full">
 
     {{-- Logo --}}
     <div class="flex items-center gap-3 px-5 py-4 border-b border-emerald-900 shrink-0">

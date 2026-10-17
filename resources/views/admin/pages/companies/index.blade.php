@@ -1,7 +1,6 @@
 @extends('admin/layouts/base')
 
 @section('title', 'Empresas')
-@section('main-class', 'overflow-hidden')
 
 @section('content-area')
 <div class="flex-1 flex flex-col gap-3 min-h-0">

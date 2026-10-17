@@ -9,6 +9,24 @@
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
+/* ── Layout de los paneles: se adapta a laptops de 14" y tablets ──────────────
+   .app-shell → alto de la ventana. 100dvh es el alto realmente visible: en tablets
+                100vh incluye la franja bajo la barra del navegador y tapaba los botones.
+   .app-main  → la página encaja en la ventana (tablas y formularios con scroll interno),
+                pero nunca se comprime por debajo de --page-min-h: si la ventana es más
+                baja, el contenido hace scroll en vez de recortarse.
+   Una vista que necesite más alto lo indica con style="--page-min-h: 40rem" en su raíz. */
+.app-shell {
+    height: 100vh;
+    height: 100dvh;
+}
+.app-main {
+    overflow: auto;
+}
+.app-main > .flex-1 {
+    min-height: var(--page-min-h, 34rem);
+}
+
 /* Select2 — skin sin Bootstrap */
 .select2-container--default .select2-selection--single {
     height: 38px;

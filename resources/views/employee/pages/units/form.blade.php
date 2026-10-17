@@ -2,7 +2,6 @@
 
 @section('title', isset($unit) ? 'Editar Unidad' : 'Nueva Unidad')
 @section('main-padding', 'p-2 md:p-3')
-@section('main-class', 'overflow-hidden')
 
 @section('content-area')
 @php
