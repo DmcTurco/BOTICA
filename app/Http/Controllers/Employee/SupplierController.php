@@ -16,13 +16,8 @@ class SupplierController extends Controller
     {
         $employee = auth()->guard('employee')->user();
 
-        $query = Supplier::where('company_id', $employee->company_id)->withCount('purchases');
-
-        if ($request->filled('buscar')) {
-            $query->where(fn ($q) => $q->where('name', 'like', '%' . $request->buscar . '%')
-                ->orWhere('ruc', 'like', '%' . $request->buscar . '%')
-                ->orWhere('contact', 'like', '%' . $request->buscar . '%'));
-        }
+        $query = Supplier::where('company_id', $employee->company_id)->withCount('purchases')
+            ->search($request->buscar, ['name', 'ruc', 'contact']);
 
         $suppliers = $query->orderBy('name')->paginate(15)->withQueryString();
 

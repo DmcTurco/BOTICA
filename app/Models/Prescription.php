@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Searchable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Prescription extends Model
 {
+    use Searchable;
     protected $table = 'prescriptions';
 
     protected $fillable = [

@@ -39,22 +39,9 @@ class OrderController extends Controller
             ->where('branch_id', $employee->branch_id)
             ->orderBy('created_at', 'desc');
 
-        if ($request->filled('buscar')) {
-            $search = $request->buscar;
-            $query->where(function ($q) use ($search) {
-                $q->where('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_document', 'like', "%{$search}%")
-                  ->orWhere('id', $search);
-            });
-        }
-
-        if ($request->filled('tipo_comprobante')) {
-            $query->where('voucher_type', $request->tipo_comprobante);
-        }
-
-        if ($request->filled('tipo_pago')) {
-            $query->where('payment_type', $request->tipo_pago);
-        }
+        // "=id" solo compara el N° de venta cuando el texto es numérico (evita error de tipo en PostgreSQL)
+        $query->search($request->buscar, ['customer_name', 'customer_document', 'voucher_number', '=id'])
+              ->filterBy(['tipo_comprobante' => 'voucher_type', 'tipo_pago' => 'payment_type']);
 
         // Rango de fechas: por defecto del 1er al último día del mes actual
         $fechaDesde = $request->input('fecha_desde') ?: now()->startOfMonth()->toDateString();

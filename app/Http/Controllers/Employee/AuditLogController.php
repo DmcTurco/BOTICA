@@ -26,13 +26,8 @@ class AuditLogController extends Controller
         if ($request->filled('grupo') && isset(AuditLog::GROUPS[$request->grupo])) {
             $query->whereIn('action', AuditLog::GROUPS[$request->grupo]);
         }
-        if ($request->filled('empleado')) {
-            $query->where('employee_id', $request->empleado);
-        }
-        if ($request->filled('buscar')) {
-            $query->where(fn ($q) => $q->where('description', 'like', '%' . $request->buscar . '%')
-                ->orWhere('subject', 'like', '%' . $request->buscar . '%'));
-        }
+        $query->filterBy(['empleado' => 'employee_id'])
+              ->search($request->buscar, ['description', 'subject']);
 
         return view('employee.pages.audit.index', [
             'logs'      => $query->orderByDesc('id')->paginate(25)->withQueryString(),

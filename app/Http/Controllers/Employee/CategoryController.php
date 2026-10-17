@@ -19,16 +19,8 @@ class CategoryController extends Controller
             ->withCount('productos');
 
         // Aplicar filtros de búsqueda
-        if ($request->filled('buscar')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->buscar . '%')
-                    ->orWhere('description', 'like', '%' . $request->buscar . '%');
-            });
-        }
-
-        if ($request->filled('estado')) {
-            $query->where('status', $request->estado);
-        }
+        $query->search($request->buscar, ['name', 'description'])
+              ->filterBy(['estado' => 'status']);
 
         // Ordenar y paginar resultados
         $categories = $query->orderBy('name', 'asc')

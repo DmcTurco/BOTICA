@@ -23,19 +23,9 @@ class ReplenishmentController extends Controller
             ->whereNotNull('stock_minimum')
             ->whereColumn('stock_actual', '<=', 'stock_minimum')
             ->whereHas('product', function ($q) use ($employee, $request) {
-                $q->where('company_id', $employee->company_id)->where('status', 1);
-
-                if ($request->filled('category')) {
-                    $q->where('category_id', $request->category);
-                }
-                if ($request->filled('laboratory')) {
-                    $q->where('laboratory_id', $request->laboratory);
-                }
-                if ($request->filled('buscar')) {
-                    $q->where(fn ($w) => $w->where('name', 'like', '%' . $request->buscar . '%')
-                        ->orWhere('code', 'like', '%' . $request->buscar . '%')
-                        ->orWhere('barcode', 'like', '%' . $request->buscar . '%'));
-                }
+                $q->where('company_id', $employee->company_id)->where('status', 1)
+                  ->filterBy(['category' => 'category_id', 'laboratory' => 'laboratory_id'])
+                  ->search($request->buscar, ['name', 'code', 'barcode']);
             });
 
         // Los agotados primero, luego los más críticos respecto a su mínimo

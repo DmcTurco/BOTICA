@@ -25,17 +25,8 @@ class FormulaController extends Controller
             ->withCount('ingredients')
             ->where('company_id', $employee->company_id);
 
-        if ($request->filled('buscar')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('code', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('name', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('pharmaceutical_form', 'like', '%' . $request->buscar . '%');
-            });
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        $query->search($request->buscar, ['code', 'name', 'pharmaceutical_form'])
+              ->filterBy(['status' => 'status']);
 
         $formulas = $query->orderBy('name')->paginate(12)->withQueryString();
 

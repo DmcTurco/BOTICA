@@ -36,8 +36,8 @@ class ProductAlternativeController extends Controller
         $candidates = Product::with(['laboratory:id,name', 'unit:id,abbreviation'])
             ->where('company_id', $employee->company_id)
             ->where('status', 1)
-            ->when($base, fn ($q) => $q->where('code', '!=', $base->code)->where('active_ingredient', 'like', '%' . $base->active_ingredient . '%'))
-            ->when(!$base, fn ($q) => $q->where(fn ($w) => $w->where('active_ingredient', 'like', '%' . $query . '%')->orWhere('name', 'like', '%' . $query . '%')))
+            ->when($base, fn ($q) => $q->where('code', '!=', $base->code)->search($base->active_ingredient, ['active_ingredient']))
+            ->when(!$base, fn ($q) => $q->search($query, ['active_ingredient', 'name']))
             ->limit(40)->get();
 
         $stocks  = BranchStock::where('branch_id', $employee->branch_id)->whereIn('product_code', $candidates->pluck('code'))->pluck('stock_actual', 'product_code');

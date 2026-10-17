@@ -21,13 +21,7 @@ class CompanyController extends Controller
     {
         $query = Company::withCount(['branches', 'employees', 'products'])->orderBy('name');
 
-        if ($request->filled('buscar')) {
-            // Búsqueda sin distinguir mayúsculas (LOWER funciona en PostgreSQL y SQLite)
-            $search = '%' . mb_strtolower($request->buscar) . '%';
-            $query->where(fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(email) LIKE ?', [$search])
-                ->orWhere('ruc', 'like', $search));
-        }
+        $query->search($request->buscar, ['name', 'email', 'ruc']);
 
         $companies = $query->paginate(15)->withQueryString();
 

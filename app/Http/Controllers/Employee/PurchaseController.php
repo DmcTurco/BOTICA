@@ -32,16 +32,8 @@ class PurchaseController extends Controller
             ->where('company_id', $employee->company_id)
             ->where('branch_id', $employee->branch_id);
 
-        if ($request->filled('buscar')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('document_number', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('supplier', 'like', '%' . $request->buscar . '%');
-            });
-        }
-
-        if ($request->filled('tipo')) {
-            $query->where('document_type', $request->tipo);
-        }
+        $query->search($request->buscar, ['document_number', 'supplier'])
+              ->filterBy(['tipo' => 'document_type']);
 
         $compras = $query->orderByDesc('purchased_at')->paginate(15)->withQueryString();
 

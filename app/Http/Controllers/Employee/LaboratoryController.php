@@ -17,17 +17,8 @@ class LaboratoryController extends Controller
         $query = Laboratory::where('company_id', $employee->company_id)
             ->withCount('productos');
 
-        if ($request->filled('buscar')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('description', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('country', 'like', '%' . $request->buscar . '%');
-            });
-        }
-
-        if ($request->filled('estado')) {
-            $query->where('status', $request->estado);
-        }
+        $query->search($request->buscar, ['name', 'description', 'country'])
+              ->filterBy(['estado' => 'status']);
 
         $laboratorios = $query->orderBy('name')->paginate(9)->withQueryString();
 

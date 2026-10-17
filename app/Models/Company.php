@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Searchable;
 use App\Traits\HasConfig;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,6 +13,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Company extends Authenticatable
 {
+    use Searchable;
     use HasApiTokens, HasConfig, HasFactory, Notifiable;
 
     protected $fillable = [

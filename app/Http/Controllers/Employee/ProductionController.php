@@ -29,12 +29,11 @@ class ProductionController extends Controller
             ->where('company_id', $employee->company_id)
             ->where('branch_id', $employee->branch_id);
 
-        if ($request->filled('buscar')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('batch', 'like', '%' . $request->buscar . '%')
-                  ->orWhereHas('formula', fn ($f) => $f->withTrashed()->where('name', 'like', '%' . $request->buscar . '%'));
-            });
-        }
+        // La fórmula puede estar eliminada: se busca con withTrashed()
+        $query->search($request->buscar, [
+            'batch',
+            fn ($q, $like) => $q->whereHas('formula', fn ($f) => $f->withTrashed()->whereLike('name', $like)),
+        ]);
 
         // Filtro por estado de vencimiento
         if ($request->input('vencimiento') === 'vencido') {

@@ -14,12 +14,8 @@ class UnitController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Unit::deCompania($this->companyId())->withCount(['productos', 'presentaciones']);
-
-        if ($request->filled('buscar')) {
-            $query->where(fn ($q) => $q->where('name', 'like', '%' . $request->buscar . '%')
-                ->orWhere('abbreviation', 'like', '%' . $request->buscar . '%'));
-        }
+        $query = Unit::deCompania($this->companyId())->withCount(['productos', 'presentaciones'])
+            ->search($request->buscar, ['name', 'abbreviation']);
 
         $units = $query->orderBy('name')->paginate(15)->withQueryString();
 

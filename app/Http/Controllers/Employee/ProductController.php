@@ -31,28 +31,10 @@ class ProductController extends Controller
                 'unit',
                 'branchStocks' => fn ($q) => $q->where('branch_id', $branchId),
             ])
-            ->where('company_id', $employee->company_id);
-
-        if ($request->filled('buscar')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('code', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('barcode', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('name', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('active_ingredient', 'like', '%' . $request->buscar . '%');
-            });
-        }
-
-        if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
-        }
-
-        if ($request->filled('laboratory')) {
-            $query->where('laboratory_id', $request->laboratory);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+            ->where('company_id', $employee->company_id)
+            ->search($request->buscar, ['code', 'barcode', 'name', 'active_ingredient'])
+            // Los nombres coinciden con los campos del formulario de filtros
+            ->filterBy(['categoria' => 'category_id', 'laboratorio' => 'laboratory_id', 'estado' => 'status']);
 
         $products    = $query->orderBy('name')->paginate(9)->withQueryString();
         $categories   = Category::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get();

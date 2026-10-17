@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Searchable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AuditLog extends Model
 {
+    use Searchable;
     public const UPDATED_AT = null;           // solo tiene created_at: el registro no se modifica
 
     protected $table = 'audit_logs';

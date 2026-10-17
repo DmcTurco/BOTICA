@@ -20,23 +20,9 @@ class EmployeeController extends Controller
 
         $query = Employee::with(['branch', 'role'])
             ->where('company_id', $company->id)
-            ->orderBy('name');
-
-        if ($request->filled('sede')) {
-            $query->where('branch_id', $request->sede);
-        }
-
-        if ($request->filled('rol')) {
-            $query->where('role_id', $request->rol);
-        }
-
-        if ($request->filled('buscar')) {
-            $search = $request->buscar;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
+            ->orderBy('name')
+            ->filterBy(['sede' => 'branch_id', 'rol' => 'role_id'])
+            ->search($request->buscar, ['name', 'email']);
 
         $employees = $query->paginate(15)->withQueryString();
 

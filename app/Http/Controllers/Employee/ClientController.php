@@ -23,19 +23,8 @@ class ClientController extends Controller
             ->where('company_id', $employee->company_id)
             ->orderBy('name');
 
-        if ($request->filled('buscar')) {
-            $search = $request->buscar;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('document_number', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        $query->search($request->buscar, ['name', 'document_number', 'code', 'phone'])
+              ->filterBy(['status' => 'status']);
 
         $clients = $query->paginate(15)->withQueryString();
 
@@ -173,11 +162,7 @@ class ClientController extends Controller
         $clients = Client::with('documentType')
             ->where('company_id', $employee->company_id)
             ->activos()
-            ->where(function ($q) use ($term) {
-                $q->where('name', 'like', "%{$term}%")
-                  ->orWhere('document_number', 'like', "%{$term}%")
-                  ->orWhere('code', 'like', "%{$term}%");
-            })
+            ->search($term, ['name', 'document_number', 'code'])
             ->orderBy('name')
             ->limit(8)
             ->get()

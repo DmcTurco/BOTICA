@@ -26,14 +26,7 @@ class PrescriptionController extends Controller
             ->whereDate('created_at', '>=', $desde)
             ->whereDate('created_at', '<=', $hasta);
 
-        if ($request->filled('buscar')) {
-            $term = '%' . $request->buscar . '%';
-            $query->where(fn ($q) => $q->where('patient_name', 'like', $term)
-                ->orWhere('patient_document', 'like', $term)
-                ->orWhere('doctor_name', 'like', $term)
-                ->orWhere('doctor_license', 'like', $term)
-                ->orWhere('prescription_number', 'like', $term));
-        }
+        $query->search($request->buscar, ['patient_name', 'patient_document', 'doctor_name', 'doctor_license', 'prescription_number']);
 
         $prescriptions = $query->orderByDesc('id')->paginate(15)->withQueryString();
 
