@@ -29,6 +29,32 @@
     min-height: var(--page-min-h, 34rem);
 }
 
+/* ── Menú lateral plegable (solo ≥ 1024 px; debajo sigue el menú deslizable) ──────────
+   La clase .sidebar-collapsed en <html> la pone partials/sidebar-collapse. Con el menú
+   plegado quedan solo los íconos: los textos sueltos se ocultan con font-size 0. */
+@media (min-width: 1024px) {
+    .sidebar-collapsed #sidebar { width: 4.5rem; }
+    .sidebar-collapsed .app-content { margin-left: 4.5rem; }
+
+    /* Encabezado: solo el logo */
+    .sidebar-collapsed #sidebar > div:first-child { justify-content: center; padding-left: 0; padding-right: 0; }
+    .sidebar-collapsed #sidebar > div:first-child > div:last-child { display: none; }
+
+    /* Títulos de sección y candados fuera; enlaces centrados con su ícono */
+    .sidebar-collapsed #sidebar nav p,
+    .sidebar-collapsed #sidebar nav a > i.ml-auto { display: none; }
+    .sidebar-collapsed #sidebar nav a,
+    .sidebar-collapsed #sidebar form button {
+        position: relative; justify-content: center; gap: 0;
+        padding-left: 0; padding-right: 0; font-size: 0;
+    }
+    .sidebar-collapsed #sidebar nav a > i:first-child,
+    .sidebar-collapsed #sidebar form button > i:first-child { font-size: 0.875rem; }
+
+    /* Contadores (p. ej. aprobaciones pendientes): globito en la esquina del ícono */
+    .sidebar-collapsed #sidebar nav a > span { position: absolute; top: 2px; right: 6px; width: 1rem; height: 1rem; font-size: 9px; }
+}
+
 /* Pulso corto para avisar que un contador cambió (p. ej. productos agregados a una compra) */
 @keyframes ping-once {
     50% { transform: scale(1.45); }

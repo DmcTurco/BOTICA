@@ -3,6 +3,11 @@
     <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-slate-700 p-1 rounded-md transition-colors">
         <i class="fas fa-bars text-lg"></i>
     </button>
+    {{-- Plegar / desplegar el menú lateral (pantallas grandes); en móvil y tablet se usa el botón de arriba --}}
+    <button onclick="toggleSidebarCollapse()" title="Plegar o desplegar el menú"
+            class="hidden lg:flex w-9 h-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+        <i class="fas fa-bars text-base"></i>
+    </button>
 
     <div class="flex-1">
         <p class="text-sm font-semibold text-slate-800">{{ $pageTitle ?? 'Dashboard' }}</p>

@@ -2,6 +2,7 @@
 <html lang="es">
 @include('company/inc/head')
 <body class="bg-slate-50 antialiased h-screen app-shell overflow-hidden">
+    @include('partials/sidebar-collapse')
 
     <div id="sidebar-overlay" onclick="toggleSidebar()"
          class="fixed inset-0 bg-black/50 z-20 hidden lg:hidden"></div>
@@ -9,7 +10,7 @@
     @include('company/inc/sidebar')
 
     {{-- app-shell / app-main: alto visible real y alto mínimo de página (ver resources/css/app.css) --}}
-    <div class="lg:ml-64 flex flex-col h-screen app-shell overflow-hidden">
+    <div class="app-content lg:ml-64 flex flex-col h-screen app-shell overflow-hidden">
         @include('company/inc/navbar')
         @include('partials/subscription-banner', ['company' => auth()->guard('company')->user(), 'showPaymentInfo' => true])
 
