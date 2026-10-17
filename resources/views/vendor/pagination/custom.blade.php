@@ -22,7 +22,7 @@
             </span>
         @else
             <a href="{{ $paginator->previousPageUrl() }}"
-               class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-colors">
+               class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 border border-slate-200 hover:bg-(--brand-50) hover:text-(--brand-600) hover:border-(--brand-100) transition-colors">
                 <i class="fas fa-chevron-left text-xs"></i>
             </a>
         @endif
@@ -36,12 +36,12 @@
             @if (is_array($element))
                 @foreach ($element as $page => $url)
                     @if ($page == $paginator->currentPage())
-                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-semibold text-white bg-emerald-600 border border-emerald-600 select-none">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-semibold text-white bg-(--brand-600) border border-(--brand-600) select-none">
                             {{ $page }}
                         </span>
                     @else
                         <a href="{{ $url }}"
-                           class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium text-slate-600 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-colors">
+                           class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium text-slate-600 border border-slate-200 hover:bg-(--brand-50) hover:text-(--brand-600) hover:border-(--brand-100) transition-colors">
                             {{ $page }}
                         </a>
                     @endif
@@ -52,7 +52,7 @@
         {{-- Siguiente --}}
         @if ($paginator->hasMorePages())
             <a href="{{ $paginator->nextPageUrl() }}"
-               class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-colors">
+               class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 border border-slate-200 hover:bg-(--brand-50) hover:text-(--brand-600) hover:border-(--brand-100) transition-colors">
                 <i class="fas fa-chevron-right text-xs"></i>
             </a>
         @else

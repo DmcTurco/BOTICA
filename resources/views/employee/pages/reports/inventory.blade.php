@@ -73,7 +73,9 @@
                     <td colspan="5" class="px-5 py-2">
                         <div class="flex items-center justify-between gap-3">
                             <p class="text-sm font-semibold text-slate-800"><i class="fas fa-flask text-slate-400 text-xs mr-1"></i> {{ $groupName }}</p>
-                            <p class="text-xs text-slate-500 whitespace-nowrap">{{ $items->count() }} prod. · costo <strong class="text-slate-800">{{ $money($items->sum('cost_value')) }}</strong></p>
+                            @php $lab = $labTotals[(int) $items->first()->laboratory_id] ?? null; @endphp
+                            {{-- Totales del laboratorio completo, aunque siga en la página siguiente --}}
+                            <p class="text-xs text-slate-500 whitespace-nowrap">{{ $lab->products ?? $items->count() }} prod. · costo <strong class="text-slate-800">{{ $money($lab->cost ?? $items->sum('cost_value')) }}</strong></p>
                         </div>
                     </td>
                 </tr>
@@ -92,6 +94,9 @@
             @endforeach
         </table>
         </div>
+        @if($products->hasPages())
+        <div class="shrink-0 px-4 py-2 border-t border-slate-200 text-xs">{{ $products->links() }}</div>
+        @endif
         @endif
     </div>
 </div>

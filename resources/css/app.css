@@ -9,9 +9,9 @@
    En cada panel, el verde con significado (éxito, stock OK, pagado, montos) se mantiene.
    Los componentes compartidos (buscador desplegable, Select2) usan las variables --brand-*:
    :root = empresa; la clase del <body> (panel-employee / panel-admin) las redefine. */
-:root          { --brand-50: #ecfdf5; --brand-100: #d1fae5; --brand-500: #10b981; --brand-700: #047857; }
-.panel-employee { --brand-50: #f0f9ff; --brand-100: #e0f2fe; --brand-500: #0ea5e9; --brand-700: #0369a1; }
-.panel-admin    { --brand-50: #f5f3ff; --brand-100: #ede9fe; --brand-500: #8b5cf6; --brand-700: #6d28d9; }
+:root          { --brand-50: #ecfdf5; --brand-100: #d1fae5; --brand-500: #10b981; --brand-600: #059669; --brand-700: #047857; }
+.panel-employee { --brand-50: #f0f9ff; --brand-100: #e0f2fe; --brand-500: #0ea5e9; --brand-600: #0284c7; --brand-700: #0369a1; }
+.panel-admin    { --brand-50: #f5f3ff; --brand-100: #ede9fe; --brand-500: #8b5cf6; --brand-600: #7c3aed; --brand-700: #6d28d9; }
 
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;

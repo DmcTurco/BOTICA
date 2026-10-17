@@ -139,6 +139,27 @@ it('valoriza el inventario a costo y a precio de venta', function () {
     expect($this->get(route('employee.reports.inventory.stock'))->viewData('productCount'))->toBe(1);
 });
 
+it('pagina el inventario de 50 en 50 pero los totales son de todo el filtro', function () {
+    loginEmployee();
+    foreach (range(1, 55) as $i) {
+        stockProduct('X' . str_pad($i, 2, '0', STR_PAD_LEFT), 2, 1.5);   // costo 3 c/u
+    }
+
+    $first = $this->get(route('employee.reports.inventory.total'))->assertOk();
+    expect($first->viewData('products')->count())->toBe(50)
+        ->and($first->viewData('productCount'))->toBe(55)
+        ->and($first->viewData('totalUnits'))->toBe(110.0)
+        ->and($first->viewData('totalCost'))->toBe(165.0);
+
+    $second = $this->get(route('employee.reports.inventory.total', ['page' => 2]))->assertOk();
+    expect($second->viewData('products')->pluck('code')->all())->toBe(['X51', 'X52', 'X53', 'X54', 'X55'])
+        ->and((float) $second->viewData('products')->first()->stock_actual)->toBe(2.0);
+
+    // El Excel trae todos, no solo la página
+    $csv = $this->get(route('employee.reports.inventory.total', ['export' => 'csv']))->streamedContent();
+    expect(array_filter(explode("\n", $csv)))->toHaveCount(56);   // encabezado + 55
+});
+
 it('agrupa el inventario por laboratorio', function () {
     loginEmployee();
     $lab = App\Models\Laboratory::create(['company_id' => 1, 'name' => 'Bayer', 'status' => 1]);

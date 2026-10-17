@@ -6,14 +6,14 @@
         </span>
     @else
         <a href="{{ $paginator->previousPageUrl() }}"
-           class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium text-slate-600 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-colors">
+           class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium text-slate-600 border border-slate-200 hover:bg-(--brand-50) hover:text-(--brand-600) hover:border-(--brand-100) transition-colors">
             <i class="fas fa-chevron-left text-[10px]"></i> Anterior
         </a>
     @endif
 
     @if ($paginator->hasMorePages())
         <a href="{{ $paginator->nextPageUrl() }}"
-           class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium text-slate-600 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-colors">
+           class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium text-slate-600 border border-slate-200 hover:bg-(--brand-50) hover:text-(--brand-600) hover:border-(--brand-100) transition-colors">
             Siguiente <i class="fas fa-chevron-right text-[10px]"></i>
         </a>
     @else

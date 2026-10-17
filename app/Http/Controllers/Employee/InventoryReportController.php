@@ -9,7 +9,10 @@ use App\Models\Laboratory;
 use App\Models\Product;
 use App\Models\StockBatch;
 use App\Support\CsvExport;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class InventoryReportController extends Controller
 {
@@ -35,55 +38,96 @@ class InventoryReportController extends Controller
         $employee = auth()->guard('employee')->user();
         $config   = self::VARIANTS[$variant];
 
-        $stocks = BranchStock::where('branch_id', $employee->branch_id)->pluck('stock_actual', 'product_code');
+        $branchId = $employee->branch_id;
 
-        $query = Product::with(['category:id,name', 'laboratory:id,name', 'unit:id,abbreviation'])
+        // Filtros sobre el catálogo (sin cargar nada todavía)
+        $base = Product::query()
             ->where('company_id', $employee->company_id)
-            ->where('status', 1);
-
-        $query->search($request->buscar, ['name', 'code', 'barcode']);
+            ->where('status', 1)
+            ->search($request->buscar, ['name', 'code', 'barcode']);
         if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
+            $base->where('category_id', $request->category);
         }
         if ($request->filled('laboratory')) {
-            $query->where('laboratory_id', $request->laboratory);
+            $base->where('laboratory_id', $request->laboratory);
+        }
+        if ($config['only_stock']) {
+            $base->whereIn('code', BranchStock::select('product_code')->where('branch_id', $branchId)->where('stock_actual', '>', 0));
         }
 
-        $products = $query->orderBy('name')->get()->each(function (Product $p) use ($stocks) {
-            $p->stock_actual = (float) ($stocks[$p->code] ?? 0);
+        // Listado ordenado (por laboratorio si corresponde; los sin laboratorio al final) con el stock de la sede
+        $list = (clone $base)
+            ->with(['category:id,name', 'laboratory:id,name', 'unit:id,abbreviation'])
+            ->select('products.*')
+            ->addSelect(['stock_actual' => BranchStock::select('stock_actual')
+                ->whereColumn('product_code', 'products.code')->where('branch_id', $branchId)->limit(1)])
+            ->when($config['by_lab'], fn ($q) => $q
+                ->orderByRaw('laboratory_id IS NULL')
+                ->orderBy(Laboratory::select('name')->whereColumn('laboratories.id', 'products.laboratory_id')->limit(1)))
+            ->orderBy('name')
+            ->orderBy('code');
+
+        $withValues = function (Product $p) {
+            $p->stock_actual = (float) ($p->stock_actual ?? 0);
             $p->cost_value   = round($p->stock_actual * (float) $p->purchase_price, 2);
             $p->sale_value   = round($p->stock_actual * (float) $p->unit_sale_price, 2);
-        });
 
-        if ($config['only_stock']) {
-            $products = $products->where('stock_actual', '>', 0);
-        }
-
-        // Grupos: por laboratorio o un solo bloque
-        $groups = $config['by_lab']
-            ? $products->groupBy(fn ($p) => $p->laboratory?->name ?? 'Sin laboratorio')->sortKeys()
-            : collect(['Todos los productos' => $products]);
+            return $p;
+        };
 
         if ($request->query('export') === 'csv') {
+            // El Excel trae todo, leído por bloques para no cargar el catálogo entero en memoria
             return CsvExport::download('inventario_' . $variant . '_' . now()->format('Ymd'),
                 ['Laboratorio', 'Código', 'Producto', 'Categoría', 'Stock', 'Precio de compra', 'Precio de venta', 'Valor a costo', 'Valor a precio de venta'],
-                $groups->flatMap(fn ($items, $lab) => $items->map(fn ($p) => [
+                $list->lazy(500)->map($withValues)->map(fn (Product $p) => [
                     $p->laboratory?->name ?? 'Sin laboratorio', $p->code, $p->name, $p->category?->name, (float) $p->stock_actual,
                     (float) $p->purchase_price, (float) $p->unit_sale_price, (float) $p->cost_value, (float) $p->sale_value,
-                ])));
+                ]));
         }
+
+        $products = $list->paginate(50)->withQueryString();
+        $products->getCollection()->each($withValues);
+
+        // Totales de todo el filtro (no solo de la página), calculados en la base de datos
+        $totals = $this->totals($base, $branchId)->first();
+
+        // Grupos de la página: por laboratorio (con el total del laboratorio completo) o un solo bloque
+        $labTotals = $config['by_lab']
+            ? $this->totals($base, $branchId)->addSelect('p.laboratory_id')->groupBy('p.laboratory_id')->get()
+                ->keyBy(fn ($row) => (int) $row->laboratory_id)
+            : collect();
+        $groups = $config['by_lab']
+            ? $products->getCollection()->groupBy(fn ($p) => $p->laboratory?->name ?? 'Sin laboratorio')
+            : collect(['Todos los productos' => $products->getCollection()]);
 
         return view('employee.pages.reports.inventory', [
             'variant'      => $variant,
             'config'       => $config,
             'groups'       => $groups,
-            'totalCost'    => (float) $products->sum('cost_value'),
-            'totalSale'    => (float) $products->sum('sale_value'),
-            'totalUnits'   => (float) $products->sum('stock_actual'),
-            'productCount' => $products->count(),
+            'products'     => $products,
+            'labTotals'    => $labTotals,
+            'totalCost'    => (float) $totals->cost,
+            'totalSale'    => (float) $totals->sale,
+            'totalUnits'   => (float) $totals->units,
+            'productCount' => (int) $totals->products,
             'categories'   => Category::where('company_id', $employee->company_id)->orderBy('name')->get(['id', 'name']),
             'laboratories' => Laboratory::where('company_id', $employee->company_id)->orderBy('name')->get(['id', 'name']),
         ]);
+    }
+
+    /**
+     * Consulta de totales (productos, unidades, valor a costo y a precio de venta) de los productos
+     * del filtro, con el stock de la sede. Se suma en la base de datos para no cargar el catálogo.
+     */
+    private function totals(Builder $base, int $branchId): QueryBuilder
+    {
+        return DB::table('products as p')
+            ->leftJoin('branch_stock as bs', fn ($join) => $join->on('bs.product_code', '=', 'p.code')->where('bs.branch_id', $branchId))
+            ->whereIn('p.code', (clone $base)->select('code'))
+            ->selectRaw('COUNT(*) AS products')
+            ->selectRaw('COALESCE(SUM(bs.stock_actual), 0) AS units')
+            ->selectRaw('COALESCE(SUM(ROUND(bs.stock_actual * p.purchase_price, 2)), 0) AS cost')
+            ->selectRaw('COALESCE(SUM(ROUND(bs.stock_actual * p.unit_sale_price, 2)), 0) AS sale');
     }
 
     /**
