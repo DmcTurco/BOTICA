@@ -135,7 +135,8 @@ class ClientController extends Controller
                 'status'           => $request->status,
             ]);
 
-            return redirect()->route('employee.clients.index')
+            // Se queda en la edición para que se vea lo que se guardó
+            return redirect()->route('employee.clients.edit', $client)
                 ->with('success', "Cliente {$client->code} actualizado correctamente.");
 
         } catch (\Exception $e) {

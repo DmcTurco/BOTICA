@@ -219,7 +219,8 @@ class ProductController extends Controller
 
             DB::commit();
 
-            return redirect()->route('employee.products.index')
+            // Se queda en la edición para que se vea lo que se guardó
+            return redirect()->route('employee.products.edit', $product)
                 ->with('success', 'Producto actualizado correctamente.');
         } catch (\Exception $e) {
             DB::rollBack();

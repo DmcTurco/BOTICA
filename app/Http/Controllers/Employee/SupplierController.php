@@ -73,7 +73,8 @@ class SupplierController extends Controller
 
         $supplier->update($request->validated());
 
-        return redirect()->route('employee.suppliers.index')->with('success', 'Proveedor actualizado correctamente.');
+        // Se queda en la edición para que se vea lo que se guardó
+        return redirect()->route('employee.suppliers.edit', $supplier)->with('success', 'Proveedor actualizado correctamente.');
     }
 
     /**

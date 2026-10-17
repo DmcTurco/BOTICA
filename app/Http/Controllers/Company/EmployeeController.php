@@ -123,7 +123,8 @@ class EmployeeController extends Controller
 
         $employee->update($data);
 
-        return redirect()->route('company.employees.index')
+        // Se queda en la edición para que se vea lo que se guardó
+        return redirect()->route('company.employees.edit', $employee)
             ->with('success', 'Empleado actualizado correctamente.');
     }
 

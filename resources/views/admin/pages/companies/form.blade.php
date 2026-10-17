@@ -10,7 +10,7 @@
 
     {{-- Header --}}
     <div class="flex items-center gap-3 shrink-0">
-        <a href="{{ route('admin.companies.index') }}"
+        <a href="{{ \App\Support\ListUrl::to('admin.companies.index') }}"
            class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors">
             <i class="fas fa-arrow-left text-xs"></i>
         </a>
@@ -113,7 +113,7 @@
                     class="px-5 py-2.5 bg-violet-700 hover:bg-violet-800 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
                 {{ $isEdit ? 'Guardar cambios' : 'Crear Empresa' }}
             </button>
-            <a href="{{ route('admin.companies.index') }}"
+            <a href="{{ \App\Support\ListUrl::to('admin.companies.index') }}"
                class="px-5 py-2.5 border border-slate-200 text-slate-600 text-sm font-medium rounded-xl hover:bg-white transition-colors">
                 Cancelar
             </a>

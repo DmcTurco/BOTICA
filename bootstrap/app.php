@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'subscription' => \App\Http\Middleware\EnsureSubscriptionIsActive::class,
         ]);
 
+        // Recuerda la URL de cada listado para que "Volver" conserve búsqueda, filtros y página
+        $middleware->web(append: [
+            \App\Http\Middleware\RememberListUrl::class,
+        ]);
+
         // Usuario ya logueado que entra al login: va al inicio de su panel (/company/home...), no a "/"
         $middleware->redirectUsersTo(function (\Illuminate\Http\Request $request) {
             $routeType = $request->routeType();

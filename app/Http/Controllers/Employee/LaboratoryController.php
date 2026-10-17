@@ -78,7 +78,8 @@ class LaboratoryController extends Controller
                 'status'      => $request->has('activo') ? 1 : 0,
             ]);
 
-            return redirect()->route('employee.laboratories.index')
+            // Se queda en la edición para que se vea lo que se guardó
+            return redirect()->route('employee.laboratories.edit', $laboratorio)
                 ->with('success', 'Laboratorio actualizado correctamente.');
         } catch (\Exception $e) {
             Log::error('Error al actualizar laboratorio: ' . $e->getMessage());

@@ -10,7 +10,7 @@
 
     {{-- Header --}}
     <div class="flex items-center gap-3 shrink-0">
-        <a href="{{ route('employee.employees.index') }}"
+        <a href="{{ \App\Support\ListUrl::to('employee.employees.index') }}"
            class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors">
             <i class="fas fa-arrow-left text-xs"></i>
         </a>
@@ -264,7 +264,7 @@
                         class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
                     {{ isset($employee) ? 'Guardar cambios' : 'Crear Empleado' }}
                 </button>
-                <a href="{{ route('employee.employees.index') }}"
+                <a href="{{ \App\Support\ListUrl::to('employee.employees.index') }}"
                    class="px-5 py-2.5 border border-slate-200 text-slate-600 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">
                     Cancelar
                 </a>

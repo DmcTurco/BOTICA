@@ -123,7 +123,8 @@ class EmployeeManagementController extends Controller
 
         \App\Models\AuditLog::record('employee.update', 'Actualizó al empleado ' . $employee->name, $employee->email, ['rol' => $request->role_id, 'privilegios' => $data['privileges']]);
 
-        return redirect()->route('employee.employees.index')
+        // Se queda en la edición para que se vea lo que se guardó
+        return redirect()->route('employee.employees.edit', $employee)
             ->with('success', 'Empleado actualizado correctamente.');
     }
 

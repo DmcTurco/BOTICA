@@ -96,7 +96,8 @@ class BranchController extends Controller
             }
         });
 
-        return redirect()->route('company.branches.index')
+        // Se queda en la edición para que se vea lo que se guardó
+        return redirect()->route('company.branches.edit', $branch)
             ->with('success', 'Sede actualizada correctamente.');
     }
 

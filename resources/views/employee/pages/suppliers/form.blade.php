@@ -12,7 +12,7 @@
 
     {{-- Header --}}
     <div class="flex items-center gap-3 shrink-0">
-        <a href="{{ route('employee.suppliers.index') }}"
+        <a href="{{ \App\Support\ListUrl::to('employee.suppliers.index') }}"
            class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
             <i class="fas fa-arrow-left text-sm"></i>
         </a>
@@ -149,7 +149,7 @@
             </div>
 
             <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
-                <a href="{{ route('employee.suppliers.index') }}"
+                <a href="{{ \App\Support\ListUrl::to('employee.suppliers.index') }}"
                    class="px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
                     Cancelar
                 </a>

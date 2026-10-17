@@ -93,7 +93,8 @@ class CompanyController extends Controller
 
         $company->update($data);
 
-        return redirect()->route('admin.companies.index')
+        // Se queda en la edición para que se vea lo que se guardó
+        return redirect()->route('admin.companies.edit', $company)
             ->with('success', "Empresa «{$company->name}» actualizada.");
     }
 }

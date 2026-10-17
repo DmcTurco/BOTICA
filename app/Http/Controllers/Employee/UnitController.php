@@ -64,7 +64,8 @@ class UnitController extends Controller
 
         $unit->update($request->validated());
 
-        return redirect()->route('employee.units.index')->with('success', 'Unidad actualizada correctamente.');
+        // Se queda en la edición para que se vea lo que se guardó
+        return redirect()->route('employee.units.edit', $unit)->with('success', 'Unidad actualizada correctamente.');
     }
 
     /**

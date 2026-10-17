@@ -82,7 +82,8 @@ class CategoryController extends Controller
             $categoria->status = $request->has('activo') ? 1 : 0;
             $categoria->save();
 
-            return redirect()->route('employee.categories.index')
+            // Se queda en la edición para que se vea lo que se guardó
+            return redirect()->route('employee.categories.edit', $categoria)
                 ->with('success', 'Categoría actualizada correctamente.');
         } catch (\Exception $e) {
             Log::error('Error al actualizar categoría: ' . $e->getMessage());

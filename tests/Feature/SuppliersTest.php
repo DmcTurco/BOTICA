@@ -234,3 +234,21 @@ it('crea y edita unidades desde una vista propia', function () {
         ->assertRedirect(route('employee.units.create'))
         ->assertSessionHasErrors(['name', 'abbreviation']);
 });
+
+it('al editar se queda en la edición y "Volver" regresa al listado con sus filtros', function () {
+    loginEmployee();
+    $unit = App\Models\Unit::create(['company_id' => 1, 'name' => 'Blíster', 'abbreviation' => 'BL', 'status' => 1]);
+
+    // El listado visitado con búsqueda queda recordado
+    $listUrl = route('employee.units.index', ['buscar' => 'blí']);
+    $this->get($listUrl)->assertOk()->assertSee('Blíster');
+
+    $this->put(route('employee.units.update', $unit), ['name' => 'Blíster x10', 'abbreviation' => 'BL', 'sunat_code' => 'NIU', 'status' => 1])
+        ->assertRedirect(route('employee.units.edit', $unit))
+        ->assertSessionHas('success');
+
+    $this->get(route('employee.units.edit', $unit))
+        ->assertOk()
+        ->assertSee('Blíster x10')
+        ->assertSee(e($listUrl), false);
+});
