@@ -218,10 +218,12 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware(['auth:employee', 'subscriptio
     // Ventas perdidas, tipo de cambio y correlativos
     Route::middleware('privilege:venta_perdida_sin_stock')->group(function () {
         Route::get('lost-sales', [Employee\LostSaleController::class, 'index'])->name('lost-sales.index');
+        Route::get('lost-sales/create', [Employee\LostSaleController::class, 'create'])->name('lost-sales.create');
         Route::post('lost-sales', [Employee\LostSaleController::class, 'store'])->name('lost-sales.store');
     });
     Route::middleware('privilege:tipo_cambio')->group(function () {
         Route::get('exchange-rates', [Employee\ExchangeRateController::class, 'index'])->name('exchange-rates.index');
+        Route::get('exchange-rates/create', [Employee\ExchangeRateController::class, 'create'])->name('exchange-rates.create');
         Route::post('exchange-rates', [Employee\ExchangeRateController::class, 'store'])->name('exchange-rates.store');
     });
     Route::middleware('privilege:admin_correlativos')->group(function () {
@@ -271,6 +273,7 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware(['auth:employee', 'subscriptio
     });
     Route::middleware('privilege:actualizacion_precio')->group(function () {
         Route::get('prices', [Employee\PriceUpdateController::class, 'index'])->name('prices.index');
+        Route::get('prices/history', [Employee\PriceUpdateController::class, 'history'])->name('prices.history');
         Route::put('prices', [Employee\PriceUpdateController::class, 'update'])->name('prices.update');
         Route::post('prices/bulk', [Employee\PriceUpdateController::class, 'bulk'])->name('prices.bulk');
     });

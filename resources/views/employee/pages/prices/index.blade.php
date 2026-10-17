@@ -6,11 +6,17 @@
 @php $money = fn ($n) => number_format($n, 2, '.', ''); @endphp
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
-    <div class="shrink-0">
-        <h1 class="text-xl font-bold text-slate-800">Actualización de Precios</h1>
-        <p class="text-sm text-slate-500 mt-0.5">Edita el precio de compra y de venta (por unidad, sin IGV) de varios productos a la vez. Cada cambio queda registrado.</p>
+    <div class="flex items-start justify-between gap-3 shrink-0">
+        <div>
+            <h1 class="text-xl font-bold text-slate-800">Actualización de Precios</h1>
+            <p class="text-sm text-slate-500 mt-0.5">Edita el precio de compra y de venta (por unidad, sin IGV) de varios productos a la vez. Cada cambio queda registrado.</p>
+        </div>
+        <a href="{{ route('employee.prices.history') }}"
+           class="shrink-0 inline-flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-medium rounded-lg shadow-sm">
+            <i class="fas fa-clock-rotate-left text-sky-600"></i> Historial de cambios
+        </a>
     </div>
 
     @include('employee.partials.alerts')
@@ -50,12 +56,12 @@
         </div>
     </form>
 
-    {{-- Precios por producto --}}
-    <form action="{{ route('employee.prices.update') }}" method="POST" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    {{-- Precios por producto: la tabla ocupa el alto disponible y el botón de guardar queda fijo abajo --}}
+    <form action="{{ route('employee.prices.update') }}" method="POST" class="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         @csrf @method('PUT')
-        <div class="overflow-x-auto">
+        <div class="flex-1 min-h-0 overflow-auto">
             <table class="w-full text-sm">
-                <thead><tr class="bg-slate-50 border-b border-slate-200">
+                <thead class="sticky top-0 z-10"><tr class="bg-slate-50 border-b border-slate-200">
                     <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Producto</th>
                     <th class="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-36">P. compra</th>
                     <th class="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-36">P. venta</th>
@@ -75,31 +81,13 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+        <div class="shrink-0 px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
             <div>{{ $products->links() }}</div>
             @if($products->count())
             <button type="submit" class="px-5 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm flex items-center gap-2"><i class="fas fa-save text-xs"></i> Guardar precios de esta página</button>
             @endif
         </div>
     </form>
-
-    {{-- Últimos cambios --}}
-    @if($changes->isNotEmpty())
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-5 py-3 border-b border-slate-200"><p class="text-sm font-semibold text-slate-800">Últimos cambios de precio</p></div>
-        <table class="w-full text-sm"><tbody class="divide-y divide-slate-100">
-            @foreach($changes as $c)
-            <tr>
-                <td class="px-5 py-2 text-xs text-slate-500">{{ $c->created_at->format('d/m H:i') }}</td>
-                <td class="px-5 py-2 text-xs text-slate-800">{{ $c->product?->name ?? $c->product_code }}</td>
-                <td class="px-5 py-2 text-xs text-slate-500 hidden sm:table-cell">{{ \App\Models\PriceChange::FIELD_LABELS[$c->field] ?? $c->field }}</td>
-                <td class="px-5 py-2 text-xs text-slate-700">S/ {{ number_format($c->old_value, 2) }} → <strong>S/ {{ number_format($c->new_value, 2) }}</strong></td>
-                <td class="px-5 py-2 text-xs text-slate-500 hidden md:table-cell">{{ $c->employee?->name }}</td>
-            </tr>
-            @endforeach
-        </tbody></table>
-    </div>
-    @endif
 </div>
 
 {{-- Confirmación del ajuste masivo --}}

@@ -6,31 +6,27 @@
 @section('content-area')
 <div class="flex-1 flex flex-col gap-3 min-h-0">
 
-    <div class="shrink-0">
-        <h1 class="text-xl font-bold text-slate-800">Tipo de Cambio</h1>
-        <p class="text-sm text-slate-500 mt-0.5">Dólar americano (USD) a soles. Registra el tipo de cambio de cada día.</p>
+    {{-- Header: el registro se hace en su propio formulario --}}
+    <div class="flex items-center justify-between gap-3 shrink-0">
+        <div>
+            <h1 class="text-xl font-bold text-slate-800">Tipo de Cambio</h1>
+            <p class="text-sm text-slate-500 mt-0.5">Dólar americano (USD) a soles. Registra el tipo de cambio de cada día.</p>
+        </div>
+        <a href="{{ route('employee.exchange-rates.create') }}"
+           class="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+            <i class="fas fa-plus text-xs"></i> Registrar tipo de cambio
+        </a>
     </div>
 
     @include('employee.partials.alerts')
 
-    <div class="grid grid-cols-2 gap-3">
-        <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Compra hoy</p><p class="text-2xl font-bold text-slate-800">{{ $today ? number_format($today->buy_rate, 3) : '—' }}</p></div>
-        <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Venta hoy</p><p class="text-2xl font-bold text-slate-800">{{ $today ? number_format($today->sell_rate, 3) : '—' }}</p></div>
+    <div class="grid grid-cols-2 gap-3 shrink-0">
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-2.5"><p class="text-xs text-slate-400">Compra hoy</p><p class="text-xl font-bold text-slate-800">{{ $today ? number_format($today->buy_rate, 3) : '—' }}</p></div>
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-2.5"><p class="text-xs text-slate-400">Venta hoy</p><p class="text-xl font-bold text-slate-800">{{ $today ? number_format($today->sell_rate, 3) : '—' }}</p></div>
     </div>
     @unless($today)
-    <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800"><i class="fas fa-triangle-exclamation mr-1"></i> Aún no registraste el tipo de cambio de hoy.</div>
+    <div class="shrink-0 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800"><i class="fas fa-triangle-exclamation mr-1"></i> Aún no registraste el tipo de cambio de hoy.</div>
     @endunless
-
-    <form action="{{ route('employee.exchange-rates.store') }}" method="POST" class="bg-white rounded-xl border border-slate-200 shadow-sm">
-        @csrf
-        <div class="px-5 py-3 bg-slate-50 border-b border-slate-200 rounded-t-xl text-xs font-semibold text-slate-600 uppercase tracking-wider">Registrar o actualizar</div>
-        <div class="p-5 grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-            <div><label class="block text-xs font-medium text-slate-600 mb-1">Fecha</label><input type="date" name="rate_date" required max="{{ today()->toDateString() }}" value="{{ old('rate_date', today()->toDateString()) }}" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
-            <div><label class="block text-xs font-medium text-slate-600 mb-1">Compra</label><input type="number" name="buy_rate" required step="0.0001" min="0.0001" value="{{ old('buy_rate', $today?->buy_rate) }}" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
-            <div><label class="block text-xs font-medium text-slate-600 mb-1">Venta</label><input type="number" name="sell_rate" required step="0.0001" min="0.0001" value="{{ old('sell_rate', $today?->sell_rate) }}" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"></div>
-            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm flex items-center justify-center gap-2"><i class="fas fa-save text-xs"></i> Guardar</button>
-        </div>
-    </form>
 
     <div class="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="flex-1 min-h-0 overflow-auto"><table class="w-full text-sm">

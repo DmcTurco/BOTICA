@@ -9,7 +9,7 @@ use App\Models\ExchangeRate;
 class ExchangeRateController extends Controller
 {
     /**
-     * Historial del tipo de cambio y formulario para registrar el del día.
+     * Historial del tipo de cambio, con el del día destacado.
      */
     public function index()
     {
@@ -23,6 +23,18 @@ class ExchangeRateController extends Controller
         $today = ExchangeRate::where('company_id', $employee->company_id)->whereDate('rate_date', today())->first();
 
         return view('employee.pages.exchange-rates.index', compact('rates', 'today'));
+    }
+
+    /**
+     * Formulario para registrar (o corregir) el tipo de cambio de una fecha; precarga el de hoy si existe.
+     */
+    public function create()
+    {
+        $employee = auth()->guard('employee')->user();
+
+        $today = ExchangeRate::where('company_id', $employee->company_id)->whereDate('rate_date', today())->first();
+
+        return view('employee.pages.exchange-rates.form', compact('today'));
     }
 
     /**

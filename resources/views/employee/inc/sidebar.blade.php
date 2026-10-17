@@ -432,7 +432,7 @@
                     <li>
                         <a href="{{ route($linkRoute) }}"
                            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                                  {{ request()->routeIs($linkRoute) ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
+                                  {{ (request()->routeIs($linkRoute) || ($linkRoute === 'employee.prices.index' && request()->routeIs('employee.prices.*'))) ? 'bg-sky-600 text-white' : 'text-slate-400 hover:bg-sky-600 hover:text-white' }}">
                             <i class="fas {{ $linkIcon }} w-4 text-center shrink-0"></i>
                             {{ $linkLabel }}
                         </a>

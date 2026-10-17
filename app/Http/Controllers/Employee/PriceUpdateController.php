@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 class PriceUpdateController extends Controller
 {
     /**
-     * Productos filtrables con sus precios editables y los últimos cambios registrados.
+     * Productos filtrables con sus precios editables (edición masiva en la misma tabla).
      */
     public function index(Request $request)
     {
@@ -26,9 +26,26 @@ class PriceUpdateController extends Controller
             'products'     => $products,
             'categories'   => Category::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get(['id', 'name']),
             'laboratories' => Laboratory::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get(['id', 'name']),
-            'changes'      => PriceChange::with(['product:code,name', 'employee:id,name'])
-                ->where('company_id', $employee->company_id)->orderByDesc('id')->limit(10)->get(),
         ]);
+    }
+
+    /**
+     * Historial de cambios de precio de la compañía (quién cambió qué, antes y después).
+     */
+    public function history(Request $request)
+    {
+        $employee = auth()->guard('employee')->user();
+
+        $changes = PriceChange::with(['product:code,name', 'employee:id,name'])
+            ->where('company_id', $employee->company_id)
+            ->when($request->filled('buscar'), fn ($q) => $q->where(fn ($w) => $w
+                ->whereHas('product', fn ($p) => $p->search($request->buscar, ['name', 'code']))
+                ->orWhereLike('product_code', '%' . addcslashes($request->buscar, '%_\\') . '%')))
+            ->orderByDesc('id')
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('employee.pages.prices.history', compact('changes'));
     }
 
     /**

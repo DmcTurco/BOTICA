@@ -147,6 +147,25 @@ it('registra ventas perdidas y arma el ranking', function () {
     $this->get(route('employee.lost-sales.index'))->assertOk()->assertSee('Amoxicilina 500mg')->assertSee('2×');
 });
 
+it('ventas perdidas: el listado y el formulario son pantallas separadas', function () {
+    loginEmployee();
+    stockProduct('P1', 0);
+
+    $this->get(route('employee.lost-sales.index'))->assertOk()
+        ->assertSee('Registrar venta perdida')
+        ->assertDontSee('name="product_name"', false);
+    $this->get(route('employee.lost-sales.create'))->assertOk()
+        ->assertViewIs('employee.pages.lost-sales.form')
+        ->assertSee('Producto P1');                                  // el catálogo sugiere sus productos
+
+    $this->from(route('employee.lost-sales.create'))
+        ->post(route('employee.lost-sales.store'), ['product_name' => '', 'quantity' => 1, 'reason' => 'no_stock'])
+        ->assertRedirect(route('employee.lost-sales.create'))->assertSessionHasErrors('product_name');
+    $this->from(route('employee.lost-sales.create'))
+        ->post(route('employee.lost-sales.store'), ['product_name' => 'Ibuprofeno 800', 'quantity' => 1, 'reason' => 'no_stock'])
+        ->assertRedirect(route('employee.lost-sales.index'));
+});
+
 // ── Tipo de cambio ────────────────────────────────────────────
 
 it('guarda el tipo de cambio una sola vez por día y valida compra ≤ venta', function () {
@@ -158,6 +177,37 @@ it('guarda el tipo de cambio una sola vez por día y valida compra ≤ venta', f
 
     expect(ExchangeRate::count())->toBe(1)->and(ExchangeRate::first()->sell_rate)->toBe(3.76);
     $this->get(route('employee.exchange-rates.index'))->assertOk();
+});
+
+it('tipo de cambio: el listado y el formulario son pantallas separadas, con el de hoy precargado', function () {
+    loginEmployee();
+
+    $this->get(route('employee.exchange-rates.index'))->assertOk()
+        ->assertSee('Registrar tipo de cambio')
+        ->assertDontSee('name="buy_rate"', false);
+    $this->get(route('employee.exchange-rates.create'))->assertOk()->assertViewIs('employee.pages.exchange-rates.form');
+
+    $this->from(route('employee.exchange-rates.create'))
+        ->post(route('employee.exchange-rates.store'), ['rate_date' => today()->toDateString(), 'buy_rate' => 3.70, 'sell_rate' => 3.75])
+        ->assertRedirect(route('employee.exchange-rates.index'));
+
+    // Con el de hoy registrado, el formulario lo trae para corregirlo
+    $this->get(route('employee.exchange-rates.create'))->assertOk()->assertSee('Hoy ya está registrado')->assertSee('3.75');
+});
+
+it('precios: el historial de cambios está en su propia pantalla y se puede buscar', function () {
+    loginEmployee();
+    stockProduct('P1', 0, 2);
+    stockProduct('P2', 0, 3);
+
+    $this->put(route('employee.prices.update'), ['prices' => [
+        'P1' => ['purchase_price' => 2, 'unit_sale_price' => 9],
+        'P2' => ['purchase_price' => 3, 'unit_sale_price' => 8],
+    ]])->assertSessionHasNoErrors();
+
+    $this->get(route('employee.prices.index'))->assertOk()->assertSee('Historial de cambios')->assertDontSee('Últimos cambios de precio');
+    $this->get(route('employee.prices.history'))->assertOk()->assertSee('Producto P1')->assertSee('Producto P2');
+    $this->get(route('employee.prices.history', ['buscar' => 'p2']))->assertOk()->assertSee('Producto P2')->assertDontSee('Producto P1');
 });
 
 // ── Correlativos ──────────────────────────────────────────────

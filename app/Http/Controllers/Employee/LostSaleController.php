@@ -34,10 +34,20 @@ class LostSaleController extends Controller
             ->orderByDesc('times')->orderByDesc('total_qty')
             ->limit(8)->get();
 
+        return view('employee.pages.lost-sales.index', compact('lostSales', 'ranking', 'desde', 'hasta'));
+    }
+
+    /**
+     * Formulario para anotar lo que el cliente pidió y no se pudo vender (catálogo como sugerencia).
+     */
+    public function create()
+    {
+        $employee = auth()->guard('employee')->user();
+
         $products = Product::where('company_id', $employee->company_id)->where('status', 1)
             ->orderBy('name')->get(['code', 'name'])->map(fn ($p) => ['code' => $p->code, 'name' => $p->name])->all();
 
-        return view('employee.pages.lost-sales.index', compact('lostSales', 'ranking', 'products', 'desde', 'hasta'));
+        return view('employee.pages.lost-sales.form', compact('products'));
     }
 
     /**
