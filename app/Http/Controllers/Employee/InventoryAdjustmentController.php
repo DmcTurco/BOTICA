@@ -15,9 +15,25 @@ use Illuminate\Support\Facades\Log;
 class InventoryAdjustmentController extends Controller
 {
     /**
-     * Pantalla de ajuste de inventario: formulario + últimos ajustes de la sede.
+     * Listado de los ajustes de inventario de la sede (más recientes primero).
      */
     public function index()
+    {
+        $employee = auth()->guard('employee')->user();
+
+        $adjustments = StockMovement::with('product:code,name')
+            ->where('branch_id', $employee->branch_id)
+            ->where('reference_type', 'manual')
+            ->orderByDesc('id')
+            ->paginate(15);
+
+        return view('employee.pages.adjustments.index', compact('adjustments'));
+    }
+
+    /**
+     * Formulario para registrar un ajuste, con el stock actual de cada producto en la sede.
+     */
+    public function create()
     {
         $employee = auth()->guard('employee')->user();
 
@@ -35,16 +51,9 @@ class InventoryAdjustmentController extends Controller
                 'stock' => (float) ($stocks[$p->code] ?? 0),
             ])->values()->all();
 
-        $adjustments = StockMovement::with('product:code,name')
-            ->where('branch_id', $employee->branch_id)
-            ->where('reference_type', 'manual')
-            ->orderByDesc('id')
-            ->paginate(15);
-
-        return view('employee.pages.adjustments.index', [
-            'products'    => $products,
-            'adjustments' => $adjustments,
-            'reasons'     => InventoryAdjustmentRequest::REASONS,
+        return view('employee.pages.adjustments.form', [
+            'products' => $products,
+            'reasons'  => InventoryAdjustmentRequest::REASONS,
         ]);
     }
 

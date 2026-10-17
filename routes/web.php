@@ -180,6 +180,7 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware(['auth:employee', 'subscriptio
     // Ajuste de inventario (conteo físico, merma, vencidos)
     Route::middleware('privilege:ajuste_inventario')->group(function () {
         Route::get('adjustments', [Employee\InventoryAdjustmentController::class, 'index'])->name('adjustments.index');
+        Route::get('adjustments/create', [Employee\InventoryAdjustmentController::class, 'create'])->name('adjustments.create');
         Route::post('adjustments', [Employee\InventoryAdjustmentController::class, 'store'])->name('adjustments.store');
     });
 

@@ -221,3 +221,29 @@ it('anula una preparación devolviendo insumos y retirando el producto final', f
     $this->post(route('employee.productions.void', $production), ['void_reason' => 'Error de pesada'])->assertSessionHasNoErrors();
     expect(stockOf('UREA'))->toBe(100.0)->and(stockOf('CREMA'))->toBe(0.0)->and($production->fresh()->status)->toBe(0);
 });
+
+// Listado y formulario de ajustes en pantallas separadas
+it('el listado y el formulario de ajustes de inventario son pantallas separadas', function () {
+    loginEmployee();
+    stockProduct('P1', 10);
+
+    $this->get(route('employee.adjustments.index'))->assertOk()
+        ->assertSee('Nuevo ajuste')
+        ->assertDontSee('name="quantity"', false);                // el listado ya no tiene el formulario
+    $this->get(route('employee.adjustments.create'))->assertOk()
+        ->assertViewIs('employee.pages.adjustments.form')
+        ->assertViewHas('products')
+        ->assertSee('name="quantity"', false);
+
+    // Un ajuste que no cambia el stock vuelve al formulario con lo escrito
+    $this->from(route('employee.adjustments.create'))
+        ->post(route('employee.adjustments.store'), ['product_code' => 'P1', 'mode' => 'set', 'quantity' => 10, 'reason' => array_key_first(App\Http\Requests\Company\InventoryAdjustmentRequest::REASONS)])
+        ->assertRedirect(route('employee.adjustments.create'))
+        ->assertSessionHasInput('product_code', 'P1');
+
+    // Registrado: vuelve al listado y aparece en él
+    $this->from(route('employee.adjustments.create'))
+        ->post(route('employee.adjustments.store'), ['product_code' => 'P1', 'mode' => 'subtract', 'quantity' => 2, 'reason' => array_key_first(App\Http\Requests\Company\InventoryAdjustmentRequest::REASONS)])
+        ->assertRedirect(route('employee.adjustments.index'));
+    $this->get(route('employee.adjustments.index'))->assertSee('Producto P1');
+});
