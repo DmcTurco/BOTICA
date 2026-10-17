@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -46,11 +47,45 @@ return new class extends Migration
 
             // El código de barras no se repite dentro de una compañía, pero dos boticas sí pueden tener el mismo
             $table->unique(['company_id', 'barcode']);
+
+            // Listados de la compañía ordenados por nombre y paginados (catálogos de miles de productos)
+            $table->index(['company_id', 'status', 'name'], 'products_company_status_name_index');
         });
+
+        $this->createSearchIndexes();
     }
 
     /**
-     * Reverse the migrations.
+     * Índices de trigramas (solo PostgreSQL) para las búsquedas "contiene" (ilike '%texto%')
+     * en nombre, código y código de barras. Si el servidor no permite crear la extensión
+     * pg_trgm, las búsquedas funcionan igual, solo sin estos índices.
+     */
+    private function createSearchIndexes(): void
+    {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
+        $available = DB::selectOne("SELECT 1 AS ok FROM pg_available_extensions WHERE name = 'pg_trgm'");
+        if (!$available) {
+            return;
+        }
+
+        // Dentro de la transacción de la migración esto es un punto de guardado: si falta el
+        // permiso, se deshace solo la extensión y la migración sigue
+        try {
+            DB::transaction(fn () => DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm'));
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        DB::statement('CREATE INDEX products_name_trgm_index ON products USING gin (name gin_trgm_ops)');
+        DB::statement('CREATE INDEX products_code_trgm_index ON products USING gin (code gin_trgm_ops)');
+        DB::statement('CREATE INDEX products_barcode_trgm_index ON products USING gin (barcode gin_trgm_ops)');
+    }
+
+    /**
+     * Reverse the migrations (los índices se van con la tabla; la extensión pg_trgm se deja).
      */
     public function down(): void
     {
