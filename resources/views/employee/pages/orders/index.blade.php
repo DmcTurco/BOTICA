@@ -93,8 +93,9 @@
             </div>
         </div>
 
-        {{-- ── Cuerpo: tres columnas ───────────────────────────── --}}
-        <div class="flex-1 grid grid-cols-[35%_35%_30%] overflow-hidden min-h-0">
+        {{-- ── Cuerpo: tres columnas. El panel de Pago se puede plegar a una franja (pantallas chicas):
+             plegado, la grilla pasa a grid-cols-[1fr_1fr_3.25rem] ── --}}
+        <div id="posGrid" class="flex-1 grid grid-cols-[35%_35%_30%] overflow-hidden min-h-0">
 
             {{-- ┌──────────────────────────────────────────────────┐
                  │  COL 1 — Catálogo de productos                   │
@@ -261,16 +262,28 @@
             {{-- ┌──────────────────────────────────────────────────┐
                  │  COL 3 — Pago / Cliente                          │
                  └──────────────────────────────────────────────────┘ --}}
-            <div class="flex flex-col bg-slate-50/30 overflow-hidden min-h-0">
+            <div id="colPago" class="flex flex-col bg-slate-50/30 overflow-hidden min-h-0">
+
+                {{-- Panel plegado: franja con lo elegido; un clic lo vuelve a abrir --}}
+                <button type="button" id="pagoFranja" title="Mostrar el panel de pago"
+                        class="hidden flex-1 flex-col items-center gap-3 py-3 bg-slate-50 hover:bg-sky-50 text-slate-500 hover:text-sky-700 transition-colors">
+                    <i class="fas fa-angles-left text-xs"></i>
+                    <i class="fas fa-wallet text-sky-600"></i>
+                    <span id="pagoFranjaTexto" class="text-xs font-semibold tracking-wide whitespace-nowrap" style="writing-mode: vertical-rl; transform: rotate(180deg);">Pago</span>
+                </button>
 
                 {{-- Cabecera pago --}}
-                <div class="shrink-0 flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 bg-slate-50">
+                <div id="pagoCabecera" class="shrink-0 flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 bg-slate-50">
                     <i class="fas fa-wallet text-emerald-600 text-xs"></i>
                     <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Pago</span>
+                    <button type="button" id="btnPlegarPago" title="Ocultar el panel de pago (más espacio para los productos)"
+                            class="ml-auto w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors">
+                        <i class="fas fa-angles-right text-xs"></i>
+                    </button>
                 </div>
 
                 {{-- Contenido scrollable --}}
-                <div class="flex-1 overflow-y-auto p-4 space-y-5">
+                <div id="pagoContenido" class="flex-1 overflow-y-auto p-4 space-y-5">
 
                     {{-- Inputs ocultos para los valores seleccionados --}}
                     <input type="hidden" id="tipoPago" value="1">
@@ -677,6 +690,38 @@ $(document).on('click', '.btn-comprobante', function() {
         seleccionarTipoDocPorId(3); // RUC
     }
 });
+
+// ── Panel de pago plegable (como el menú lateral) ─────────────
+// Plegado queda una franja con lo elegido y el catálogo y el detalle ganan ese ancho.
+// Se recuerda en este navegador; la primera vez, en pantallas de menos de 1280 px empieza plegado.
+function textoFranjaPago() {
+    const pago = $('.btn-pago[data-value="' + $('#tipoPago').val() + '"]').text().trim();
+    const comp = $('.btn-comprobante[data-value="' + $('#tipoComprobante').val() + '"]').text().trim();
+    return [pago, comp].filter(Boolean).join(' · ') || 'Pago';
+}
+
+function plegarPago(plegar, recordar) {
+    $('#posGrid').toggleClass('grid-cols-[35%_35%_30%]', !plegar).toggleClass('grid-cols-[1fr_1fr_3.25rem]', plegar);
+    $('#pagoCabecera, #pagoContenido').toggleClass('hidden', plegar);
+    $('#pagoFranja').toggleClass('hidden', !plegar).toggleClass('flex', plegar);
+    $('#colPago').toggleClass('border-l border-slate-200', plegar);
+    $('#pagoFranjaTexto').text(textoFranjaPago());
+    if (recordar) {
+        try { localStorage.setItem('pos-pago-plegado', plegar ? '1' : '0'); } catch (e) {}
+    }
+}
+
+$('#btnPlegarPago').on('click', () => plegarPago(true, true));
+$('#pagoFranja').on('click', () => plegarPago(false, true));
+// La franja muestra siempre lo elegido (tipo de pago y comprobante)
+$(document).on('click', '.btn-pago, .btn-comprobante', () => $('#pagoFranjaTexto').text(textoFranjaPago()));
+
+(function () {
+    let guardado = null;
+    try { guardado = localStorage.getItem('pos-pago-plegado'); } catch (e) {}
+    const plegar = guardado !== null ? guardado === '1' : window.innerWidth < 1280;
+    if (plegar) plegarPago(true, false);
+})();
 
 // ── Tipo de documento del cliente ────────────────────────────
 function seleccionarTipoDocPorId(id) {
