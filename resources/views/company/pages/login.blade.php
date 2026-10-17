@@ -230,5 +230,6 @@
         e.className = i.type === 'password' ? 'fas fa-eye text-sm' : 'fas fa-eye-slash text-sm';
     }
     </script>
+    @include('partials/password-toggle')
 </body>
 </html>

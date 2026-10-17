@@ -76,6 +76,7 @@
     }
     </script>
     @include('partials/alert-modal')
+    @include('partials/password-toggle')
     @include('partials/search-select')
     @include('company/inc/foot')
 </body>

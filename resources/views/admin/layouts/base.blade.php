@@ -20,6 +20,7 @@
 
     {{-- Modal de avisos (éxito / errores de validación), igual que en los otros paneles --}}
     @include('partials/alert-modal')
+    @include('partials/password-toggle')
     @include('admin/inc/foot')
 
     <script>

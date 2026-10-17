@@ -19,6 +19,7 @@
     </div>
 
     @include('partials/alert-modal')
+    @include('partials/password-toggle')
     @include('partials/search-select')
     @include('employee/inc/foot')
 
