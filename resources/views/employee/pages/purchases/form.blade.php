@@ -55,10 +55,11 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">N° Documento</label>
-                        <input type="text" name="document_number" value="{{ old('document_number') }}"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                        <label class="block text-xs font-medium text-slate-600 mb-1">N° Documento <span id="docNumberReq" class="text-red-500">*</span></label>
+                        <input type="text" name="document_number" id="docNumber" value="{{ old('document_number') }}"
+                            class="w-full px-3 py-2 text-sm border @error('document_number') border-red-400 @else border-slate-300 @enderror rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                             placeholder="Ej: B001-00123">
+                        <p id="docNumberError" class="text-[11px] mt-1 text-red-600 {{ $errors->has('document_number') ? '' : 'hidden' }}">{{ $errors->first('document_number') ?: 'Ingresa el número de la boleta o factura.' }}</p>
                     </div>
 
                     {{-- Proveedor: un solo campo que busca entre los registrados; si no existe, se crea con el nombre escrito --}}
@@ -87,13 +88,15 @@
                         <input type="date" name="due_date" id="dueDate" value="{{ old('due_date', date('Y-m-d', strtotime('+30 days'))) }}"
                             class="mt-1 w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent hidden"
                             title="Fecha límite de pago">
+                        @error('due_date')<p class="text-[11px] mt-1 text-red-600">{{ $message }}</p>@enderror
                     </div>
 
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Fecha <span
                                 class="text-red-500">*</span></label>
                         <input type="date" name="purchased_at" value="{{ old('purchased_at', date('Y-m-d')) }}"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                            class="w-full px-3 py-2 text-sm border @error('purchased_at') border-red-400 @else border-slate-300 @enderror rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                        @error('purchased_at')<p class="text-[11px] mt-1 text-red-600">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="col-span-2 sm:col-span-1">
@@ -591,30 +594,76 @@
         const camposDoc = document.getElementById('camposDocumento');
         const resumenDoc = document.getElementById('resumenDocumento');
         const btnPlegar = document.getElementById('btnPlegarDocumento');
-        function textoResumenDocumento() {
-            const f = document.getElementById('formCompra');
-            const tipo = f.document_type.selectedOptions[0]?.text.trim();
-            const partes = [tipo, f.document_number.value.trim(), f.supplier.value.trim(),
-                f.payment_condition.selectedOptions[0]?.text.trim(), f.purchased_at.value.split('-').reverse().join('/')];
-            return partes.filter(Boolean).join(' · ');
-        }
-        // En pantallas bajas (laptop 14"), al agregar el primer producto el bloque se pliega solo
-        // para dejar espacio a la lista; se puede volver a abrir con "Mostrar".
-        let plegadoAutomatico = false;
-        document.getElementById('cuerpoProductos').addEventListener('click', e => {
-            if (plegadoAutomatico || !e.target.closest('.fila-producto') || window.innerHeight >= 800) return;
-            plegadoAutomatico = true;
-            if (!camposDoc.classList.contains('hidden')) btnPlegar.click();
-        });
+        const formCompra = document.getElementById('formCompra');
+        const docNumber = document.getElementById('docNumber');
+        const escHtml = t => { const d = document.createElement('div'); d.textContent = t ?? ''; return d.innerHTML; };
 
-        btnPlegar.addEventListener('click', () => {
-            const plegar = !camposDoc.classList.contains('hidden');
+        // Boleta y factura necesitan su número; la nota de ingreso (3) es interna y no lo pide
+        function docIncompleto() {
+            return formCompra.document_type.value !== '3' && !docNumber.value.trim();
+        }
+
+        function textoResumenDocumento() {
+            const tipo = formCompra.document_type.selectedOptions[0]?.text.trim();
+            const partes = [tipo, docNumber.value.trim(), formCompra.supplier.value.trim(),
+                formCompra.payment_condition.selectedOptions[0]?.text.trim(), formCompra.purchased_at.value.split('-').reverse().join('/')];
+            const texto = escHtml(partes.filter(Boolean).join(' · '));
+            return docIncompleto()
+                ? texto + ' · <span class="font-semibold text-red-600"><i class="fas fa-triangle-exclamation"></i> Falta el N° de documento</span>'
+                : texto;
+        }
+
+        // Marca (o desmarca) el N° de documento como pendiente
+        function marcarDocNumber(falta) {
+            docNumber.classList.toggle('border-red-400', falta);
+            docNumber.classList.toggle('border-slate-300', !falta);
+            document.getElementById('docNumberError').classList.toggle('hidden', !falta);
+        }
+
+        function plegarDocumento(plegar) {
             camposDoc.classList.toggle('hidden', plegar);
             resumenDoc.classList.toggle('hidden', !plegar);
-            resumenDoc.textContent = plegar ? textoResumenDocumento() : '';
+            resumenDoc.innerHTML = plegar ? textoResumenDocumento() : '';
             btnPlegar.innerHTML = plegar
                 ? '<span>Mostrar</span> <i class="fas fa-chevron-down text-[10px]"></i>'
                 : '<span>Ocultar</span> <i class="fas fa-chevron-up text-[10px]"></i>';
+        }
+
+        // En pantallas bajas (laptop 14"), al agregar el primer producto el bloque se pliega solo
+        // para dejar espacio a la lista; se puede volver a abrir con "Mostrar".
+        // No se pliega mientras falte el N° de documento, para que no quede oculto lo que falta.
+        let plegadoAutomatico = false;
+        document.getElementById('cuerpoProductos').addEventListener('click', e => {
+            if (plegadoAutomatico || !e.target.closest('.fila-producto') || window.innerHeight >= 800 || docIncompleto()) return;
+            plegadoAutomatico = true;
+            if (!camposDoc.classList.contains('hidden')) plegarDocumento(true);
+        });
+
+        btnPlegar.addEventListener('click', () => plegarDocumento(!camposDoc.classList.contains('hidden')));
+
+        // El asterisco del N° de documento solo aplica a boleta y factura
+        function actualizarAsteriscoDoc() {
+            document.getElementById('docNumberReq').classList.toggle('hidden', formCompra.document_type.value === '3');
+        }
+        // El aviso se quita cuando el usuario corrige (al cargar se conserva el error que vino del servidor)
+        formCompra.document_type.addEventListener('change', () => { actualizarAsteriscoDoc(); if (!docIncompleto()) marcarDocNumber(false); });
+        docNumber.addEventListener('input', () => { if (docNumber.value.trim()) marcarDocNumber(false); });
+        actualizarAsteriscoDoc();
+
+        // Antes de enviar: lo que falta se muestra aquí mismo, sin perder la lista de productos
+        formCompra.addEventListener('submit', e => {
+            if (seleccionados.size === 0) {
+                e.preventDefault();
+                window.showAlertModal('Falta agregar productos', ['Agrega al menos un producto del catálogo a la compra.']);
+                return;
+            }
+            if (docIncompleto()) {
+                e.preventDefault();
+                plegarDocumento(false);
+                marcarDocNumber(true);
+                docNumber.focus();
+                window.showAlertModal('Falta el N° de documento', ['Ingresa el número de la boleta o factura del proveedor (ej: B001-00123). Si no tienes comprobante, elige el tipo "Nota de ingreso".']);
+            }
         });
 
         // ── Calcular totales ─────────────────────────────────────────────────────────
@@ -629,9 +678,39 @@
             document.getElementById('resumenTotal').textContent = 'S/. ' + total.toFixed(2);
         }
 
+        // ── Si la compra volvió con un error, se reconstruye la lista tal como estaba ──
+        @php $itemsAnteriores = array_values((array) old('items', [])); @endphp
+        const itemsAnteriores = @json($itemsAnteriores);
+
+        function restaurarItem(anterior) {
+            const fila = document.querySelector(`.fila-producto[data-code="${CSS.escape(anterior.product_code || '')}"]`);
+            if (!fila) return;
+            fila.click();
+            const row = document.querySelector(`#filasSeleccionados .item-seleccionado[data-code="${CSS.escape(anterior.product_code)}"]`);
+            if (!row) return;
+            const poner = (selector, valor, evento) => {
+                const el = row.querySelector(selector);
+                if (!el || valor === undefined || valor === null || valor === '') return;
+                el.value = valor;
+                if (evento) el.dispatchEvent(new Event('input', { bubbles: true }));
+            };
+            // Primero la presentación (recalcula el costo) y luego el costo y la cantidad escritos
+            poner('[data-field="presentation"]', anterior.presentation_id, true);
+            poner('[data-field="unitCost"]', anterior.unit_cost, true);
+            poner('[data-field="quantity"]', anterior.quantity, true);
+            poner('input[type="date"]', anterior.expiration_date, false);
+            poner('input[name$="[batch]"]', anterior.batch, false);
+        }
+
         // ── Precarga de los productos de una orden de compra ─────────────────────────
         const precarga = @json($preload);
         document.addEventListener('DOMContentLoaded', () => {
+            if (itemsAnteriores.length) {
+                plegadoAutomatico = true;   // el bloque queda abierto para ver el error
+                itemsAnteriores.forEach(restaurarItem);
+                if (docIncompleto()) marcarDocNumber(true);
+                return;
+            }
             precarga.forEach(p => {
                 const fila = document.querySelector(`.fila-producto[data-code="${CSS.escape(p.code)}"]`);
                 if (!fila) return;
@@ -649,6 +728,7 @@
         // ── Precarga del producto si llega desde la pantalla de edición ──────────────
         @if ($producto)
             document.addEventListener('DOMContentLoaded', () => {
+                if (itemsAnteriores.length) return;   // ya se reconstruyó la lista enviada
                 const fila = document.querySelector(`.fila-producto[data-code="{{ $producto->code }}"]`);
                 if (fila) fila.querySelector('.btn-agregar').click();
             });

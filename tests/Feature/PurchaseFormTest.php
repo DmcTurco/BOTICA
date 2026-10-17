@@ -82,3 +82,25 @@ it('no deja registrar dos veces el mismo comprobante del mismo proveedor', funct
     $this->post(route('employee.purchases.store'), $payload)->assertSessionHasNoErrors();
     $this->post(route('employee.purchases.store'), $payload)->assertSessionHasErrors('document_number');
 });
+
+it('si la compra vuelve con un error, la pantalla recibe los productos para reconstruir la lista', function () {
+    loginEmployee();
+    stockProduct('P1', 10, 2);
+
+    // Boleta sin número: el servidor la rechaza y vuelve al formulario con lo enviado
+    $this->from(route('employee.purchases.create'))
+        ->post(route('employee.purchases.store'), purchasePayload([
+            'document_number' => '',
+            'items' => [['product_code' => 'P1', 'quantity' => 7, 'unit_cost' => 1.25, 'batch' => 'L-77']],
+        ]))
+        ->assertRedirect(route('employee.purchases.create'))
+        ->assertSessionHasErrors('document_number');
+
+    expect(Purchase::count())->toBe(0);
+
+    // La página reconstruye la lista con los ítems enviados y marca el N° de documento
+    $this->get(route('employee.purchases.create'))->assertOk()
+        ->assertSee('"product_code":"P1"', false)
+        ->assertSee('"batch":"L-77"', false)
+        ->assertSee('id="docNumberError" class="text-[11px] mt-1 text-red-600 "', false);
+});
