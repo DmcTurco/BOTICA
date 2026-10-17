@@ -27,6 +27,14 @@
     min-height: var(--page-min-h, 34rem);
 }
 
+/* Pulso corto para avisar que un contador cambió (p. ej. productos agregados a una compra) */
+@keyframes ping-once {
+    50% { transform: scale(1.45); }
+}
+.animate-ping-once {
+    animation: ping-once 0.35s ease-out;
+}
+
 /* Select2 — skin sin Bootstrap */
 .select2-container--default .select2-selection--single {
     height: 38px;

@@ -29,10 +29,18 @@
             @endif
             @include('employee.partials.alerts')
 
-            {{-- Datos del documento --}}
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 shrink-0">
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Datos del documento</p>
-                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+            {{-- Datos del documento: compacto y plegable para dejar el alto a los productos --}}
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3 shrink-0">
+                <div class="flex items-center justify-between gap-3">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">Datos del documento</p>
+                    {{-- Resumen visible solo con el bloque plegado --}}
+                    <p id="resumenDocumento" class="hidden flex-1 min-w-0 truncate text-xs text-slate-600"></p>
+                    <button type="button" id="btnPlegarDocumento"
+                        class="shrink-0 inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors">
+                        <span>Ocultar</span> <i class="fas fa-chevron-up text-[10px]"></i>
+                    </button>
+                </div>
+                <div id="camposDocumento" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 mt-2">
 
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Tipo <span
@@ -88,7 +96,7 @@
                             class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                     </div>
 
-                    <div class="col-span-2 sm:col-span-4 lg:col-span-1">
+                    <div class="col-span-2 sm:col-span-1">
                         <label class="block text-xs font-medium text-slate-600 mb-1">Observaciones</label>
                         <input type="text" name="notes" value="{{ old('notes') }}"
                             class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -98,12 +106,25 @@
                 </div>
             </div>
 
-            {{-- Panel principal: dos columnas --}}
-            <div class="flex-1 flex gap-3 min-h-0 flex-col lg:flex-row">
+            {{-- Pestañas (tablet y laptops angostas, < 1280 px): un panel a la vez, a pantalla completa --}}
+            <div class="xl:hidden shrink-0 grid grid-cols-2 gap-1 p-1 bg-slate-200/70 rounded-xl" id="pestanasCompra">
+                <button type="button" data-panel="catalogo"
+                    class="pestana-compra px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 bg-white text-emerald-700 shadow-sm">
+                    <i class="fas fa-boxes-stacked text-xs"></i> Catálogo
+                </button>
+                <button type="button" data-panel="seleccionados"
+                    class="pestana-compra px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 text-slate-600">
+                    <i class="fas fa-cart-shopping text-xs"></i> Seleccionados
+                    <span id="contadorPestana" class="px-1.5 py-0.5 bg-emerald-600 text-white rounded-full text-[10px] font-bold">0</span>
+                </button>
+            </div>
+
+            {{-- Panel principal: catálogo (40 %) y seleccionados (60 %, donde se trabaja) --}}
+            <div class="flex-1 flex gap-3 min-h-0 flex-col xl:flex-row">
 
                 {{-- ── COLUMNA IZQUIERDA: Catálogo de productos ──────────── --}}
-                <div
-                    class="lg:w-1/2 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-0">
+                <div data-panel-compra="catalogo"
+                    class="flex-1 xl:flex-2 min-w-0 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-0">
 
                     {{-- Cabecera con buscador --}}
                     <div class="px-4 py-3 border-b border-slate-200 shrink-0">
@@ -185,8 +206,8 @@
                 </div>
 
                 {{-- ── COLUMNA DERECHA: Productos seleccionados ──────────── --}}
-                <div
-                    class="lg:w-1/2 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-0">
+                <div data-panel-compra="seleccionados"
+                    class="max-xl:hidden flex-1 xl:flex-3 min-w-0 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-0">
 
                     {{-- Cabecera --}}
                     <div class="px-4 py-3 border-b border-slate-200 shrink-0 flex items-center justify-between">
@@ -215,40 +236,21 @@
                             <p class="text-xs mt-1">Selecciona productos del catálogo</p>
                         </div>
 
-                        {{-- Tabla de seleccionados --}}
-                        <table class="w-full text-sm hidden" id="tablaSeleccionados">
-                            <thead class="sticky top-0 z-10">
-                                <tr class="bg-slate-50 border-b border-slate-200">
-                                    <th
-                                        class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                        Producto</th>
-                                    <th class="text-center px-3 py-2.5 text-xs font-semibold text-slate-500 w-20">Cant.
-                                    </th>
-                                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 w-28">Costo
-                                        c/u</th>
-                                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 w-24">Subtotal
-                                    </th>
-                                    <th class="text-center px-3 py-2.5 text-xs font-semibold text-slate-500 w-32">
-                                        Vencimiento</th>
-                                    <th class="text-center px-3 py-2.5 text-xs font-semibold text-slate-500 w-24">Lote</th>
-                                    <th class="w-10 px-3 py-2.5"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="filasSeleccionados" class="divide-y divide-slate-100">
-                                {{-- Filas generadas por JS --}}
-                            </tbody>
-                        </table>
+                        {{-- Seleccionados: cada producto en dos líneas (datos arriba, campos abajo) para que
+                             el nombre se lea completo a cualquier ancho. Las filas las genera el JS. --}}
+                        <div id="tablaSeleccionados" class="hidden">
+                            <div id="filasSeleccionados" class="divide-y divide-slate-100"></div>
+                        </div>
                     </div>
 
-                    {{-- Pie: totales + IGV + botón guardar --}}
-                    <div class="border-t border-slate-200 bg-slate-50 px-4 py-3 shrink-0 space-y-2">
-                        <div class="flex items-center justify-between text-xs text-slate-500">
-                            <span>Subtotal</span>
-                            <span id="resumenSubtotal" class="font-medium text-slate-700">S/. 0.00</span>
+                    {{-- Pie compacto en una fila: subtotal + IGV | total + botón guardar (deja el alto a la lista) --}}
+                    <div class="border-t border-slate-200 bg-slate-50 px-4 py-2.5 shrink-0 flex flex-wrap items-center gap-x-5 gap-y-2">
+                        <div class="text-xs text-slate-500">
+                            Subtotal <span id="resumenSubtotal" class="ml-1 font-medium text-slate-700">S/. 0.00</span>
                         </div>
-                        <div class="flex items-center justify-between text-xs text-slate-500">
-                            <label for="tax">IGV / Impuesto</label>
-                            <div class="relative w-28">
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <label for="tax">IGV</label>
+                            <div class="relative w-24">
                                 <span
                                     class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">S/.</span>
                                 <input type="number" id="tax" name="tax" min="0" step="0.01"
@@ -257,14 +259,15 @@
                                     oninput="recalcularTotales()">
                             </div>
                         </div>
-                        <div class="flex items-center justify-between font-bold text-sm border-t border-slate-200 pt-2">
-                            <span class="text-slate-700">Total</span>
-                            <span id="resumenTotal" class="text-emerald-700">S/. 0.00</span>
+                        <div class="ml-auto flex items-center gap-4">
+                            <p class="text-sm font-bold text-slate-700">
+                                Total <span id="resumenTotal" class="ml-1 text-lg text-emerald-700">S/. 0.00</span>
+                            </p>
+                            <button type="submit"
+                                class="px-5 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2">
+                                <i class="fas fa-save text-xs"></i> Registrar compra
+                            </button>
                         </div>
-                        <button type="submit"
-                            class="w-full mt-1 px-4 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2">
-                            <i class="fas fa-save text-xs"></i> Registrar compra
-                        </button>
                     </div>
 
                 </div>
@@ -412,59 +415,67 @@
             const item = seleccionados.get(code);
             const idx = item.idx;
 
-            const tbody = document.getElementById('filasSeleccionados');
-            const tr = document.createElement('tr');
-            tr.className = 'divide-y divide-slate-50 hover:bg-slate-50 transition-colors';
-            tr.dataset.code = code;
-            tr.innerHTML = `
-            <td class="px-4 py-2.5">
-                <input type="hidden" name="items[${idx}][product_code]" value="${code}">
-                <p class="font-medium text-slate-800 text-xs leading-tight">${item.name}</p>
-                <p class="text-[10px] text-slate-400 font-mono">${code}</p>
+            const lista = document.getElementById('filasSeleccionados');
+            const fila = document.createElement('div');
+            fila.className = 'item-seleccionado px-4 py-3 hover:bg-slate-50 transition-colors';
+            fila.dataset.code = code;
+            fila.innerHTML = `
+            <input type="hidden" name="items[${idx}][product_code]" value="${code}">
+            <div class="flex items-start gap-3">
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium text-slate-800 text-sm leading-tight nombre-item"></p>
+                    <p class="text-[10px] text-slate-400 font-mono">${code}</p>
+                </div>
                 ${item.presentations.length ? `
                 <select name="items[${idx}][presentation_id]" data-code="${code}" data-field="presentation"
-                    class="input-seleccionado mt-1 w-full px-1.5 py-1 text-[11px] border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    class="input-seleccionado w-40 shrink-0 px-2 py-1 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <option value="" data-factor="1">${item.unit} (1 unidad)</option>
                     ${item.presentations.map(p => `<option value="${p.id}" data-factor="${p.amount}">${p.label} (${p.amount} unid.)</option>`).join('')}
                 </select>` : ''}
-                <p class="text-[10px] text-emerald-700 mt-1 hint-unidades" data-code="${code}"></p>
-            </td>
-            <td class="px-3 py-2.5">
-                <input type="number" name="items[${idx}][quantity]"
-                    value="${item.quantity}" min="1" step="1" required
-                    data-code="${code}" data-field="quantity"
-                    class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 input-seleccionado">
-            </td>
-            <td class="px-3 py-2.5">
-                <div class="relative">
-                    <span class="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">S/.</span>
-                    <input type="number" name="items[${idx}][unit_cost]"
-                        value="${item.unitCost.toFixed(2)}" min="0" step="0.01" required
-                        data-code="${code}" data-field="unitCost"
-                        class="w-full pl-6 pr-2 py-1.5 text-xs border border-slate-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-emerald-500 input-seleccionado">
-                </div>
-            </td>
-            <td class="px-3 py-2.5 text-right text-xs font-medium text-slate-700 celda-subtotal" data-code="${code}">
-                S/. ${(item.quantity * item.unitCost).toFixed(2)}
-            </td>
-            <td class="px-3 py-2.5">
-                <input type="date" name="items[${idx}][expiration_date]"
-                    class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            </td>
-            <td class="px-3 py-2.5">
-                <input type="text" name="items[${idx}][batch]"
-                    class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    placeholder="Ej: L-24">
-            </td>
-            <td class="px-3 py-2.5 text-center">
-                <button type="button" data-code="${code}"
-                        class="btn-quitar w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors mx-auto">
+                <p class="shrink-0 w-24 text-right text-sm font-semibold text-slate-700 celda-subtotal" data-code="${code}">
+                    S/. ${(item.quantity * item.unitCost).toFixed(2)}
+                </p>
+                <button type="button" data-code="${code}" title="Quitar"
+                        class="btn-quitar shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
                     <i class="fas fa-trash text-[10px] pointer-events-none"></i>
                 </button>
-            </td>
+            </div>
+            <p class="text-[10px] text-emerald-700 mt-0.5 hint-unidades" data-code="${code}"></p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                <label class="block">
+                    <span class="block text-[10px] font-medium text-slate-500 mb-0.5">Cantidad</span>
+                    <input type="number" name="items[${idx}][quantity]"
+                        value="${item.quantity}" min="1" step="1" required
+                        data-code="${code}" data-field="quantity"
+                        class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 input-seleccionado">
+                </label>
+                <label class="block">
+                    <span class="block text-[10px] font-medium text-slate-500 mb-0.5">Costo c/u</span>
+                    <span class="relative block">
+                        <span class="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">S/.</span>
+                        <input type="number" name="items[${idx}][unit_cost]"
+                            value="${item.unitCost.toFixed(2)}" min="0" step="0.01" required
+                            data-code="${code}" data-field="unitCost"
+                            class="w-full pl-6 pr-2 py-1.5 text-xs border border-slate-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-emerald-500 input-seleccionado">
+                    </span>
+                </label>
+                <label class="block">
+                    <span class="block text-[10px] font-medium text-slate-500 mb-0.5">Vencimiento</span>
+                    <input type="date" name="items[${idx}][expiration_date]"
+                        class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </label>
+                <label class="block">
+                    <span class="block text-[10px] font-medium text-slate-500 mb-0.5">Lote</span>
+                    <input type="text" name="items[${idx}][batch]"
+                        class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        placeholder="Ej: L-24">
+                </label>
+            </div>
             `;
+            // El nombre va como texto (no HTML) por si trae caracteres especiales
+            fila.querySelector('.nombre-item').textContent = item.name;
 
-            tbody.appendChild(tr);
+            lista.appendChild(fila);
             pintarHintUnidades(code);
         }
 
@@ -482,7 +493,7 @@
         // ── Actualiza los inputs de una fila ya existente ───────────────────────────
         function actualizarFilaSeleccionada(code) {
             const item = seleccionados.get(code);
-            const fila = document.querySelector(`#filasSeleccionados tr[data-code="${code}"]`);
+            const fila = document.querySelector(`#filasSeleccionados .item-seleccionado[data-code="${code}"]`);
             if (!fila) return;
             fila.querySelector(`input[data-field="quantity"]`).value = item.quantity;
             const subtotal = item.quantity * item.unitCost;
@@ -499,7 +510,7 @@
             const item = seleccionados.get(code);
             if (!item) return;
 
-            const fila = document.querySelector(`#filasSeleccionados tr[data-code="${code}"]`);
+            const fila = document.querySelector(`#filasSeleccionados .item-seleccionado[data-code="${code}"]`);
 
             if (field === 'quantity') item.quantity = parseInt(input.value) || 1;
             if (field === 'unitCost') item.unitCost = parseFloat(input.value) || 0;
@@ -524,7 +535,7 @@
             if (!btn) return;
             const code = btn.dataset.code;
             seleccionados.delete(code);
-            document.querySelector(`#filasSeleccionados tr[data-code="${code}"]`).remove();
+            document.querySelector(`#filasSeleccionados .item-seleccionado[data-code="${code}"]`).remove();
             actualizarUI();
         });
 
@@ -546,9 +557,65 @@
             tabla.classList.toggle('hidden', count === 0);
             btnLim.classList.toggle('hidden', count === 0);
             document.getElementById('contadorSeleccionados').textContent = count;
+            document.getElementById('contadorPestana').textContent = count;
 
             recalcularTotales();
         }
+
+        // ── Pestañas (< 1280 px): muestra un panel a la vez. En pantallas anchas se ven ambos ──
+        const pestanas = document.querySelectorAll('.pestana-compra');
+        function mostrarPanel(panel) {
+            document.querySelectorAll('[data-panel-compra]').forEach(p => {
+                p.classList.toggle('max-xl:hidden', p.dataset.panelCompra !== panel);
+            });
+            pestanas.forEach(b => {
+                const activa = b.dataset.panel === panel;
+                b.classList.toggle('bg-white', activa);
+                b.classList.toggle('text-emerald-700', activa);
+                b.classList.toggle('shadow-sm', activa);
+                b.classList.toggle('text-slate-600', !activa);
+            });
+        }
+        pestanas.forEach(b => b.addEventListener('click', () => mostrarPanel(b.dataset.panel)));
+
+        // Al agregar desde el catálogo en tablet, el contador de la pestaña "late" para que se note
+        document.getElementById('cuerpoProductos').addEventListener('click', e => {
+            if (!e.target.closest('.fila-producto')) return;
+            const badge = document.getElementById('contadorPestana');
+            badge.classList.remove('animate-ping-once');
+            void badge.offsetWidth;
+            badge.classList.add('animate-ping-once');
+        });
+
+        // ── Datos del documento: plegar / desplegar con un resumen de lo llenado ────────
+        const camposDoc = document.getElementById('camposDocumento');
+        const resumenDoc = document.getElementById('resumenDocumento');
+        const btnPlegar = document.getElementById('btnPlegarDocumento');
+        function textoResumenDocumento() {
+            const f = document.getElementById('formCompra');
+            const tipo = f.document_type.selectedOptions[0]?.text.trim();
+            const partes = [tipo, f.document_number.value.trim(), f.supplier.value.trim(),
+                f.payment_condition.selectedOptions[0]?.text.trim(), f.purchased_at.value.split('-').reverse().join('/')];
+            return partes.filter(Boolean).join(' · ');
+        }
+        // En pantallas bajas (laptop 14"), al agregar el primer producto el bloque se pliega solo
+        // para dejar espacio a la lista; se puede volver a abrir con "Mostrar".
+        let plegadoAutomatico = false;
+        document.getElementById('cuerpoProductos').addEventListener('click', e => {
+            if (plegadoAutomatico || !e.target.closest('.fila-producto') || window.innerHeight >= 800) return;
+            plegadoAutomatico = true;
+            if (!camposDoc.classList.contains('hidden')) btnPlegar.click();
+        });
+
+        btnPlegar.addEventListener('click', () => {
+            const plegar = !camposDoc.classList.contains('hidden');
+            camposDoc.classList.toggle('hidden', plegar);
+            resumenDoc.classList.toggle('hidden', !plegar);
+            resumenDoc.textContent = plegar ? textoResumenDocumento() : '';
+            btnPlegar.innerHTML = plegar
+                ? '<span>Mostrar</span> <i class="fas fa-chevron-down text-[10px]"></i>'
+                : '<span>Ocultar</span> <i class="fas fa-chevron-up text-[10px]"></i>';
+        });
 
         // ── Calcular totales ─────────────────────────────────────────────────────────
         function recalcularTotales() {
@@ -574,7 +641,7 @@
                 item.unitCost = p.cost;
                 seleccionados.set(p.code, item);
                 actualizarFilaSeleccionada(p.code);
-                document.querySelector(`#filasSeleccionados tr[data-code="${CSS.escape(p.code)}"] input[data-field="unitCost"]`).value = p.cost.toFixed(2);
+                document.querySelector(`#filasSeleccionados .item-seleccionado[data-code="${CSS.escape(p.code)}"] input[data-field="unitCost"]`).value = p.cost.toFixed(2);
                 recalcularTotales();
             });
         });
