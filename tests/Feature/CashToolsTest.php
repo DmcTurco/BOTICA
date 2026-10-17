@@ -13,6 +13,34 @@ uses(RefreshDatabase::class);
 
 // ── Gastos e ingresos ─────────────────────────────────────────
 
+it('el listado y el formulario de movimientos son pantallas separadas', function () {
+    $employee = loginEmployee();
+
+    // Sin caja abierta: el listado avisa y el formulario no se abre
+    $this->get(route('employee.cash-movements.index'))->assertOk()->assertSee('No tienes una caja abierta')->assertDontSee('Nuevo movimiento');
+    $this->get(route('employee.cash-movements.create'))->assertRedirect(route('employee.cash-movements.index'));
+
+    openRegister($employee, 100, 0);
+
+    $this->get(route('employee.cash-movements.index'))->assertOk()
+        ->assertSee('Nuevo movimiento')
+        ->assertDontSee('name="concept"', false);                 // el listado ya no tiene el formulario
+    $this->get(route('employee.cash-movements.create'))->assertOk()
+        ->assertViewIs('employee.pages.cash-movements.form')
+        ->assertSee('name="concept"', false);
+
+    // Un error (gasto mayor al efectivo) vuelve al formulario con lo escrito
+    $this->from(route('employee.cash-movements.create'))
+        ->post(route('employee.cash-movements.store'), ['type' => 'expense', 'concept' => 'Compra grande', 'amount' => 500])
+        ->assertRedirect(route('employee.cash-movements.create'))
+        ->assertSessionHasInput('concept', 'Compra grande');
+
+    // Registrado: vuelve al listado
+    $this->from(route('employee.cash-movements.create'))
+        ->post(route('employee.cash-movements.store'), ['type' => 'expense', 'concept' => 'Flete', 'amount' => 20])
+        ->assertRedirect(route('employee.cash-movements.index'));
+});
+
 it('el efectivo esperado suma ingresos y resta gastos', function () {
     $employee = loginEmployee();
     $register = openRegister($employee, 100, 50); // 150 en caja

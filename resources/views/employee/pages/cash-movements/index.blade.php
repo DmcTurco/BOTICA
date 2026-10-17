@@ -4,24 +4,30 @@
 @section('main-padding', 'p-2 md:p-3')
 
 @php
-    $emp = auth()->guard('employee')->user();
-    $canExpense = $emp->hasPrivilege(\App\Models\Employee::PRIV_GASTOS_DIA);
-    $canIncome  = $emp->hasPrivilege(\App\Models\Employee::PRIV_OTROS_INGRESOS);
-    $defaultType = old('type', $canExpense ? 'expense' : 'income');
     $money = fn ($n) => 'S/ ' . number_format($n, 2);
 @endphp
 
 @section('content-area')
-<div class="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
+<div class="flex-1 flex flex-col gap-3 min-h-0">
 
-    <div class="shrink-0">
-        <h1 class="text-xl font-bold text-slate-800">Gastos e Ingresos de Caja</h1>
-        <p class="text-sm text-slate-500 mt-0.5">Movimientos de efectivo que no son ventas. Se reflejan en el efectivo esperado al cerrar la caja.</p>
+    {{-- Header: el registro se hace en su propio formulario --}}
+    <div class="flex items-center justify-between gap-3 shrink-0">
+        <div>
+            <h1 class="text-xl font-bold text-slate-800">Gastos e Ingresos de Caja</h1>
+            <p class="text-sm text-slate-500 mt-0.5">Movimientos de efectivo que no son ventas. Se reflejan en el efectivo esperado al cerrar la caja.</p>
+        </div>
+        @if($caja)
+        <a href="{{ route('employee.cash-movements.create') }}"
+           class="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+            <i class="fas fa-plus text-xs"></i> Nuevo movimiento
+        </a>
+        @endif
     </div>
 
     @include('employee.partials.alerts')
 
     @if($caja)
+    {{-- Resumen de la caja abierta del empleado --}}
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 shrink-0">
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Apertura</p><p class="text-lg font-bold text-slate-800">{{ $money($caja->opening_amount) }}</p></div>
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Ventas en efectivo</p><p class="text-lg font-bold text-slate-800">{{ $money($caja->totalCash()) }}</p></div>
@@ -29,42 +35,6 @@
         <div class="bg-white rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-400">Gastos</p><p class="text-lg font-bold text-red-600">− {{ $money($caja->expenses()) }}</p></div>
         <div class="bg-sky-600 rounded-xl p-4 text-white"><p class="text-xs text-sky-200">Efectivo en caja</p><p class="text-lg font-bold">{{ $money($caja->expectedCash()) }}</p></div>
     </div>
-
-    <form action="{{ route('employee.cash-movements.store') }}" method="POST" class="bg-white rounded-xl border border-slate-200 shadow-sm shrink-0">
-        @csrf
-        <div class="px-5 py-3 bg-slate-50 border-b border-slate-200 rounded-t-xl flex items-center gap-2">
-            <i class="fas fa-money-bill-transfer text-emerald-600 text-xs"></i>
-            <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Nuevo movimiento</span>
-        </div>
-        <div class="p-5 grid grid-cols-1 sm:grid-cols-6 gap-4">
-            <div class="sm:col-span-2">
-                <label class="block text-xs font-medium text-slate-600 mb-1">Tipo <span class="text-red-500">*</span></label>
-                <select name="type" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                    @if($canExpense)<option value="expense" {{ $defaultType === 'expense' ? 'selected' : '' }}>Gasto (sale dinero)</option>@endif
-                    @if($canIncome)<option value="income" {{ $defaultType === 'income' ? 'selected' : '' }}>Otro ingreso (entra dinero)</option>@endif
-                </select>
-            </div>
-            <div class="sm:col-span-2">
-                <label class="block text-xs font-medium text-slate-600 mb-1">Concepto <span class="text-red-500">*</span></label>
-                <input type="text" name="concept" required maxlength="150" value="{{ old('concept') }}" placeholder="Ej: Pago de flete, sencillo recibido"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
-            </div>
-            <div class="sm:col-span-2">
-                <label class="block text-xs font-medium text-slate-600 mb-1">Monto (S/) <span class="text-red-500">*</span></label>
-                <input type="number" name="amount" required min="0.01" step="0.01" value="{{ old('amount') }}"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
-            </div>
-            <div class="sm:col-span-5">
-                <input type="text" name="notes" maxlength="500" value="{{ old('notes') }}" placeholder="Nota opcional"
-                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
-            </div>
-            <div class="sm:col-span-1 flex justify-end">
-                <button type="submit" class="w-full px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm flex items-center justify-center gap-2">
-                    <i class="fas fa-save text-xs"></i> Registrar
-                </button>
-            </div>
-        </div>
-    </form>
     @else
     <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800 flex items-center gap-2 shrink-0">
         <i class="fas fa-lock"></i> No tienes una caja abierta. <a href="{{ route('employee.cash-register.show-open') }}" class="underline font-medium">Abre tu caja</a> para registrar movimientos.
@@ -79,10 +49,11 @@
         </form>
     </div>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+    {{-- Tabla: ocupa el alto disponible y hace scroll por dentro --}}
+    <div class="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="flex-1 min-h-0 overflow-auto">
             <table class="w-full text-sm">
-                <thead>
+                <thead class="sticky top-0 z-10">
                     <tr class="bg-slate-50 border-b border-slate-200">
                         <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Concepto</th>
@@ -118,7 +89,7 @@
                 </tbody>
             </table>
         </div>
-        @if($movements->hasPages())<div class="px-5 py-3 border-t border-slate-200 bg-slate-50">{{ $movements->links() }}</div>@endif
+        @if($movements->hasPages())<div class="shrink-0 px-5 py-3 border-t border-slate-200 bg-slate-50">{{ $movements->links() }}</div>@endif
     </div>
 </div>
 

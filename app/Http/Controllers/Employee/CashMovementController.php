@@ -44,6 +44,24 @@ class CashMovementController extends Controller
     }
 
     /**
+     * Formulario para registrar un gasto u otro ingreso en la caja abierta del empleado.
+     * Sin caja abierta no hay dónde registrarlo: vuelve al listado con el aviso.
+     */
+    public function create()
+    {
+        $employee = auth()->guard('employee')->user();
+
+        $caja = CashRegister::currentOpen($employee->id)->latest('opened_at')->first();
+
+        if (!$caja) {
+            return redirect()->route('employee.cash-movements.index')
+                ->with('error', 'Abre tu caja antes de registrar movimientos.');
+        }
+
+        return view('employee.pages.cash-movements.form', compact('caja'));
+    }
+
+    /**
      * Registra el movimiento en la caja abierta del empleado.
      * Un gasto no puede superar el efectivo que hay en el cajón.
      */

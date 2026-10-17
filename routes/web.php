@@ -200,6 +200,7 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware(['auth:employee', 'subscriptio
     // Caja: gastos del día / otros ingresos, historial de cierres e impresión del día
     Route::middleware('privilege:gastos_dia,otros_ingresos')->group(function () {
         Route::get('cash-movements', [Employee\CashMovementController::class, 'index'])->name('cash-movements.index');
+        Route::get('cash-movements/create', [Employee\CashMovementController::class, 'create'])->name('cash-movements.create');
         Route::post('cash-movements', [Employee\CashMovementController::class, 'store'])->name('cash-movements.store');
         Route::post('cash-movements/{movement}/void', [Employee\CashMovementController::class, 'void'])->name('cash-movements.void');
     });
