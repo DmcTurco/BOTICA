@@ -58,17 +58,15 @@
                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                 </div>
 
-                <div class="sm:col-span-3">
+                {{-- Forma farmacéutica: sugerencias comunes en una lista propia (no el datalist del navegador); se puede escribir otra --}}
+                <div class="sm:col-span-3 relative">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Forma farmacéutica</label>
-                    <input type="text" name="pharmaceutical_form" maxlength="50" list="formas"
+                    <input type="text" name="pharmaceutical_form" id="formaInput" maxlength="50" autocomplete="off"
                            value="{{ old('pharmaceutical_form', $formula->pharmaceutical_form ?? '') }}"
                            placeholder="Crema, jarabe, cápsulas, solución..."
+                           data-formas="{{ json_encode(['Crema', 'Ungüento', 'Gel', 'Loción', 'Solución', 'Jarabe', 'Suspensión', 'Cápsulas', 'Tabletas', 'Óvulos', 'Polvo']) }}"
                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
-                    <datalist id="formas">
-                        @foreach(['Crema', 'Ungüento', 'Gel', 'Loción', 'Solución', 'Jarabe', 'Suspensión', 'Cápsulas', 'Tabletas', 'Óvulos', 'Polvo'] as $forma)
-                            <option value="{{ $forma }}">
-                        @endforeach
-                    </datalist>
+                    <div id="formaLista" class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-auto"></div>
                 </div>
 
                 <div class="sm:col-span-2">
@@ -325,6 +323,33 @@ document.addEventListener('click', e => {
 document.getElementById('sellInPos').addEventListener('change', function () {
     document.getElementById('bloqueProducto').classList.toggle('hidden', !this.checked);
 });
+
+// Forma farmacéutica: lista de sugerencias (se filtra al escribir; se puede escribir otra)
+(function () {
+    const input  = document.getElementById('formaInput');
+    const listaF = document.getElementById('formaLista');
+    const formas = JSON.parse(input.dataset.formas);
+    const esc    = t => { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
+
+    function mostrar() {
+        const q = input.value.toLowerCase().trim();
+        const halladas = formas.filter(f => !q || f.toLowerCase().includes(q));
+        if (!halladas.length || (halladas.length === 1 && halladas[0].toLowerCase() === q)) { listaF.classList.add('hidden'); return; }
+        listaF.innerHTML = halladas.map(f => `<button type="button" class="forma-item w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-sky-50 border-b border-slate-100 last:border-0">${esc(f)}</button>`).join('');
+        listaF.classList.remove('hidden');
+    }
+
+    input.addEventListener('focus', mostrar);
+    input.addEventListener('input', mostrar);
+    listaF.addEventListener('mousedown', e => {
+        const item = e.target.closest('.forma-item');
+        if (!item) return;
+        e.preventDefault();
+        input.value = item.textContent;
+        listaF.classList.add('hidden');
+    });
+    input.addEventListener('blur', () => listaF.classList.add('hidden'));
+})();
 
 // Carga inicial (edición o regreso por error de validación)
 insumosIniciales.forEach(i => agregarInsumo(i.product_code, i.quantity, i.notes));

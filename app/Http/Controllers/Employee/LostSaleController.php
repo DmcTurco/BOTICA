@@ -38,14 +38,19 @@ class LostSaleController extends Controller
     }
 
     /**
-     * Formulario para anotar lo que el cliente pidió y no se pudo vender (catálogo como sugerencia).
+     * Formulario para anotar lo que el cliente pidió y no se pudo vender
+     * (el catálogo, con el stock de la sede, sirve de sugerencia).
      */
     public function create()
     {
         $employee = auth()->guard('employee')->user();
 
+        $stocks = \App\Models\BranchStock::where('branch_id', $employee->branch_id)->pluck('stock_actual', 'product_code');
+
         $products = Product::where('company_id', $employee->company_id)->where('status', 1)
-            ->orderBy('name')->get(['code', 'name'])->map(fn ($p) => ['code' => $p->code, 'name' => $p->name])->all();
+            ->orderBy('name')->get(['code', 'name'])
+            ->map(fn ($p) => ['code' => $p->code, 'name' => $p->name, 'stock' => (float) ($stocks[$p->code] ?? 0)])
+            ->all();
 
         return view('employee.pages.lost-sales.form', compact('products'));
     }
