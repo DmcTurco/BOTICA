@@ -59,6 +59,37 @@ it('"Recordar sesión" mantiene la sesión aunque se pierda la sesión del naveg
         ->and(Auth::guard($guard)->viaRemember())->toBeTrue();
 })->with(['admin', 'company', 'employee']);
 
+it('cerrar sesión en un panel no cierra el otro panel abierto en el mismo navegador', function () {
+    [$employee] = rememberUser('employee');
+    [$company]  = rememberUser('company');
+    $this->actingAs($employee, 'employee')->actingAs($company, 'company');
+
+    // En los tests la ruta de logout de Fortify queda protegida con el guard de arranque ("web"),
+    // así que se llama directo al controlador que reemplaza al de Fortify
+    $session = app('session')->driver();
+    $session->start();
+    $token   = $session->token();
+    $logout  = function (string $guard) use ($session) {
+        usePanel($guard);
+        $request = Illuminate\Http\Request::create("/{$guard}/logout", 'POST');
+        $request->setLaravelSession($session);
+
+        return app(Laravel\Fortify\Http\Controllers\AuthenticatedSessionController::class)->destroy($request);
+    };
+
+    $logout('employee');
+
+    // Sale solo el empleado; la compañía sigue y su pestaña conserva el token (sin 419)
+    expect(Auth::guard('employee')->check())->toBeFalse()
+        ->and(Auth::guard('company')->id())->toBe($company->getKey())
+        ->and($session->token())->toBe($token);
+
+    // Al salir del último panel se invalida la sesión completa
+    $logout('company');
+    expect(Auth::guard('company')->check())->toBeFalse()
+        ->and($session->token())->not->toBe($token);
+});
+
 it('sin marcar "Recordar sesión" no entrega la cookie de recordarme', function (string $guard) {
     usePanel($guard);
     [, $email] = rememberUser($guard);

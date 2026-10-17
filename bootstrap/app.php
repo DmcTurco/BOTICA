@@ -33,5 +33,39 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Token CSRF vencido (419 "Page Expired"): pasa con una página abierta mucho tiempo o
+        // cuando la sesión se cerró en otra pestaña. En vez de la página de error, se resuelve solo.
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, \Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() !== 419) {
+                return null;
+            }
+
+            $message = 'La página estuvo abierta mucho tiempo y venció. Revisa los datos y vuelve a intentarlo.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 419);
+            }
+
+            $panel = $request->routeType();
+            $login = $panel ? url($panel . '/login') : url('/');
+
+            // Cerrar sesión: igual se quería salir, se va directo al login
+            if (str_ends_with($request->path(), 'logout')) {
+                if ($panel) {
+                    \Illuminate\Support\Facades\Auth::guard($panel)->logout();
+                }
+
+                return redirect($login);
+            }
+
+            // Ingresar con la página de login vieja: vuelve al login con el correo ya escrito
+            if (str_ends_with($request->path(), 'login')) {
+                return redirect($login)
+                    ->withInput($request->only('email'))
+                    ->withErrors(['email' => 'La página de ingreso estuvo abierta mucho tiempo. Vuelve a escribir tu contraseña.']);
+            }
+
+            return redirect()->back()
+                ->withInput($request->except(['_token', 'password', 'password_confirmation', 'current_password']))
+                ->with('error', $message);
+        });
     })->create();

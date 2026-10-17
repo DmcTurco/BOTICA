@@ -29,6 +29,12 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Cerrar sesión sale solo del panel actual (ver App\Http\Controllers\Auth\AuthenticatedSessionController)
+        $this->app->bind(
+            \Laravel\Fortify\Http\Controllers\AuthenticatedSessionController::class,
+            \App\Http\Controllers\Auth\AuthenticatedSessionController::class,
+        );
+
         $routeType = request()->routeType();
         if ($routeType) {
             config([
