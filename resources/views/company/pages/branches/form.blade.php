@@ -90,11 +90,12 @@
                         Código de establecimiento SUNAT <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="sunat_establishment_code" maxlength="4" inputmode="numeric"
-                           value="{{ old('sunat_establishment_code', $branch->sunat_establishment_code ?? '0000') }}"
+                           value="{{ old('sunat_establishment_code', $branch->sunat_establishment_code ?? $suggestedCode ?? '0000') }}"
                            placeholder="0000"
                            class="w-full sm:w-40 px-3 py-2.5 text-sm font-mono border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('sunat_establishment_code') border-red-400 @enderror">
                     <p class="text-xs text-slate-400 mt-1">
-                        4 dígitos. <strong>0000</strong> es el domicilio fiscal; las demás sedes usan el código del anexo registrado en SUNAT (0001, 0002...).
+                        4 dígitos, tal como figura en tu ficha RUC. <strong>0000</strong> es el domicilio fiscal; las demás sedes usan el código del anexo registrado en SUNAT (0001, 0002...).
+                        Va en cada boleta y factura de la sede, y no se puede repetir entre sedes.
                     </p>
                     @error('sunat_establishment_code')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>

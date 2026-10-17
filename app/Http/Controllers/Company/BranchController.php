@@ -23,15 +23,20 @@ class BranchController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('company.pages.branches.index', compact('branches'));
+        // Sedes que comparten código de establecimiento: sus comprobantes declaran el mismo local
+        $duplicateCodes = Branch::duplicateEstablishmentCodes($company->id);
+
+        return view('company.pages.branches.index', compact('branches', 'duplicateCodes'));
     }
 
     /**
-     * Muestra el formulario para crear una sede.
+     * Muestra el formulario para crear una sede, con el siguiente código de establecimiento libre.
      */
     public function create()
     {
-        return view('company.pages.branches.form');
+        $suggestedCode = Branch::nextEstablishmentCode(auth()->guard('company')->id());
+
+        return view('company.pages.branches.form', compact('suggestedCode'));
     }
 
     /**

@@ -49,6 +49,20 @@
                 </div>
                 @endif
 
+                {{-- Cada comprobante declara el local que lo emite: las sedes no pueden compartir código --}}
+                @if(count($duplicateCodes ?? []))
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                    <i class="fas fa-triangle-exclamation mr-1.5"></i>
+                    <strong>Revisa los códigos de establecimiento de tus sedes.</strong>
+                    @foreach($duplicateCodes as $code => $names)
+                        <span class="font-mono font-semibold">{{ $code }}</span>: {{ implode(', ', $names) }}.
+                    @endforeach
+                    Cada boleta y factura indica desde qué local se emitió; usa el código de cada establecimiento de tu
+                    ficha RUC (0000 domicilio fiscal, 0001, 0002... anexos).
+                    <a href="{{ route('company.branches.index') }}" class="font-semibold underline underline-offset-2">Ir a Sedes</a>
+                </div>
+                @endif
+
                 {{-- ── 1. Datos fiscales ─────────────────────────── --}}
                 <section class="space-y-5">
                     <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">1. Datos fiscales</h2>

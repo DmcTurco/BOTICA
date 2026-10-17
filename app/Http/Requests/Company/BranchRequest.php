@@ -4,6 +4,7 @@ namespace App\Http\Requests\Company;
 
 use App\Models\DocumentSeries;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class BranchRequest extends FormRequest
@@ -45,7 +46,14 @@ class BranchRequest extends FormRequest
             'address'                  => 'nullable|string|max:200',
             'phone'                    => 'nullable|string|max:30',
             'email'                    => 'nullable|email|max:100',
-            'sunat_establishment_code' => 'required|digits:4',
+            // Código del establecimiento en la ficha RUC (0000 domicilio fiscal, 0001... anexos).
+            // Va en cada comprobante: dos sedes de la empresa no pueden declarar el mismo local.
+            'sunat_establishment_code' => [
+                'required', 'digits:4',
+                Rule::unique('branches', 'sunat_establishment_code')
+                    ->where('company_id', auth()->guard('company')->id())
+                    ->ignore($this->route('branch')?->id),
+            ],
             'status'                   => 'required|in:0,1',
 
             // Series de la sede (solo al editar): [id de la serie => texto de la serie]
@@ -136,6 +144,7 @@ class BranchRequest extends FormRequest
             'email.email'                       => 'Ingresa un email válido.',
             'sunat_establishment_code.required' => 'Ingresa el código de establecimiento SUNAT.',
             'sunat_establishment_code.digits'   => 'El código de establecimiento debe tener 4 dígitos (ej. 0000).',
+            'sunat_establishment_code.unique'   => 'Otra sede ya usa ese código de establecimiento. Cada sede tiene el suyo en la ficha RUC (0000 el domicilio fiscal, 0001, 0002... los anexos).',
         ];
     }
 }

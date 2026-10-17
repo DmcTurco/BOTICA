@@ -19,6 +19,25 @@
         </a>
     </div>
 
+    {{-- Sedes que comparten código de establecimiento: sus comprobantes declaran a SUNAT el mismo local --}}
+    @if(count($duplicateCodes))
+    <div class="shrink-0 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 flex gap-3">
+        <i class="fas fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+        <div>
+            <p class="font-semibold">Hay sedes con el mismo código de establecimiento SUNAT</p>
+            <ul class="mt-1 space-y-0.5">
+                @foreach($duplicateCodes as $code => $names)
+                <li><span class="font-mono font-semibold">{{ $code }}</span>: {{ implode(', ', $names) }}</li>
+                @endforeach
+            </ul>
+            <p class="mt-1.5 text-amber-700">
+                Cada boleta y factura indica desde qué local se emitió. Revisa en tu ficha RUC el código de cada
+                establecimiento (0000 el domicilio fiscal, 0001, 0002... los anexos) y corrígelo en cada sede.
+            </p>
+        </div>
+    </div>
+    @endif
+
     {{-- Tabla --}}
     <div class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 
@@ -62,7 +81,14 @@
                                 <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
                                     <i class="fas fa-building text-emerald-600 text-xs"></i>
                                 </div>
-                                <span class="font-semibold text-slate-800">{{ $branch->name }}</span>
+                                <div>
+                                    <span class="font-semibold text-slate-800">{{ $branch->name }}</span>
+                                    {{-- Código de establecimiento SUNAT (en ámbar si otra sede usa el mismo) --}}
+                                    <p class="text-[11px] font-mono {{ isset($duplicateCodes[$branch->sunat_establishment_code]) ? 'text-amber-600 font-semibold' : 'text-slate-400' }}"
+                                       title="Código de establecimiento SUNAT">
+                                        Establecimiento {{ $branch->sunat_establishment_code }}
+                                    </p>
+                                </div>
                             </div>
                         </td>
                         <td class="px-4 py-3 text-slate-500">{{ $branch->address ?: '—' }}</td>

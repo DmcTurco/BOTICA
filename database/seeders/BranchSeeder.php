@@ -25,6 +25,7 @@ class BranchSeeder extends Seeder
             [
                 'company_id' => 1,
                 'name'       => 'Sede Principal — Centro',
+                'sunat_establishment_code' => '0000', // domicilio fiscal
                 'address'    => 'Av. Abancay 123, Cercado de Lima',
                 'phone'      => '+51 1 428-0000',
                 'email'      => 'sede.centro@botica.com',
@@ -35,6 +36,7 @@ class BranchSeeder extends Seeder
             [
                 'company_id' => 1,
                 'name'       => 'Sede Norte — Los Olivos',
+                'sunat_establishment_code' => '0001', // establecimiento anexo
                 'address'    => 'Av. Universitaria 4500, Los Olivos',
                 'phone'      => '+51 1 533-1100',
                 'email'      => 'sede.norte@botica.com',
@@ -45,6 +47,7 @@ class BranchSeeder extends Seeder
             [
                 'company_id' => 1,
                 'name'       => 'Sede Sur — Miraflores',
+                'sunat_establishment_code' => '0002', // establecimiento anexo
                 'address'    => 'Av. Larco 740, Miraflores',
                 'phone'      => '+51 1 241-5500',
                 'email'      => 'sede.sur@botica.com',
@@ -55,6 +58,7 @@ class BranchSeeder extends Seeder
             [
                 'company_id' => 1,
                 'name'       => 'Sede Este — San Juan de Lurigancho',
+                'sunat_establishment_code' => '0003', // establecimiento anexo
                 'address'    => 'Av. Próceres de la Independencia 1200, SJL',
                 'phone'      => '+51 1 376-9900',
                 'email'      => 'sede.este@botica.com',

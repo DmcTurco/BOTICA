@@ -22,7 +22,10 @@ class SunatSettingController extends Controller
         $setting = CompanySunatSetting::firstOrNew(['company_id' => $company->id]);
         $setting->setRelation('company', $company);
 
-        return view('company.pages.sunat.form', compact('company', 'setting'));
+        // Sedes con el mismo código de establecimiento (sus comprobantes declararían el mismo local)
+        $duplicateCodes = \App\Models\Branch::duplicateEstablishmentCodes($company->id);
+
+        return view('company.pages.sunat.form', compact('company', 'setting', 'duplicateCodes'));
     }
 
     /**
