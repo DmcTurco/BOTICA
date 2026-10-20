@@ -842,8 +842,12 @@ function maxCantidad(productId, factor, stock, exceptoClave) {
     return Math.floor(Math.max(stock - unidadesEnCarrito(productId, exceptoClave), 0) / factor + 1e-9);
 }
 
+// Escapa texto para HTML y también para atributos: .html() no convierte las comillas, y una
+// comilla dentro de data-presentations="[{"id":...}]" cortaba el atributo
 function escapar(texto) {
-    return $('<div>').text(texto == null ? '' : String(texto)).html();
+    return $('<div>').text(texto == null ? '' : String(texto)).html()
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 // ── Modal de cantidad / presentación ─────────────────────────
