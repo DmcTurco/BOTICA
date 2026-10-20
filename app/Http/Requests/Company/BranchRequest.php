@@ -23,6 +23,9 @@ class BranchRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        // Casilla: 1 si viene marcada; si no, 0 (la sede tiene su propio código de anexo)
+        $this->merge(['uses_fiscal_establishment' => $this->boolean('uses_fiscal_establishment') ? 1 : 0]);
+
         if (is_array($this->input('series'))) {
             $this->merge([
                 'series' => array_map(
@@ -46,12 +49,17 @@ class BranchRequest extends FormRequest
             'address'                  => 'nullable|string|max:200',
             'phone'                    => 'nullable|string|max:30',
             'email'                    => 'nullable|email|max:100',
+            // El local aún no es anexo en SUNAT: emite con el código del domicilio fiscal (0000)
+            'uses_fiscal_establishment' => 'required|in:0,1',
             // Código del establecimiento en la ficha RUC (0000 domicilio fiscal, 0001... anexos).
-            // Va en cada comprobante: dos sedes de la empresa no pueden declarar el mismo local.
+            // Va en cada comprobante: dos sedes de la empresa no pueden declarar el mismo local
+            // (no cuentan las que usan el del domicilio fiscal; en ellas el campo no se guarda).
             'sunat_establishment_code' => [
+                'exclude_if:uses_fiscal_establishment,1',
                 'required', 'digits:4',
                 Rule::unique('branches', 'sunat_establishment_code')
                     ->where('company_id', auth()->guard('company')->id())
+                    ->where('uses_fiscal_establishment', 0)
                     ->ignore($this->route('branch')?->id),
             ],
             'status'                   => 'required|in:0,1',

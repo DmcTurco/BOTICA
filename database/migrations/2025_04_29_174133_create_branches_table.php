@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('phone', 30)->nullable();              // teléfono de contacto
             $table->string('email', 100)->nullable();             // email de la sede
             $table->string('sunat_establishment_code', 4)->default('0000'); // código de establecimiento anexo SUNAT (0000 = domicilio fiscal)
+            $table->unsignedTinyInteger('uses_fiscal_establishment')->default(0)
+                  ->comment('1 = el local aún no es anexo en SUNAT: emite con el código del domicilio fiscal (0000); 0 = usa su propio código');
             $table->unsignedTinyInteger('status')->default(1)
                   ->comment('1=activa, 0=inactiva');
             $table->timestamps();

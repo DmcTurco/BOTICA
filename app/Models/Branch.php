@@ -19,12 +19,17 @@ class Branch extends Model
         'phone',
         'email',
         'sunat_establishment_code',
+        'uses_fiscal_establishment',
         'status',
     ];
 
     protected $casts = [
-        'status' => 'integer',
+        'status'                    => 'integer',
+        'uses_fiscal_establishment' => 'integer',
     ];
+
+    /** Código del domicilio fiscal en la ficha RUC: siempre 0000 */
+    const FISCAL_ESTABLISHMENT_CODE = '0000';
 
     // ── Relaciones ──────────────────────────────────────────────
 
@@ -86,7 +91,20 @@ class Branch extends Model
 
     // ── Código de establecimiento SUNAT ─────────────────────────
     // Cada comprobante declara el local que lo emite con este código de la ficha RUC
-    // (0000 domicilio fiscal, 0001, 0002... anexos). No se puede repetir dentro de la empresa.
+    // (0000 domicilio fiscal, 0001, 0002... anexos). No se puede repetir dentro de la empresa,
+    // salvo las sedes que aún no son anexo en SUNAT: emiten con el código del domicilio fiscal.
+
+    /**
+     * Código de establecimiento que va en los comprobantes de la sede.
+     *
+     * @return string
+     */
+    public function sunatEstablishmentCode(): string
+    {
+        return $this->uses_fiscal_establishment === 1
+            ? self::FISCAL_ESTABLISHMENT_CODE
+            : ($this->sunat_establishment_code ?: self::FISCAL_ESTABLISHMENT_CODE);
+    }
 
     /**
      * Primer código libre de la empresa, para proponerlo al crear una sede.
@@ -96,7 +114,8 @@ class Branch extends Model
      */
     public static function nextEstablishmentCode(int $companyId): string
     {
-        $used = self::where('company_id', $companyId)->pluck('sunat_establishment_code')->flip();
+        $used = self::where('company_id', $companyId)->where('uses_fiscal_establishment', 0)
+            ->pluck('sunat_establishment_code')->flip();
 
         for ($n = 0; $n <= 9999; $n++) {
             $code = str_pad((string) $n, 4, '0', STR_PAD_LEFT);
@@ -110,7 +129,8 @@ class Branch extends Model
 
     /**
      * Códigos usados por más de una sede de la empresa: [código => [nombres de las sedes]].
-     * Sedes creadas antes de validar la unicidad pueden compartir el 0000.
+     * Sedes creadas antes de validar la unicidad pueden compartir el 0000. No cuentan las que
+     * usan a propósito el código del domicilio fiscal (aún no son anexo en SUNAT).
      *
      * @param  int  $companyId
      * @return array<string, array<int, string>>
@@ -118,6 +138,7 @@ class Branch extends Model
     public static function duplicateEstablishmentCodes(int $companyId): array
     {
         return self::where('company_id', $companyId)
+            ->where('uses_fiscal_establishment', 0)
             ->orderBy('name')
             ->get(['name', 'sunat_establishment_code'])
             ->groupBy('sunat_establishment_code')

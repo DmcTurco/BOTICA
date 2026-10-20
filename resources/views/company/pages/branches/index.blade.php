@@ -84,10 +84,16 @@
                                 <div>
                                     <span class="font-semibold text-slate-800">{{ $branch->name }}</span>
                                     {{-- Código de establecimiento SUNAT (en ámbar si otra sede usa el mismo) --}}
+                                    @if($branch->uses_fiscal_establishment === 1)
+                                    <p class="text-[11px] text-amber-600" title="El local aún no es anexo en SUNAT: emite con el código del domicilio fiscal">
+                                        <span class="font-mono">Establecimiento 0000</span> · anexo pendiente en SUNAT
+                                    </p>
+                                    @else
                                     <p class="text-[11px] font-mono {{ isset($duplicateCodes[$branch->sunat_establishment_code]) ? 'text-amber-600 font-semibold' : 'text-slate-400' }}"
                                        title="Código de establecimiento SUNAT">
                                         Establecimiento {{ $branch->sunat_establishment_code }}
                                     </p>
+                                    @endif
                                 </div>
                             </div>
                         </td>

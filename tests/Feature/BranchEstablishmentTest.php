@@ -48,6 +48,32 @@ it('al crear una sede propone el siguiente código libre', function () {
     $this->get(route('company.branches.create'))->assertOk()->assertViewHas('suggestedCode', '0002');
 });
 
+it('una sede que aún no es anexo en SUNAT emite con el código del domicilio fiscal', function () {
+    $this->actingAs(Company::find(1), 'company');
+
+    // Dos locales sin anexo: no piden código ni chocan con la sede 0000 ni entre ellos
+    $this->post(route('company.branches.store'), branchData(['name' => 'Local Norte', 'uses_fiscal_establishment' => 1, 'sunat_establishment_code' => '']))
+        ->assertSessionHasNoErrors();
+    $this->post(route('company.branches.store'), branchData(['name' => 'Local Sur', 'uses_fiscal_establishment' => 1]))
+        ->assertSessionHasNoErrors();
+
+    $norte = Branch::where('name', 'Local Norte')->first();
+    expect($norte->uses_fiscal_establishment)->toBe(1)
+        ->and($norte->sunatEstablishmentCode())->toBe('0000')
+        ->and(Branch::duplicateEstablishmentCodes(1))->toBe([])
+        // Cada local sigue con sus propias series
+        ->and($norte->documentSeries()->where('type_code', 'BOLETA')->value('series'))
+            ->not->toBe(Branch::where('name', 'Local Sur')->first()->documentSeries()->where('type_code', 'BOLETA')->value('series'));
+
+    $this->get(route('company.branches.index'))->assertOk()->assertSee('anexo pendiente en SUNAT')
+        ->assertDontSee('Hay sedes con el mismo código de establecimiento SUNAT');
+
+    // Al registrar el anexo se desmarca y se pone su código propio
+    $this->put(route('company.branches.update', $norte), branchData(['name' => 'Local Norte', 'sunat_establishment_code' => '0001']))
+        ->assertSessionHasNoErrors();
+    expect($norte->fresh()->sunatEstablishmentCode())->toBe('0001');
+});
+
 it('avisa cuando hay sedes con el mismo código (creadas antes de la validación)', function () {
     $this->actingAs(Company::find(1), 'company');
 

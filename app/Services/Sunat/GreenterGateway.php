@@ -401,7 +401,8 @@ class GreenterGateway implements SunatGateway
                     ->setDistrito($setting->district)
                     ->setUrbanizacion('-')
                     ->setDireccion($setting->fiscal_address)
-                    ->setCodLocal($order->branch?->sunat_establishment_code ?? '0000')
+                    // Sede que aún no es anexo en SUNAT: emite con el código del domicilio fiscal
+                    ->setCodLocal($order->branch?->sunatEstablishmentCode() ?? \App\Models\Branch::FISCAL_ESTABLISHMENT_CODE)
             );
     }
 

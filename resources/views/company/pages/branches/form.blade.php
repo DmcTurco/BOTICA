@@ -85,14 +85,15 @@
                 </div>
 
                 {{-- Código de establecimiento SUNAT --}}
+                @php $usesFiscal = (int) old('uses_fiscal_establishment', $branch->uses_fiscal_establishment ?? 0) === 1; @endphp
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">
                         Código de establecimiento SUNAT <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="sunat_establishment_code" maxlength="4" inputmode="numeric"
+                    <input type="text" name="sunat_establishment_code" id="establishmentCode" maxlength="4" inputmode="numeric"
                            value="{{ old('sunat_establishment_code', $branch->sunat_establishment_code ?? $suggestedCode ?? '0000') }}"
-                           placeholder="0000"
-                           class="w-full sm:w-40 px-3 py-2.5 text-sm font-mono border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('sunat_establishment_code') border-red-400 @enderror">
+                           placeholder="0000" @disabled($usesFiscal)
+                           class="w-full sm:w-40 px-3 py-2.5 text-sm font-mono border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-400 @error('sunat_establishment_code') border-red-400 @enderror">
                     <p class="text-xs text-slate-400 mt-1">
                         4 dígitos, tal como figura en tu ficha RUC. <strong>0000</strong> es el domicilio fiscal; las demás sedes usan el código del anexo registrado en SUNAT (0001, 0002...).
                         Va en cada boleta y factura de la sede, y no se puede repetir entre sedes.
@@ -100,6 +101,17 @@
                     @error('sunat_establishment_code')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
+
+                    {{-- Local que aún no se registró como anexo: emite con el código del domicilio fiscal --}}
+                    <label class="mt-3 flex items-start gap-2.5 p-3 rounded-lg border border-amber-200 bg-amber-50 cursor-pointer">
+                        <input type="checkbox" name="uses_fiscal_establishment" id="usesFiscal" value="1" @checked($usesFiscal)
+                               class="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                        <span class="text-xs text-amber-800">
+                            <strong class="block text-sm">Este local aún no está registrado como anexo en SUNAT</strong>
+                            Sus boletas y facturas se emitirán con el código <strong>0000</strong> del domicilio fiscal. La sede sigue con sus propias series, stock y cajas.
+                            Cuando registres el anexo en tu ficha RUC, desmarca esta opción y escribe el código que te asignó SUNAT.
+                        </span>
+                    </label>
                 </div>
 
                 {{-- Series de comprobantes (solo al editar; al crear se generan solas) --}}
@@ -171,4 +183,11 @@
     </form>
 
 </div>
+
+<script>
+// Si el local aún no es anexo en SUNAT, su código propio no se usa: el campo queda bloqueado
+document.getElementById('usesFiscal').addEventListener('change', function () {
+    document.getElementById('establishmentCode').disabled = this.checked;
+});
+</script>
 @endsection
