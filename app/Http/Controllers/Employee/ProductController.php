@@ -96,7 +96,7 @@ class ProductController extends Controller
             // Crear registro de stock inicial en la sede del empleado
             BranchStock::create([
                 'branch_id'     => $employee->branch_id,
-                'product_code'  => $producto->code,
+                'product_id'    => $producto->id,
                 'stock_actual'  => 0,
                 'stock_minimum' => $request->stock_minimo ?? null,
                 'stock_maximum' => $request->stock_maximo ?? null,
@@ -106,14 +106,14 @@ class ProductController extends Controller
             $initialStock = round((float) $request->stock_inicial, 2);
             if ($initialStock > 0) {
                 $stock->move(
-                    $employee->company_id, $employee->branch_id, $producto->code, $initialStock,
+                    $employee->company_id, $employee->branch_id, $producto->id, $initialStock,
                     'initial', null, (float) $producto->purchase_price, 'Inventario inicial'
                 );
 
                 // Con lote o vencimiento se registra como lote (FEFO); si no, quedan como unidades sin lote
                 if ($request->filled('lote_inicial') || $request->filled('vencimiento_inicial')) {
                     $batches->receive(
-                        $employee->company_id, $employee->branch_id, $producto->code, $initialStock,
+                        $employee->company_id, $employee->branch_id, $producto->id, $initialStock,
                         $request->lote_inicial, $request->vencimiento_inicial, (float) $producto->purchase_price, 'initial', null
                     );
                 }
@@ -123,7 +123,7 @@ class ProductController extends Controller
                 foreach ($request->presentaciones as $data) {
                     if (isset($data['unidad_medida_id'], $data['cantidad_equivalente'], $data['precio_venta'])) {
                         Presentation::create([
-                            'product_code'      => $producto->code,
+                            'product_id'        => $producto->id,
                             'unit_id'           => $data['unidad_medida_id'],
                             'equivalent_amount' => $data['cantidad_equivalente'],
                             'sale_price'        => $data['precio_venta'],
@@ -194,7 +194,7 @@ class ProductController extends Controller
 
             // Actualizar mínimos/máximos en el branch_stock de la sede del empleado
             BranchStock::where('branch_id', $employee->branch_id)
-                ->where('product_code', $product->code)
+                ->where('product_id', $product->id)
                 ->update([
                     'stock_minimum' => $request->stock_minimo ?? null,
                     'stock_maximum' => $request->stock_maximo ?? null,
@@ -206,7 +206,7 @@ class ProductController extends Controller
                 foreach ($request->presentaciones as $data) {
                     if (isset($data['unidad_medida_id'], $data['cantidad_equivalente'], $data['precio_venta'])) {
                         Presentation::create([
-                            'product_code'      => $product->code,
+                            'product_id'        => $product->id,
                             'unit_id'           => $data['unidad_medida_id'],
                             'equivalent_amount' => $data['cantidad_equivalente'],
                             'sale_price'        => $data['precio_venta'],

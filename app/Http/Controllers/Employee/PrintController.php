@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CompanySunatSetting;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
 use App\Services\Sunat\VoucherQr;
 use App\Support\NumberToWords;
 
@@ -102,10 +103,12 @@ class PrintController extends Controller
         $order->setRelation('branch', $branch);
         $order->setRelation('employee', $employee);
         $order->setRelation('documentType', null);
+        // Ítems de ejemplo: el correlativo que se imprime sale del producto relacionado
+        $sample = fn (string $code, array $data) => (new OrderItem($data))->setRelation('product', new Product(['code' => $code]));
         $order->setRelation('items', collect([
-            new OrderItem(['product_code' => 'P001', 'product_name' => 'Paracetamol 500 mg x 10 tab', 'quantity' => 2, 'unit_price' => 4.50, 'subtotal' => 9.00]),
-            new OrderItem(['product_code' => 'P002', 'product_name' => 'Amoxicilina 500 mg x 12 cáps', 'quantity' => 1, 'unit_price' => 18.00, 'subtotal' => 18.00]),
-            new OrderItem(['product_code' => 'P003', 'product_name' => 'Jarabe para la tos 120 ml', 'quantity' => 1, 'unit_price' => 12.00, 'subtotal' => 12.00]),
+            $sample('P-00000001', ['product_name' => 'Paracetamol 500 mg x 10 tab', 'quantity' => 2, 'unit_price' => 4.50, 'subtotal' => 9.00]),
+            $sample('P-00000002', ['product_name' => 'Amoxicilina 500 mg x 12 cáps', 'quantity' => 1, 'unit_price' => 18.00, 'subtotal' => 18.00]),
+            $sample('P-00000003', ['product_name' => 'Jarabe para la tos 120 ml', 'quantity' => 1, 'unit_price' => 12.00, 'subtotal' => 12.00]),
         ]));
 
         return view(self::TEMPLATES[$template], [

@@ -19,20 +19,20 @@ it('fija el stock contado con su costo, precio, lote y vencimiento, y solo toca 
     $this->get(route('employee.initial-inventory.index'))->assertOk()->assertSee('Producto P1')->assertSee('Guardar conteo');
 
     $this->post(route('employee.initial-inventory.store'), ['rows' => [
-        'P1' => ['quantity' => 50, 'cost' => 2, 'price' => 5, 'batch' => 'L-77', 'expiration' => today()->addYear()->toDateString()],
-        'P2' => ['quantity' => '', 'cost' => '', 'price' => ''],          // sin llenar: no se toca
+        pid('P1') => ['quantity' => 50, 'cost' => 2, 'price' => 5, 'batch' => 'L-77', 'expiration' => today()->addYear()->toDateString()],
+        pid('P2') => ['quantity' => '', 'cost' => '', 'price' => ''],          // sin llenar: no se toca
     ]])->assertSessionHas('success');
 
-    $p1 = Product::find('P1');
+    $p1 = Product::find(pid('P1'));
     expect(stockOf('P1'))->toBe(50.0)
         ->and(stockOf('P2'))->toBe(0.0)
         ->and((float) $p1->purchase_price)->toBe(2.0)
         ->and((float) $p1->unit_sale_price)->toBe(5.0)
-        ->and(PriceChange::where('product_code', 'P1')->count())->toBe(2)
-        ->and(StockBatch::where('product_code', 'P1')->value('batch'))->toBe('L-77');
+        ->and(PriceChange::where('product_id', pid('P1'))->count())->toBe(2)
+        ->and(StockBatch::where('product_id', pid('P1'))->value('batch'))->toBe('L-77');
 
     // Queda en el kardex como ajuste "Inventario inicial" (aparece también en Ajuste de inventario)
-    $mov = StockMovement::where('product_code', 'P1')->sole();
+    $mov = StockMovement::where('product_id', pid('P1'))->sole();
     expect($mov->reference_type)->toBe('manual')
         ->and($mov->notes)->toContain('Inventario inicial')
         ->and((float) $mov->quantity)->toBe(50.0);
@@ -42,20 +42,20 @@ it('la cantidad contada fija el stock (no suma): si hay menos, lo baja', functio
     loginEmployee();
     stockProduct('P1', 10, 1);
 
-    $this->post(route('employee.initial-inventory.store'), ['rows' => ['P1' => ['quantity' => 4]]])->assertSessionHas('success');
+    $this->post(route('employee.initial-inventory.store'), ['rows' => [pid('P1') => ['quantity' => 4]]])->assertSessionHas('success');
     expect(stockOf('P1'))->toBe(4.0);
 
     // Contar lo mismo que ya hay no mueve el stock
-    $this->post(route('employee.initial-inventory.store'), ['rows' => ['P1' => ['quantity' => 4]]]);
-    expect(StockMovement::where('product_code', 'P1')->count())->toBe(1);
+    $this->post(route('employee.initial-inventory.store'), ['rows' => [pid('P1') => ['quantity' => 4]]]);
+    expect(StockMovement::where('product_id', pid('P1'))->count())->toBe(1);
 });
 
 it('valida los datos y avisa si no hay nada que guardar', function () {
     loginEmployee();
     stockProduct('P1', 0);
 
-    $this->post(route('employee.initial-inventory.store'), ['rows' => ['P1' => ['quantity' => -3]]])->assertSessionHasErrors('rows.P1.quantity');
-    $this->post(route('employee.initial-inventory.store'), ['rows' => ['P1' => ['quantity' => '']]])->assertSessionHas('error');
+    $this->post(route('employee.initial-inventory.store'), ['rows' => [pid('P1') => ['quantity' => -3]]])->assertSessionHasErrors('rows.' . pid('P1') . '.quantity');
+    $this->post(route('employee.initial-inventory.store'), ['rows' => [pid('P1') => ['quantity' => '']]])->assertSessionHas('error');
 
     expect(stockOf('P1'))->toBe(0.0);
 });
@@ -92,9 +92,9 @@ it('importa la plantilla en CSV con el formato de Excel en español (punto y com
     ])->assertSessionHas('error')->assertSessionHasErrors();
 
     expect(stockOf('P1'))->toBe(12.0)
-        ->and((float) Product::find('P1')->purchase_price)->toBe(0.5)
-        ->and((float) Product::find('P1')->unit_sale_price)->toBe(1.2)
-        ->and(StockBatch::where('product_code', 'P1')->first()->expiration_date->toDateString())->toBe('2027-12-31')
+        ->and((float) Product::find(pid('P1'))->purchase_price)->toBe(0.5)
+        ->and((float) Product::find(pid('P1'))->unit_sale_price)->toBe(1.2)
+        ->and(StockBatch::where('product_id', pid('P1'))->first()->expiration_date->toDateString())->toBe('2027-12-31')
         ->and(stockOf('P2'))->toBe(0.0);
 
     $errors = session('errors')->all();
@@ -130,8 +130,8 @@ it('importa la plantilla guardada como Excel (.xlsx), con fechas seriales', func
     ])->assertSessionHas('success');
 
     expect(stockOf('P1'))->toBe(30.0)
-        ->and(StockBatch::where('product_code', 'P1')->first(['batch', 'expiration_date'])->batch)->toBe('X-9')
-        ->and(StockBatch::where('product_code', 'P1')->first()->expiration_date->toDateString())->toBe('2027-12-31');
+        ->and(StockBatch::where('product_id', pid('P1'))->first(['batch', 'expiration_date'])->batch)->toBe('X-9')
+        ->and(StockBatch::where('product_id', pid('P1'))->first()->expiration_date->toDateString())->toBe('2027-12-31');
 
     @unlink($path);
 });

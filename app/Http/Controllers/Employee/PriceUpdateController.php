@@ -36,11 +36,11 @@ class PriceUpdateController extends Controller
     {
         $employee = auth()->guard('employee')->user();
 
-        $changes = PriceChange::with(['product:code,name', 'employee:id,name'])
+        $changes = PriceChange::with(['product:id,code,name', 'employee:id,name'])
             ->where('company_id', $employee->company_id)
-            ->when($request->filled('buscar'), fn ($q) => $q->where(fn ($w) => $w
-                ->whereHas('product', fn ($p) => $p->search($request->buscar, ['name', 'code']))
-                ->orWhereLike('product_code', '%' . addcslashes($request->buscar, '%_\\') . '%')))
+            // La relación incluye productos eliminados, así su historial también se encuentra
+            ->when($request->filled('buscar'), fn ($q) => $q
+                ->whereHas('product', fn ($p) => $p->search($request->buscar, ['name', 'code', 'barcode'])))
             ->orderByDesc('id')
             ->paginate(25)
             ->withQueryString();
@@ -66,13 +66,14 @@ class PriceUpdateController extends Controller
             'prices.*.*.min'                    => 'Los precios no pueden ser negativos.',
         ]);
 
-        $products = Product::where('company_id', $employee->company_id)->whereIn('code', array_keys($request->prices))->get()->keyBy('code');
+        // prices[id del producto][campo]
+        $products = Product::where('company_id', $employee->company_id)->whereIn('id', array_keys($request->prices))->get()->keyBy('id');
 
         $changed = 0;
 
         DB::transaction(function () use ($request, $products, $employee, &$changed) {
-            foreach ($request->prices as $code => $values) {
-                $product = $products->get($code);
+            foreach ($request->prices as $productId => $values) {
+                $product = $products->get((int) $productId);
 
                 if ($product) {
                     $changed += PriceChange::apply($product, $values, $employee->id);
@@ -106,7 +107,7 @@ class PriceUpdateController extends Controller
         $changed = 0;
 
         DB::transaction(function () use ($request, $employee, $data, $factor, &$changed) {
-            $this->filtered($request, $employee->company_id)->orderBy('code')->lockForUpdate()->get()->each(function (Product $product) use ($data, $factor, $employee, &$changed) {
+            $this->filtered($request, $employee->company_id)->orderBy('id')->lockForUpdate()->get()->each(function (Product $product) use ($data, $factor, $employee, &$changed) {
                 $new = [
                     'purchase_price'  => in_array($data['target'], ['purchase', 'both'], true) ? round((float) $product->purchase_price * $factor, 2) : (float) $product->purchase_price,
                     'unit_sale_price' => in_array($data['target'], ['sale', 'both'], true) ? round((float) $product->unit_sale_price * $factor, 2) : (float) $product->unit_sale_price,

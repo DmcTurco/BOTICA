@@ -37,7 +37,7 @@
 
         {{-- Errores --}}
         <form id="productoForm"
-            action="{{ isset($products) ? route('employee.products.update', $products->code) : route('employee.products.store') }}"
+            action="{{ isset($products) ? route('employee.products.update', $products) : route('employee.products.store') }}"
             method="POST" class="flex-1 min-h-0 flex flex-col">
             @csrf
             @if (isset($products))
@@ -312,7 +312,7 @@
                                             <span class="font-semibold text-slate-800">
                                                 {{ $products->branchStocks->first()?->stock_actual ?? 0 }}
                                             </span>
-                                            <a href="{{ route('employee.purchases.create', ['product' => $products->code]) }}"
+                                            <a href="{{ route('employee.purchases.create', ['product' => $products->id]) }}"
                                                 class="text-xs text-emerald-600 hover:text-sky-700 font-medium flex items-center gap-1">
                                                 <i class="fas fa-plus-circle text-[10px]"></i> Registrar compra
                                             </a>

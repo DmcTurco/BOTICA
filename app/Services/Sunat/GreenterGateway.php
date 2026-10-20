@@ -434,7 +434,7 @@ class GreenterGateway implements SunatGateway
         $taxed    = $item->igv_affectation === TaxCalculator::GRAVADO;
 
         return (new SaleDetail())
-            ->setCodProducto($item->product_code)
+            ->setCodProducto($item->product?->code ?? (string) $item->product_id)   // a SUNAT va el correlativo, no el id
             ->setUnidad($item->unit_code ?: 'NIU')
             ->setCantidad($quantity)
             ->setDescripcion($item->product_name)

@@ -40,8 +40,8 @@ class InitialInventoryController extends Controller
             ->withQueryString();
 
         $stocks = BranchStock::where('branch_id', $employee->branch_id)
-            ->whereIn('product_code', $products->pluck('code'))
-            ->pluck('stock_actual', 'product_code');
+            ->whereIn('product_id', $products->pluck('id'))
+            ->pluck('stock_actual', 'product_id');
 
         return view('employee.pages.initial-inventory.index', [
             'products'     => $products,
@@ -57,8 +57,9 @@ class InitialInventoryController extends Controller
     public function store(InitialInventoryRequest $request, InitialInventoryService $service)
     {
         $rows = [];
-        foreach ($request->validated('rows') as $code => $row) {
-            $rows[] = ['code' => (string) $code] + $row;
+        // La pantalla envía rows[id del producto][campo]
+        foreach ($request->validated('rows') as $productId => $row) {
+            $rows[] = ['product_id' => (int) $productId] + $row;
         }
 
         return $this->finish($service->apply(auth()->guard('employee')->user(), $rows));
@@ -70,14 +71,14 @@ class InitialInventoryController extends Controller
     public function template(Request $request)
     {
         $employee = auth()->guard('employee')->user();
-        $stocks   = BranchStock::where('branch_id', $employee->branch_id)->pluck('stock_actual', 'product_code');
+        $stocks   = BranchStock::where('branch_id', $employee->branch_id)->pluck('stock_actual', 'product_id');
 
         $rows = $this->filtered($request, $employee)
             ->with('laboratory:id,name')
             ->orderBy('name')
             ->lazy()
             ->map(fn (Product $p) => [
-                $p->code, $p->name, $p->laboratory?->name, (float) ($stocks[$p->code] ?? 0),
+                $p->code, $p->name, $p->laboratory?->name, (float) ($stocks[$p->id] ?? 0),
                 '', (float) $p->purchase_price, (float) $p->unit_sale_price, '', '',
             ]);
 
@@ -122,8 +123,8 @@ class InitialInventoryController extends Controller
             ->search($request->buscar, ['name', 'code', 'barcode', 'active_ingredient'])
             ->filterBy(['categoria' => 'category_id', 'laboratorio' => 'laboratory_id'])
             // "Solo sin stock": lo que aún no se contó en esta sede
-            ->when($request->boolean('sin_stock'), fn ($q) => $q->whereNotIn('code', BranchStock::where('branch_id', $employee->branch_id)
-                ->where('stock_actual', '>', 0)->select('product_code')));
+            ->when($request->boolean('sin_stock'), fn ($q) => $q->whereNotIn('id', BranchStock::where('branch_id', $employee->branch_id)
+                ->where('stock_actual', '>', 0)->select('product_id')));
     }
 
     /** Mensaje final: cuántos se contaron y, si hubo, qué filas fallaron */

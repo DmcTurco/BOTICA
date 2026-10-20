@@ -15,7 +15,7 @@ function purchasePayload(array $override = []): array
 {
     return array_merge([
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
-        'items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => 2]],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 1, 'unit_cost' => 2]],
     ], $override);
 }
 
@@ -23,15 +23,15 @@ it('convierte la compra por presentación a unidades base', function () {
     loginEmployee();
     stockProduct('P1', 0, 0.15);
     $blister = Unit::create(['company_id' => 1, 'name' => 'Blíster', 'abbreviation' => 'BL', 'status' => 1]);
-    $presentation = Presentation::create(['product_code' => 'P1', 'unit_id' => $blister->id, 'equivalent_amount' => 10, 'sale_price' => 3.5, 'status' => 1]);
+    $presentation = Presentation::create(['product_id' => pid('P1'), 'unit_id' => $blister->id, 'equivalent_amount' => 10, 'sale_price' => 3.5, 'status' => 1]);
 
     // 5 blísteres de 10 unidades a S/ 1.50 cada uno
     $this->post(route('employee.purchases.store'), purchasePayload([
-        'items' => [['product_code' => 'P1', 'presentation_id' => $presentation->id, 'quantity' => 5, 'unit_cost' => 1.5]],
+        'items' => [['product_id' => pid('P1'), 'presentation_id' => $presentation->id, 'quantity' => 5, 'unit_cost' => 1.5]],
     ]))->assertSessionHasNoErrors();
 
     $detail = PurchaseDetail::firstOrFail();
-    expect((float) BranchStock::where('product_code', 'P1')->first()->stock_actual)->toBe(50.0)
+    expect((float) BranchStock::where('product_id', pid('P1'))->first()->stock_actual)->toBe(50.0)
         ->and($detail->quantity)->toBe(50)
         ->and((float) $detail->unit_cost)->toBe(0.15)
         ->and((float) $detail->subtotal)->toBe(7.5)
@@ -43,10 +43,10 @@ it('rechaza una presentación que no es del producto', function () {
     stockProduct('P1');
     stockProduct('P2');
     $box = Unit::create(['company_id' => 1, 'name' => 'Caja', 'abbreviation' => 'CJ', 'status' => 1]);
-    $other = Presentation::create(['product_code' => 'P2', 'unit_id' => $box->id, 'equivalent_amount' => 10, 'sale_price' => 3.5, 'status' => 1]);
+    $other = Presentation::create(['product_id' => pid('P2'), 'unit_id' => $box->id, 'equivalent_amount' => 10, 'sale_price' => 3.5, 'status' => 1]);
 
     $this->post(route('employee.purchases.store'), purchasePayload([
-        'items' => [['product_code' => 'P1', 'presentation_id' => $other->id, 'quantity' => 1, 'unit_cost' => 2]],
+        'items' => [['product_id' => pid('P1'), 'presentation_id' => $other->id, 'quantity' => 1, 'unit_cost' => 2]],
     ]))->assertSessionHasErrors('items.0.presentation_id');
 });
 
@@ -69,8 +69,8 @@ it('valida documento, fecha, costo, vencimiento y crédito', function () {
     $this->post(route('employee.purchases.store'), purchasePayload(['document_number' => null]))->assertSessionHasErrors('document_number');
     $this->post(route('employee.purchases.store'), purchasePayload(['document_number' => null, 'document_type' => 3]))->assertSessionHasNoErrors();
     $this->post(route('employee.purchases.store'), purchasePayload(['purchased_at' => today()->addDay()->toDateString()]))->assertSessionHasErrors('purchased_at');
-    $this->post(route('employee.purchases.store'), purchasePayload(['items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => 0]]]))->assertSessionHasErrors('items.0.unit_cost');
-    $this->post(route('employee.purchases.store'), purchasePayload(['items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => 2, 'expiration_date' => today()->subDay()->toDateString()]]]))->assertSessionHasErrors('items.0.expiration_date');
+    $this->post(route('employee.purchases.store'), purchasePayload(['items' => [['product_id' => pid('P1'), 'quantity' => 1, 'unit_cost' => 0]]]))->assertSessionHasErrors('items.0.unit_cost');
+    $this->post(route('employee.purchases.store'), purchasePayload(['items' => [['product_id' => pid('P1'), 'quantity' => 1, 'unit_cost' => 2, 'expiration_date' => today()->subDay()->toDateString()]]]))->assertSessionHasErrors('items.0.expiration_date');
     $this->post(route('employee.purchases.store'), purchasePayload(['payment_condition' => 'credit', 'due_date' => today()->addDays(30)->toDateString()]))->assertSessionHasErrors('supplier');
 });
 
@@ -91,7 +91,7 @@ it('si la compra vuelve con un error, la pantalla recibe los productos para reco
     $this->from(route('employee.purchases.create'))
         ->post(route('employee.purchases.store'), purchasePayload([
             'document_number' => '',
-            'items' => [['product_code' => 'P1', 'quantity' => 7, 'unit_cost' => 1.25, 'batch' => 'L-77']],
+            'items' => [['product_id' => pid('P1'), 'quantity' => 7, 'unit_cost' => 1.25, 'batch' => 'L-77']],
         ]))
         ->assertRedirect(route('employee.purchases.create'))
         ->assertSessionHasErrors('document_number');
@@ -100,7 +100,7 @@ it('si la compra vuelve con un error, la pantalla recibe los productos para reco
 
     // La página reconstruye la lista con los ítems enviados y marca el N° de documento
     $this->get(route('employee.purchases.create'))->assertOk()
-        ->assertSee('"product_code":"P1"', false)
+        ->assertSee('"product_id":' . pid('P1'), false)
         ->assertSee('"batch":"L-77"', false)
         ->assertSee('id="docNumberError" class="text-[11px] mt-1 text-red-600 "', false);
 });

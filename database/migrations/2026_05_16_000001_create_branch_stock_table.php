@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('branch_stock', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('branch_id')->index();     // sede a la que pertenece el stock
-            $table->string('product_code', 20)->index();          // producto del catálogo
+            $table->unsignedBigInteger('product_id')->index();    // producto del catálogo
             $table->decimal('stock_actual', 10, 2)->default(0);  // cantidad actual disponible
             $table->integer('stock_minimum')->nullable();         // alerta de stock bajo
             $table->integer('stock_maximum')->nullable();         // límite de reposición
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Un solo registro por sede + producto
-            $table->unique(['branch_id', 'product_code']);
+            $table->unique(['branch_id', 'product_id']);
         });
     }
 

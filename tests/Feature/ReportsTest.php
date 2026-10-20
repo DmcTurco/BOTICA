@@ -81,7 +81,7 @@ it('ordena los más vendidos por unidades', function () {
 
     $rows = $this->get(route('employee.reports.best-sellers'))->assertOk()->viewData('rows');
 
-    expect($rows->pluck('product_code')->all())->toBe(['B', 'A'])->and((float) $rows[1]->qty)->toBe(5.0);
+    expect($rows->pluck('product_id')->all())->toBe([pid('B'), pid('A')])->and((float) $rows[1]->qty)->toBe(5.0);
 });
 
 it('detecta productos con stock que no se vendieron', function () {
@@ -180,8 +180,8 @@ it('muestra los lotes comprados que vencen pronto y los ya vencidos', function (
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
         'items' => [
-            ['product_code' => 'A', 'quantity' => 1, 'unit_cost' => 1, 'expiration_date' => today()->addDays(20)->toDateString(), 'batch' => 'L-A'],
-            ['product_code' => 'B', 'quantity' => 1, 'unit_cost' => 1, 'expiration_date' => today()->addDays(5)->toDateString(), 'batch' => 'L-B'],
+            ['product_id' => pid('A'), 'quantity' => 1, 'unit_cost' => 1, 'expiration_date' => today()->addDays(20)->toDateString(), 'batch' => 'L-A'],
+            ['product_id' => pid('B'), 'quantity' => 1, 'unit_cost' => 1, 'expiration_date' => today()->addDays(5)->toDateString(), 'batch' => 'L-B'],
         ],
     ])->assertSessionHasNoErrors();
 
@@ -199,9 +199,9 @@ it('actualiza precios y deja cada cambio en la bitácora', function () {
     loginEmployee();
     stockProduct('A', 1, 2);   // compra 2 · venta 4
 
-    $this->put(route('employee.prices.update'), ['prices' => ['A' => ['purchase_price' => 2, 'unit_sale_price' => 5.5]]])->assertSessionHasNoErrors();
+    $this->put(route('employee.prices.update'), ['prices' => [pid('A') => ['purchase_price' => 2, 'unit_sale_price' => 5.5]]])->assertSessionHasNoErrors();
 
-    $product = Product::find('A');
+    $product = Product::find(pid('A'));
     expect((float) $product->unit_sale_price)->toBe(5.5)->and((float) $product->purchase_price)->toBe(2.0)
         ->and(PriceChange::count())->toBe(1)
         ->and(PriceChange::first()->field)->toBe('unit_sale_price');
@@ -214,7 +214,7 @@ it('aplica un porcentaje a todos los productos filtrados', function () {
 
     $this->post(route('employee.prices.bulk', ['buscar' => 'Producto A']), ['percent' => 10, 'target' => 'sale'])->assertSessionHasNoErrors();
 
-    expect((float) Product::find('A')->unit_sale_price)->toBe(22.0)->and((float) Product::find('B')->unit_sale_price)->toBe(10.0);
+    expect((float) Product::find(pid('A'))->unit_sale_price)->toBe(22.0)->and((float) Product::find(pid('B'))->unit_sale_price)->toBe(10.0);
     $this->post(route('employee.prices.bulk'), ['percent' => 0, 'target' => 'sale'])->assertSessionHasErrors('percent');
 });
 

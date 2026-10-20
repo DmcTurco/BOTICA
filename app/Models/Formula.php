@@ -27,7 +27,7 @@ class Formula extends Model
         'storage',
         'shelf_life_days',
         'sell_in_pos',
-        'product_code',
+        'product_id',
         'status',
         'employee_id',
     ];
@@ -55,7 +55,7 @@ class Formula extends Model
     /** Producto del catálogo que recibe el stock (solo si se vende en el POS) */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code');
+        return $this->belongsTo(Product::class);
     }
 
     /** Empleado que registró la fórmula */

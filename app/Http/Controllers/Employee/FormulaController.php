@@ -21,7 +21,7 @@ class FormulaController extends Controller
     {
         $employee = auth()->guard('employee')->user();
 
-        $query = Formula::with(['product:code,name', 'yieldUnit'])
+        $query = Formula::with(['product:id,code,name', 'yieldUnit'])
             ->withCount('ingredients')
             ->where('company_id', $employee->company_id);
 
@@ -117,7 +117,7 @@ class FormulaController extends Controller
             'products'  => $this->catalog($employee->company_id),
             'units'     => Unit::deCompania($employee->company_id)->where('status', 1)->orderBy('name')->get(),
             'currentIngredients' => $formula->ingredients
-                ->map(fn ($i) => ['product_code' => $i->product_code, 'quantity' => $i->quantity, 'notes' => $i->notes])
+                ->map(fn ($i) => ['product_id' => $i->product_id, 'quantity' => $i->quantity, 'notes' => $i->notes])
                 ->all(),
         ]);
     }
@@ -173,7 +173,7 @@ class FormulaController extends Controller
     {
         return $request->safe()->only([
             'name', 'pharmaceutical_form', 'description', 'yield_quantity', 'yield_unit_id',
-            'procedure', 'storage', 'shelf_life_days', 'sell_in_pos', 'product_code', 'status',
+            'procedure', 'storage', 'shelf_life_days', 'sell_in_pos', 'product_id', 'status',
         ]);
     }
 
@@ -184,7 +184,7 @@ class FormulaController extends Controller
 
         foreach ($ingredients as $item) {
             $formula->ingredients()->create([
-                'product_code' => $item['product_code'],
+                'product_id'   => $item['product_id'],
                 'quantity'     => $item['quantity'],
                 'notes'        => $item['notes'] ?? null,
             ]);
@@ -198,6 +198,6 @@ class FormulaController extends Controller
             ->where('company_id', $companyId)
             ->where('status', 1)
             ->orderBy('name')
-            ->get(['code', 'name', 'purchase_price', 'unit_id']);
+            ->get(['id', 'code', 'barcode', 'name', 'purchase_price', 'unit_id']);
     }
 }

@@ -53,19 +53,21 @@ class StockTransferController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $stocks = BranchStock::where('branch_id', $employee->branch_id)->where('stock_actual', '>', 0)->pluck('stock_actual', 'product_code');
+        $stocks = BranchStock::where('branch_id', $employee->branch_id)->where('stock_actual', '>', 0)->pluck('stock_actual', 'product_id');
 
         $products = Product::with('unit:id,abbreviation')
             ->where('company_id', $employee->company_id)
             ->where('status', 1)
-            ->whereIn('code', $stocks->keys())
+            ->whereIn('id', $stocks->keys())
             ->orderBy('name')
-            ->get(['code', 'name', 'unit_id'])
+            ->get(['id', 'code', 'barcode', 'name', 'unit_id'])
             ->map(fn ($p) => [
-                'code'  => $p->code,
-                'name'  => $p->name,
+                'id'      => $p->id,
+                'code'    => $p->code,
+                'barcode' => $p->barcode,
+                'name'    => $p->name,
                 'unit'  => $p->unit?->abbreviation,
-                'stock' => (float) $stocks[$p->code],
+                'stock' => (float) $stocks[$p->id],
             ])->values()->all();
 
         // Un traslado necesita otra sede de destino y stock propio que enviar
@@ -87,9 +89,9 @@ class StockTransferController extends Controller
     {
         $employee = auth()->guard('employee')->user();
 
-        // Se procesan ordenados por código para tomar los bloqueos siempre en el mismo orden
-        $items = collect($request->items)->sortBy('product_code')->values();
-        $costs = Product::whereIn('code', $items->pluck('product_code'))->pluck('purchase_price', 'code');
+        // Se procesan ordenados por producto para tomar los bloqueos siempre en el mismo orden
+        $items = collect($request->items)->sortBy('product_id')->values();
+        $costs = Product::whereIn('id', $items->pluck('product_id'))->pluck('purchase_price', 'id');
 
         DB::beginTransaction();
 
@@ -106,22 +108,22 @@ class StockTransferController extends Controller
 
             foreach ($items as $item) {
                 $quantity = round((float) $item['quantity'], 2);
-                $cost     = (float) ($costs[$item['product_code']] ?? 0);
+                $cost     = (float) ($costs[$item['product_id']] ?? 0);
 
                 // No se envían unidades vencidas
-                if ($batches->sellable($employee->branch_id, $item['product_code']) < $quantity) {
-                    throw new \RuntimeException('Hay unidades vencidas de ' . $item['product_code'] . ': solo se pueden enviar las vigentes.');
+                if ($batches->sellable($employee->branch_id, $item['product_id']) < $quantity) {
+                    throw new \RuntimeException('Hay unidades vencidas de ' . Product::whereKey($item['product_id'])->value('name') . ': solo se pueden enviar las vigentes.');
                 }
 
-                $transfer->items()->create(['product_code' => $item['product_code'], 'quantity' => $quantity]);
+                $transfer->items()->create(['product_id' => $item['product_id'], 'quantity' => $quantity]);
 
-                $stock->move($employee->company_id, $employee->branch_id, $item['product_code'], -$quantity, 'transfer', $transfer->id, $cost, 'Salida hacia ' . $transfer->toBranch->name);
-                $stock->move($employee->company_id, (int) $request->to_branch_id, $item['product_code'], $quantity, 'transfer', $transfer->id, $cost, 'Ingreso desde ' . $transfer->fromBranch->name);
+                $stock->move($employee->company_id, $employee->branch_id, $item['product_id'], -$quantity, 'transfer', $transfer->id, $cost, 'Salida hacia ' . $transfer->toBranch->name);
+                $stock->move($employee->company_id, (int) $request->to_branch_id, $item['product_id'], $quantity, 'transfer', $transfer->id, $cost, 'Ingreso desde ' . $transfer->fromBranch->name);
 
                 // Los lotes viajan con la mercadería: mismo número y vencimiento en la sede de destino
-                foreach ($batches->consume($employee->branch_id, $item['product_code'], $quantity, 'transfer', $transfer->id) as $line) {
+                foreach ($batches->consume($employee->branch_id, $item['product_id'], $quantity, 'transfer', $transfer->id) as $line) {
                     $batches->receive(
-                        $employee->company_id, (int) $request->to_branch_id, $item['product_code'], $line['quantity'],
+                        $employee->company_id, (int) $request->to_branch_id, $item['product_id'], $line['quantity'],
                         $line['batch']->batch, $line['batch']->expiration_date, $line['batch']->unit_cost, 'transfer', $transfer->id
                     );
                 }
@@ -175,7 +177,7 @@ class StockTransferController extends Controller
 
         try {
             $transfer->load('items');
-            $costs = Product::whereIn('code', $transfer->items->pluck('product_code'))->pluck('purchase_price', 'code');
+            $costs = Product::whereIn('id', $transfer->items->pluck('product_id'))->pluck('purchase_price', 'id');
 
             // Si el destino ya vendió parte de los lotes recibidos, no se puede devolver
             $batches = app(BatchService::class);
@@ -183,17 +185,17 @@ class StockTransferController extends Controller
                 throw new \RuntimeException('La sede de destino ya vendió parte de esos lotes.');
             }
 
-            foreach ($transfer->items->sortBy('product_code') as $item) {
-                $cost = (float) ($costs[$item->product_code] ?? 0);
-                $stock->move($employee->company_id, $transfer->to_branch_id, $item->product_code, -$item->quantity, 'transfer_void', $transfer->id, $cost, 'Anulación de traspaso');
-                $stock->move($employee->company_id, $transfer->from_branch_id, $item->product_code, $item->quantity, 'transfer_void', $transfer->id, $cost, 'Anulación de traspaso');
+            foreach ($transfer->items->sortBy('product_id') as $item) {
+                $cost = (float) ($costs[$item->product_id] ?? 0);
+                $stock->move($employee->company_id, $transfer->to_branch_id, $item->product_id, -$item->quantity, 'transfer_void', $transfer->id, $cost, 'Anulación de traspaso');
+                $stock->move($employee->company_id, $transfer->from_branch_id, $item->product_id, $item->quantity, 'transfer_void', $transfer->id, $cost, 'Anulación de traspaso');
             }
 
             // Los lotes vuelven a la sede de origen y salen del destino
             $batches->discardSource('transfer', $transfer->id, $transfer->to_branch_id);
             $batches->restore('transfer', $transfer->id);
             foreach ($transfer->items as $item) {
-                $batches->reconcile($transfer->to_branch_id, $item->product_code);
+                $batches->reconcile($transfer->to_branch_id, $item->product_id);
             }
 
             $transfer->update(['status' => 0, 'voided_at' => now(), 'void_reason' => $request->void_reason]);

@@ -51,7 +51,7 @@
             <tbody class="divide-y divide-slate-100">
                 @foreach($order->items as $i)
                 <tr>
-                    <td class="px-5 py-2.5"><p class="text-xs font-medium text-slate-800">{{ $i->product?->name ?? $i->product_code }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $i->product_code }}</p></td>
+                    <td class="px-5 py-2.5"><p class="text-xs font-medium text-slate-800">{{ $i->product?->name ?? '—' }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $i->product?->code }}</p></td>
                     <td class="px-5 py-2.5 text-center text-xs text-slate-700">{{ $fmt($i->quantity) }} {{ $i->product?->unit?->abbreviation }}</td>
                     <td class="px-5 py-2.5 text-right text-xs text-slate-600">S/ {{ number_format($i->unit_cost, 2) }}</td>
                     <td class="px-5 py-2.5 text-right text-xs font-semibold text-slate-800">S/ {{ number_format($i->quantity * $i->unit_cost, 2) }}</td>

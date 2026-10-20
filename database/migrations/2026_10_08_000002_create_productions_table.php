@@ -32,7 +32,7 @@ return new class extends Migration
             $table->decimal('unit_cost', 10, 2)->default(0);
 
             // Snapshot de la venta en POS al preparar (si ingresó a stock)
-            $table->string('product_code', 20)->nullable()->index();
+            $table->unsignedBigInteger('product_id')->nullable()->index();
 
             $table->text('notes')->nullable();
 
@@ -51,7 +51,7 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('production_id')->index();
-            $table->string('product_code', 20)->index();            // insumo consumido
+            $table->unsignedBigInteger('product_id')->index();      // insumo consumido
             $table->decimal('quantity', 12, 2);                     // cantidad descontada del stock
             $table->decimal('unit_cost', 10, 2)->default(0);        // costo unitario al momento
             $table->decimal('subtotal', 10, 2)->default(0);

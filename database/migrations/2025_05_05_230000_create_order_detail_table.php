@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('order_detail', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('order_id')->index();        // orden a la que pertenece
-            $table->string('product_code', 20)->index();            // producto vendido
+            $table->unsignedBigInteger('product_id')->index();      // producto vendido
             $table->string('product_name', 150);                    // incluye la presentación vendida, ej. "Paracetamol (Blíster x10)"
             $table->unsignedBigInteger('presentation_id')->nullable()->index(); // presentación vendida (null = unidad base)
             $table->decimal('units_per_item', 10, 2)->default(1);   // unidades base que trae cada una (blíster x10 = 10)

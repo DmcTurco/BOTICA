@@ -141,7 +141,7 @@ it('registra ventas perdidas y arma el ranking', function () {
     foreach ([1, 2] as $_) {
         $this->post(route('employee.lost-sales.store'), ['product_name' => 'Amoxicilina 500mg', 'quantity' => 2, 'reason' => 'no_stock'])->assertSessionHasNoErrors();
     }
-    $this->post(route('employee.lost-sales.store'), ['product_name' => 'Producto P1', 'product_code' => 'P1', 'quantity' => 1, 'reason' => 'price'])->assertSessionHasNoErrors();
+    $this->post(route('employee.lost-sales.store'), ['product_name' => 'Producto P1', 'product_id' => pid('P1'), 'quantity' => 1, 'reason' => 'price'])->assertSessionHasNoErrors();
 
     expect(LostSale::count())->toBe(3);
     $this->get(route('employee.lost-sales.index'))->assertOk()->assertSee('Amoxicilina 500mg')->assertSee('2×');
@@ -201,8 +201,8 @@ it('precios: el historial de cambios está en su propia pantalla y se puede busc
     stockProduct('P2', 0, 3);
 
     $this->put(route('employee.prices.update'), ['prices' => [
-        'P1' => ['purchase_price' => 2, 'unit_sale_price' => 9],
-        'P2' => ['purchase_price' => 3, 'unit_sale_price' => 8],
+        pid('P1') => ['purchase_price' => 2, 'unit_sale_price' => 9],
+        pid('P2') => ['purchase_price' => 3, 'unit_sale_price' => 8],
     ]])->assertSessionHasNoErrors();
 
     $this->get(route('employee.prices.index'))->assertOk()->assertSee('Historial de cambios')->assertDontSee('Últimos cambios de precio');

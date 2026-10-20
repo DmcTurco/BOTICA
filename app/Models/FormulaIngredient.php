@@ -11,7 +11,7 @@ class FormulaIngredient extends Model
 
     protected $fillable = [
         'formula_id',
-        'product_code',
+        'product_id',
         'quantity',
         'notes',
     ];
@@ -29,6 +29,6 @@ class FormulaIngredient extends Model
     /** Insumo (producto del catálogo) */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code')->withTrashed();
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 }

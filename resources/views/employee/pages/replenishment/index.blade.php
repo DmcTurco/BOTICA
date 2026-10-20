@@ -62,10 +62,10 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($rows as $row)
                     <tr class="hover:bg-slate-50">
-                        @if($canBuy)<td class="px-5 py-3"><input type="checkbox" class="marcar rounded border-slate-300 text-emerald-600" name="products[{{ $row->product_code }}]" value="{{ $row->suggested }}" checked></td>@endif
+                        @if($canBuy)<td class="px-5 py-3"><input type="checkbox" class="marcar rounded border-slate-300 text-emerald-600" name="products[{{ $row->product_id }}]" value="{{ $row->suggested }}" checked></td>@endif
                         <td class="px-5 py-3">
                             <p class="text-xs font-medium text-slate-800">{{ $row->product->name }}</p>
-                            <p class="text-[10px] text-slate-400 font-mono">{{ $row->product_code }} @if($row->product->category) · {{ $row->product->category->name }} @endif</p>
+                            <p class="text-[10px] text-slate-400 font-mono">{{ $row->product?->code }} @if($row->product->category) · {{ $row->product->category->name }} @endif</p>
                         </td>
                         <td class="px-5 py-3 text-xs text-slate-600 hidden md:table-cell">{{ $row->product->laboratory?->name ?? '—' }}</td>
                         <td class="px-5 py-3 text-center">
@@ -77,7 +77,7 @@
                         <td class="px-5 py-3 text-center text-xs font-semibold text-emerald-700">+{{ rtrim(rtrim(number_format($row->suggested, 2), '0'), '.') }} {{ $row->product->unit?->abbreviation }}</td>
                         <td class="px-5 py-3 text-right">
                             @if($canBuy)
-                            <a href="{{ route('employee.purchases.create', ['product' => $row->product_code]) }}"
+                            <a href="{{ route('employee.purchases.create', ['product' => $row->product_id]) }}"
                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-sky-100 rounded-lg transition-colors">
                                 <i class="fas fa-cart-plus text-[10px]"></i> Comprar
                             </a>

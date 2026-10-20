@@ -78,12 +78,12 @@ it('marcar un producto como controlado lo deja también como que requiere receta
     $category = App\Models\Category::create(['company_id' => 1, 'name' => 'Psicotrópicos', 'status' => 1]);
     $unit     = App\Models\Unit::create(['company_id' => 1, 'name' => 'Tableta', 'abbreviation' => 'TAB', 'sunat_code' => 'NIU', 'status' => 1]);
 
-    $this->put(route('employee.products.update', 'P1'), [
+    $this->put(route('employee.products.update', pid('P1')), [
         'nombre' => 'Clonazepam 2mg', 'categoria_id' => $category->id, 'unidad_medida_id' => $unit->id, 'afectacion_igv' => '20',
         'precio_compra' => 1, 'precio_venta_unidad' => 2, 'tipo_controlado' => 'psicotropico', 'registro_sanitario' => 'EE-01234',
     ])->assertSessionHasNoErrors();
 
-    $product = Product::find('P1');
+    $product = Product::find(pid('P1'));
     expect($product->controlled_type)->toBe('psicotropico')->and($product->sanitary_registry)->toBe('EE-01234')
         ->and($product->requires_recipe)->toBeTrue()->and($product->recipe_level)->toBe(2);
 });

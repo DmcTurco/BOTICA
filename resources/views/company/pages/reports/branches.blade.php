@@ -69,7 +69,7 @@
             @forelse($top as $i => $p)
             <tr>
                 <td class="px-5 py-2 text-xs text-slate-400 w-10">{{ $i + 1 }}</td>
-                <td class="px-5 py-2 text-xs font-medium text-slate-800">{{ $p->name }}<span class="text-[10px] text-slate-400 font-mono"> {{ $p->product_code }}</span></td>
+                <td class="px-5 py-2 text-xs font-medium text-slate-800">{{ $p->name }}<span class="text-[10px] text-slate-400 font-mono"> {{ $p->code }}</span></td>
                 <td class="px-5 py-2 text-center text-xs text-slate-700">{{ rtrim(rtrim(number_format($p->qty, 2), '0'), '.') }} unid.</td>
                 <td class="px-5 py-2 text-right text-xs text-slate-600">{{ $money($p->net) }}</td>
             </tr>

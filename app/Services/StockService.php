@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\BranchStock;
+use App\Models\Product;
 use App\Models\StockMovement;
 use RuntimeException;
 
@@ -25,7 +26,7 @@ class StockService
     public function move(
         int $companyId,
         int $branchId,
-        string $productCode,
+        int $productId,
         float $delta,
         string $reference,
         ?int $referenceId = null,
@@ -34,7 +35,7 @@ class StockService
         ?string $type = null,
     ): float {
         $stock = BranchStock::where('branch_id', $branchId)
-            ->where('product_code', $productCode)
+            ->where('product_id', $productId)
             ->lockForUpdate()
             ->first();
 
@@ -42,7 +43,10 @@ class StockService
         $balance = round($current + $delta, 2);
 
         if ($balance < 0) {
-            throw new RuntimeException("Stock insuficiente de {$productCode}: hay {$current} y se necesitan " . abs($delta) . '.');
+            // El mensaje muestra el correlativo y el nombre, no el id interno
+            $product = Product::withTrashed()->find($productId, ['code', 'name']);
+            $label   = $product ? "{$product->code} {$product->name}" : "#{$productId}";
+            throw new RuntimeException("Stock insuficiente de {$label}: hay {$current} y se necesitan " . abs($delta) . '.');
         }
 
         if ($stock) {
@@ -50,7 +54,7 @@ class StockService
         } else {
             BranchStock::create([
                 'branch_id'    => $branchId,
-                'product_code' => $productCode,
+                'product_id' => $productId,
                 'stock_actual' => $balance,
             ]);
         }
@@ -58,7 +62,7 @@ class StockService
         StockMovement::create([
             'company_id'     => $companyId,
             'branch_id'      => $branchId,
-            'product_code'   => $productCode,
+            'product_id'   => $productId,
             'type'           => $type ?? ($delta >= 0 ? 'entrada' : 'salida'),
             'reference_type' => $reference,
             'reference_id'   => $referenceId,

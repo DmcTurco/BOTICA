@@ -113,8 +113,8 @@ it('el stock inicial entra al crear el producto, con su lote y queda en el karde
     ]))->assertSessionHasNoErrors();
 
     $product  = Product::sole();
-    $movement = \App\Models\StockMovement::where('product_code', $product->code)->sole();
-    $batch    = \App\Models\StockBatch::where('product_code', $product->code)->sole();
+    $movement = \App\Models\StockMovement::where('product_id', $product->id)->sole();
+    $batch    = \App\Models\StockBatch::where('product_id', $product->id)->sole();
 
     expect($product->stockEnSede($employee->branch_id))->toBe(300.0)
         ->and($movement->reference_type)->toBe('initial')

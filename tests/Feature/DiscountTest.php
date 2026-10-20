@@ -14,8 +14,8 @@ uses(RefreshDatabase::class);
 it('aplica el descuento a la base de cada línea antes del IGV', function () {
     $tax = (new TaxCalculator())->calculate(
         [
-            ['code' => 'A', 'price' => 10, 'qty' => 2],  // gravado: 20 − 10% = 18 → IGV 3.24
-            ['code' => 'B', 'price' => 5,  'qty' => 1],  // exonerado: 5 − 10% = 4.50
+            ['product_id' => 'A', 'price' => 10, 'qty' => 2],  // gravado: 20 − 10% = 18 → IGV 3.24
+            ['product_id' => 'B', 'price' => 5,  'qty' => 1],  // exonerado: 5 − 10% = 4.50
         ],
         ['A' => '10', 'B' => '20'],
         10
@@ -31,10 +31,10 @@ it('aplica el descuento a la base de cada línea antes del IGV', function () {
 });
 
 it('sin descuento el cálculo no cambia y rechaza porcentajes fuera de rango', function () {
-    $tax = (new TaxCalculator())->calculate([['code' => 'A', 'price' => 10, 'qty' => 1]], ['A' => '10']);
+    $tax = (new TaxCalculator())->calculate([['product_id' => 'A', 'price' => 10, 'qty' => 1]], ['A' => '10']);
 
     expect($tax['discount'])->toBe(0.0)->and($tax['total'])->toBe(11.8);
-    expect(fn () => (new TaxCalculator())->calculate([['code' => 'A', 'price' => 1, 'qty' => 1]], ['A' => '10'], 101))
+    expect(fn () => (new TaxCalculator())->calculate([['product_id' => 'A', 'price' => 1, 'qty' => 1]], ['A' => '10'], 101))
         ->toThrow(InvalidArgumentException::class);
 });
 
@@ -114,9 +114,9 @@ function salesSettings(Employee $employee, bool $rounding, bool $amount): void
 it('reparte un descuento por monto entre las líneas y suma exactamente el monto', function () {
     $tax = (new TaxCalculator())->calculate(
         [
-            ['code' => 'A', 'price' => 3.33, 'qty' => 1],
-            ['code' => 'B', 'price' => 3.33, 'qty' => 1],
-            ['code' => 'C', 'price' => 3.34, 'qty' => 1],
+            ['product_id' => 'A', 'price' => 3.33, 'qty' => 1],
+            ['product_id' => 'B', 'price' => 3.33, 'qty' => 1],
+            ['product_id' => 'C', 'price' => 3.34, 'qty' => 1],
         ],
         ['A' => '10', 'B' => '10', 'C' => '20'],
         0,

@@ -93,7 +93,7 @@ class ApprovalController extends Controller
             foreach ($orders as $order) {
                 foreach ($order->items as $item) {
                     $branchStock = BranchStock::where('branch_id', $cashRegister->branch_id)
-                        ->where('product_code', $item->product_code)
+                        ->where('product_id', $item->product_id)
                         ->lockForUpdate()
                         ->first();
 
@@ -106,7 +106,7 @@ class ApprovalController extends Controller
                         StockMovement::create([
                             'company_id'     => $cashRegister->company_id,
                             'branch_id'      => $cashRegister->branch_id,
-                            'product_code'   => $item->product_code,
+                            'product_id'     => $item->product_id,
                             'type'           => 'entrada',
                             'reference_type' => 'order_reversal',
                             'reference_id'   => $order->id,

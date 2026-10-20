@@ -75,7 +75,7 @@
                 </tr></thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($products as $p)
-                    @php $stock = (float) ($stocks[$p->code] ?? 0); $k = $p->code; @endphp
+                    @php $stock = (float) ($stocks[$p->id] ?? 0); $k = $p->id; @endphp
                     <tr class="fila-conteo hover:bg-slate-50 transition-colors">
                         <td class="px-4 py-2">
                             <p class="text-xs font-medium text-slate-800">{{ $p->name }}</p>

@@ -148,13 +148,13 @@
                         <td class="px-5 py-3">
                             <div class="flex items-center justify-end gap-1">
 @if($canManage)
-                                <a href="{{ route('employee.products.edit', $producto->code) }}"
+                                <a href="{{ route('employee.products.edit', $producto) }}"
                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-sky-50 hover:text-sky-600 transition-colors" title="Editar">
                                     <i class="fas fa-pencil text-xs"></i>
                                 </a>
                                 <button type="button"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors btn-eliminar"
-                                        data-id="{{ $producto->code }}" data-nombre="{{ $producto->name }}" title="Eliminar">
+                                        data-id="{{ $producto->id }}" data-nombre="{{ $producto->name }}" title="Eliminar">
                                     <i class="fas fa-trash text-xs"></i>
                                 </button>
 @endif

@@ -65,7 +65,7 @@
             <tbody class="divide-y divide-slate-100">
                 @foreach($transfer->items as $item)
                 <tr>
-                    <td class="px-5 py-2.5"><p class="text-xs font-medium text-slate-800">{{ $item->product?->name ?? $item->product_code }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $item->product_code }}</p></td>
+                    <td class="px-5 py-2.5"><p class="text-xs font-medium text-slate-800">{{ $item->product?->name ?? '—' }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $item->product?->code }}</p></td>
                     <td class="px-5 py-2.5 text-center text-xs text-slate-700">{{ $fmt($item->quantity) }} {{ $item->product?->unit?->abbreviation }}</td>
                 </tr>
                 @endforeach

@@ -19,12 +19,12 @@ uses(RefreshDatabase::class);
 it('vende primero el lote que vence antes', function () {
     $employee = loginEmployee();
     posSetup($employee);
-    BranchStock::where('product_code', 'P1')->update(['stock_actual' => 0]);
+    BranchStock::where('product_id', pid('P1'))->update(['stock_actual' => 0]);
     addBatch('P1', 5, today()->addDays(200)->toDateString(), 'TARDE');
     addBatch('P1', 5, today()->addDays(20)->toDateString(), 'PRONTO');
     addBatch('P1', 5, null, 'SINFECHA');
 
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 7]], 'total' => 82.6])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 7]], 'total' => 82.6])->assertOk();
 
     expect(remaining('PRONTO'))->toBe(0.0)     // el que vence antes se agota primero
         ->and(remaining('TARDE'))->toBe(3.0)   // luego el siguiente en vencer
@@ -35,25 +35,25 @@ it('vende primero el lote que vence antes', function () {
 it('no vende unidades de lotes vencidos', function () {
     $employee = loginEmployee();
     posSetup($employee);
-    BranchStock::where('product_code', 'P1')->update(['stock_actual' => 0]);
+    BranchStock::where('product_id', pid('P1'))->update(['stock_actual' => 0]);
     addBatch('P1', 4, today()->subDays(2)->toDateString(), 'VENCIDO');
     addBatch('P1', 2, today()->addDays(30)->toDateString(), 'VIGENTE');
 
     // Hay 6 en stock pero solo 2 vigentes
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 3]], 'total' => 35.4])->assertStatus(422);
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 3]], 'total' => 35.4])->assertStatus(422);
     expect(stockOf('P1'))->toBe(6.0);
 
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 2]], 'total' => 23.6])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 2]], 'total' => 23.6])->assertOk();
     expect(remaining('VIGENTE'))->toBe(0.0)->and(remaining('VENCIDO'))->toBe(4.0)->and(stockOf('P1'))->toBe(4.0);
 });
 
 it('un lote que vence hoy todavía se puede vender', function () {
     $employee = loginEmployee();
     posSetup($employee);
-    BranchStock::where('product_code', 'P1')->update(['stock_actual' => 0]);
+    BranchStock::where('product_id', pid('P1'))->update(['stock_actual' => 0]);
     addBatch('P1', 3, today()->toDateString(), 'HOY');
 
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 3]], 'total' => 35.4])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 3]], 'total' => 35.4])->assertOk();
 
     expect(remaining('HOY'))->toBe(0.0);
 });
@@ -63,7 +63,7 @@ it('las unidades sin lote se venden después de los lotes', function () {
     posSetup($employee);                       // 10 unidades sin lote
     addBatch('P1', 2, today()->addDays(10)->toDateString(), 'L1');
 
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 5]], 'total' => 59])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 5]], 'total' => 59])->assertOk();
 
     expect(remaining('L1'))->toBe(0.0)->and(stockOf('P1'))->toBe(7.0);
 });
@@ -71,11 +71,11 @@ it('las unidades sin lote se venden después de los lotes', function () {
 it('anular la venta con nota de crédito devuelve las unidades a su lote', function () {
     $employee = loginEmployee();
     posSetup($employee);
-    BranchStock::where('product_code', 'P1')->update(['stock_actual' => 0]);
+    BranchStock::where('product_id', pid('P1'))->update(['stock_actual' => 0]);
     addBatch('P1', 5, today()->addDays(10)->toDateString(), 'L1');
     addBatch('P1', 5, today()->addDays(90)->toDateString(), 'L2');
 
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 7]], 'total' => 82.6])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 7]], 'total' => 82.6])->assertOk();
     expect(remaining('L1'))->toBe(0.0)->and(remaining('L2'))->toBe(3.0);
 
     $order = App\Models\Order::firstOrFail();
@@ -89,15 +89,15 @@ it('anular la venta con nota de crédito devuelve las unidades a su lote', funct
 it('una compra crea su lote y no se anula si ya se vendió parte', function () {
     $employee = loginEmployee();
     posSetup($employee);
-    BranchStock::where('product_code', 'P1')->update(['stock_actual' => 0]);
+    BranchStock::where('product_id', pid('P1'))->update(['stock_actual' => 0]);
 
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
-        'items' => [['product_code' => 'P1', 'quantity' => 10, 'unit_cost' => 2, 'expiration_date' => today()->addDays(60)->toDateString(), 'batch' => 'C-1']],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 10, 'unit_cost' => 2, 'expiration_date' => today()->addDays(60)->toDateString(), 'batch' => 'C-1']],
     ])->assertSessionHasNoErrors();
     expect(remaining('C-1'))->toBe(10.0);
 
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 4]], 'total' => 47.2])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 4]], 'total' => 47.2])->assertOk();
 
     $this->post(route('employee.purchases.void', Purchase::firstOrFail()), ['void_reason' => 'x'])->assertSessionHas('error');
     expect(Purchase::first()->status)->toBe(1)->and(stockOf('P1'))->toBe(6.0);
@@ -109,7 +109,7 @@ it('anular una compra intacta retira su lote', function () {
 
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
-        'items' => [['product_code' => 'P1', 'quantity' => 10, 'unit_cost' => 2, 'expiration_date' => today()->addDays(60)->toDateString(), 'batch' => 'C-1']],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 10, 'unit_cost' => 2, 'expiration_date' => today()->addDays(60)->toDateString(), 'batch' => 'C-1']],
     ]);
     $this->post(route('employee.purchases.void', Purchase::firstOrFail()), ['void_reason' => 'duplicada'])->assertSessionHasNoErrors();
 
@@ -124,7 +124,7 @@ it('el lote viaja con el traspaso y vuelve al anularlo', function () {
     stockProduct('P1', 0);
     addBatch('P1', 10, today()->addDays(45)->toDateString(), 'L1');
 
-    $this->post(route('employee.transfers.store'), ['to_branch_id' => $norte->id, 'items' => [['product_code' => 'P1', 'quantity' => 6]]])
+    $this->post(route('employee.transfers.store'), ['to_branch_id' => $norte->id, 'items' => [['product_id' => pid('P1'), 'quantity' => 6]]])
         ->assertSessionHasNoErrors();
 
     $dest = StockBatch::where('branch_id', $norte->id)->firstOrFail();
@@ -143,7 +143,7 @@ it('no traspasa unidades vencidas', function () {
     stockProduct('P1', 0);
     addBatch('P1', 5, today()->subDay()->toDateString(), 'VENC');
 
-    $this->post(route('employee.transfers.store'), ['to_branch_id' => $norte->id, 'items' => [['product_code' => 'P1', 'quantity' => 2]]])
+    $this->post(route('employee.transfers.store'), ['to_branch_id' => $norte->id, 'items' => [['product_id' => pid('P1'), 'quantity' => 2]]])
         ->assertSessionHas('error');
 
     expect(StockTransfer::count())->toBe(0)->and(stockOf('P1'))->toBe(5.0);
@@ -156,11 +156,11 @@ it('un ajuste de resta descuenta de los lotes y uno de suma puede crear lote', f
     stockProduct('P1', 0);
     addBatch('P1', 5, today()->addDays(10)->toDateString(), 'L1');
 
-    $this->post(route('employee.adjustments.store'), ['product_code' => 'P1', 'mode' => 'subtract', 'quantity' => 2, 'reason' => 'merma'])->assertSessionHasNoErrors();
+    $this->post(route('employee.adjustments.store'), ['product_id' => pid('P1'), 'mode' => 'subtract', 'quantity' => 2, 'reason' => 'merma'])->assertSessionHasNoErrors();
     expect(remaining('L1'))->toBe(3.0);
 
     $this->post(route('employee.adjustments.store'), [
-        'product_code' => 'P1', 'mode' => 'add', 'quantity' => 4, 'reason' => 'conteo', 'batch' => 'NUEVO', 'expiration_date' => today()->addDays(99)->toDateString(),
+        'product_id' => pid('P1'), 'mode' => 'add', 'quantity' => 4, 'reason' => 'conteo', 'batch' => 'NUEVO', 'expiration_date' => today()->addDays(99)->toDateString(),
     ])->assertSessionHasNoErrors();
     expect(remaining('NUEVO'))->toBe(4.0)->and(stockOf('P1'))->toBe(7.0);
 });
@@ -209,8 +209,8 @@ it('el preparado entra como lote con su vencimiento y los insumos salen por FEFO
     addBatch('UREA', 20, today()->addDays(90)->toDateString(), 'UREA-OK');
 
     $this->post(route('employee.formulas.store'), [
-        'name' => 'Crema', 'yield_quantity' => 10, 'status' => 1, 'shelf_life_days' => 30, 'sell_in_pos' => 1, 'product_code' => 'CREMA',
-        'ingredients' => [['product_code' => 'UREA', 'quantity' => 4]],
+        'name' => 'Crema', 'yield_quantity' => 10, 'status' => 1, 'shelf_life_days' => 30, 'sell_in_pos' => 1, 'product_id' => pid('CREMA'),
+        'ingredients' => [['product_id' => pid('UREA'), 'quantity' => 4]],
     ])->assertSessionHasNoErrors();
     $formula = Formula::firstOrFail();
 
@@ -236,7 +236,7 @@ it('no prepara con insumos vencidos aunque haya stock total', function () {
 
     $this->post(route('employee.formulas.store'), [
         'name' => 'Crema', 'yield_quantity' => 10, 'status' => 1,
-        'ingredients' => [['product_code' => 'UREA', 'quantity' => 4]],
+        'ingredients' => [['product_id' => pid('UREA'), 'quantity' => 4]],
     ]);
 
     $this->post(route('employee.productions.store'), ['formula_id' => Formula::firstOrFail()->id, 'quantity_produced' => 10, 'produced_at' => today()->toDateString()])
@@ -252,9 +252,9 @@ it('los lotes nunca suman más que el stock total', function () {
     stockProduct('P1', 0);
     addBatch('P1', 5, today()->addDays(10)->toDateString(), 'A');
     addBatch('P1', 5, today()->addDays(20)->toDateString(), 'B');
-    BranchStock::where('product_code', 'P1')->update(['stock_actual' => 7]);   // se perdieron 3 sin pasar por los lotes
+    BranchStock::where('product_id', pid('P1'))->update(['stock_actual' => 7]);   // se perdieron 3 sin pasar por los lotes
 
-    DB::transaction(fn () => app(BatchService::class)->reconcile(1, 'P1'));
+    DB::transaction(fn () => app(BatchService::class)->reconcile(1, pid('P1')));
 
     // El exceso se recorta del lote que vence más tarde
     expect(remaining('A'))->toBe(5.0)->and(remaining('B'))->toBe(2.0);

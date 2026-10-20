@@ -23,7 +23,7 @@ function creditPurchase(Supplier $supplier, string $due = null): Purchase
     test()->post(route('employee.purchases.store'), [
         'document_type' => 2, 'document_number' => 'F001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
         'supplier_id' => $supplier->id, 'payment_condition' => 'credit', 'due_date' => $due ?? today()->addDays(30)->toDateString(),
-        'items' => [['product_code' => 'P1', 'quantity' => 10, 'unit_cost' => 10]],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 10, 'unit_cost' => 10]],
     ])->assertSessionHasNoErrors();
 
     return Purchase::latest('id')->firstOrFail();
@@ -71,7 +71,7 @@ it('una compra a crédito queda con saldo y una al contado queda pagada', functi
 
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
-        'items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => 5]],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 1, 'unit_cost' => 5]],
     ])->assertSessionHasNoErrors();
     $cash = Purchase::latest('id')->first();
     expect($cash->payment_condition)->toBe('cash')->and($cash->balance)->toBe(0.0)->and((float) $cash->paid_amount)->toBe(5.0);
@@ -83,7 +83,7 @@ it('exige fecha de vencimiento en una compra a crédito', function () {
 
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(), 'payment_condition' => 'credit',
-        'items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => 5]],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 1, 'unit_cost' => 5]],
     ])->assertSessionHasErrors('due_date');
 
     expect(Purchase::count())->toBe(0);
@@ -139,7 +139,7 @@ it('emite una orden de compra y la recibe como compra', function () {
     $supplier = makeSupplier();
 
     $this->post(route('employee.purchase-orders.store'), [
-        'supplier_id' => $supplier->id, 'items' => [['product_code' => 'P1', 'quantity' => 12, 'unit_cost' => 2.5]],
+        'supplier_id' => $supplier->id, 'items' => [['product_id' => pid('P1'), 'quantity' => 12, 'unit_cost' => 2.5]],
     ])->assertSessionHasNoErrors();
 
     $order = PurchaseOrder::firstOrFail();
@@ -148,18 +148,18 @@ it('emite una orden de compra y la recibe como compra', function () {
 
     // Al abrir la recepción se precargan los productos de la orden
     $form = $this->get(route('employee.purchases.create', ['order' => $order->id]))->assertOk();
-    expect($form->viewData('preload'))->toBe([['code' => 'P1', 'qty' => 12.0, 'cost' => 2.5]]);
+    expect($form->viewData('preload'))->toBe([['product_id' => pid('P1'), 'qty' => 12.0, 'cost' => 2.5]]);
 
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(), 'supplier_id' => $supplier->id, 'purchase_order_id' => $order->id,
-        'items' => [['product_code' => 'P1', 'quantity' => 12, 'unit_cost' => 2.5]],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 12, 'unit_cost' => 2.5]],
     ])->assertSessionHasNoErrors();
 
     expect($order->fresh()->status)->toBe('received')->and(stockOf('P1'))->toBe(12.0);
     // Una orden ya recibida no se puede volver a usar
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(), 'purchase_order_id' => $order->id,
-        'items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => 2.5]],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 1, 'unit_cost' => 2.5]],
     ])->assertSessionHasErrors('purchase_order_id');
 });
 
@@ -169,7 +169,7 @@ it('numera las órdenes en orden y permite anular las pendientes', function () {
     $supplier = makeSupplier();
 
     foreach ([1, 2] as $_) {
-        $this->post(route('employee.purchase-orders.store'), ['supplier_id' => $supplier->id, 'items' => [['product_code' => 'P1', 'quantity' => 1]]])->assertSessionHasNoErrors();
+        $this->post(route('employee.purchase-orders.store'), ['supplier_id' => $supplier->id, 'items' => [['product_id' => pid('P1'), 'quantity' => 1]]])->assertSessionHasNoErrors();
     }
     expect(PurchaseOrder::orderBy('id')->pluck('number')->all())->toBe(['OC-0001', 'OC-0002']);
 
@@ -185,8 +185,8 @@ it('reposición arma una orden de compra con las cantidades sugeridas', function
 
     $this->get(route('employee.replenishment.index'))->assertOk()->assertSee('Orden de compra con los marcados');
 
-    $form = $this->get(route('employee.purchase-orders.create', ['products' => ['BAJO' => 18]]))->assertOk();
-    expect($form->viewData('initial'))->toBe([['product_code' => 'BAJO', 'quantity' => 18.0]]);
+    $form = $this->get(route('employee.purchase-orders.create', ['products' => [pid('BAJO') => 18]]))->assertOk();
+    expect($form->viewData('initial'))->toBe([['product_id' => pid('BAJO'), 'quantity' => 18.0]]);
 });
 
 it('la orden de compra avisa qué falta registrar si no hay proveedores ni productos', function () {

@@ -11,7 +11,7 @@ class BranchStock extends Model
 
     protected $fillable = [
         'branch_id',
-        'product_code',
+        'product_id',
         'stock_actual',
         'stock_minimum',
         'stock_maximum',
@@ -34,7 +34,7 @@ class BranchStock extends Model
     /** Producto del catálogo */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code');
+        return $this->belongsTo(Product::class);
     }
 
     // ── Accessors ───────────────────────────────────────────────

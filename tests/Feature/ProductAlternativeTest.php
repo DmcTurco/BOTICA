@@ -22,7 +22,7 @@ it('ofrece productos con el mismo principio activo, con stock, del más barato a
     ingredientProduct('OTRO', 'Ibuprofeno', 0.50, 40);
     ingredientProduct('PEDIDO', 'Paracetamol', 0.80, 0);
 
-    $lista = $this->getJson(route('employee.pos.alternatives', ['code' => 'PEDIDO']))->assertOk()->json();
+    $lista = $this->getJson(route('employee.pos.alternatives', ['product_id' => pid('PEDIDO')]))->assertOk()->json();
 
     expect(array_column($lista, 'code'))->toBe(['GEN', 'MARCA']);
 });
@@ -35,7 +35,7 @@ it('no cuenta como alternativa el stock de lotes vencidos', function () {
     ingredientProduct('OK', 'Amoxicilina', 2, 0);
     addBatch('OK', 5, today()->addDays(20)->toDateString(), 'OK1');
 
-    $lista = $this->getJson(route('employee.pos.alternatives', ['code' => 'PEDIDO']))->json();
+    $lista = $this->getJson(route('employee.pos.alternatives', ['product_id' => pid('PEDIDO')]))->json();
 
     expect(array_column($lista, 'code'))->toBe(['OK']);
 });
@@ -46,7 +46,7 @@ it('busca por texto cuando el producto pedido no existe en la lista', function (
 
     expect(array_column($this->getJson(route('employee.pos.alternatives', ['q' => 'lorata']))->json(), 'code'))->toBe(['A']);
     expect($this->getJson(route('employee.pos.alternatives', ['q' => 'lo']))->json())->toBe([]);          // muy corto
-    expect($this->getJson(route('employee.pos.alternatives', ['code' => 'NOEXISTE']))->json())->toBe([]);
+    expect($this->getJson(route('employee.pos.alternatives', ['product_id' => pid('NOEXISTE')]))->json())->toBe([]);
 });
 
 it('no mezcla productos de otra compañía y exige el privilegio de ventas', function () {
@@ -54,8 +54,8 @@ it('no mezcla productos de otra compañía y exige el privilegio de ventas', fun
     ingredientProduct('PEDIDO', 'Metformina', 1, 0);
     Product::create(['code' => 'AJENO', 'company_id' => 99, 'name' => 'Ajeno', 'active_ingredient' => 'Metformina', 'purchase_price' => 1, 'unit_sale_price' => 2, 'igv_affectation' => '20', 'employee_id' => 1, 'status' => 1]);
 
-    expect($this->getJson(route('employee.pos.alternatives', ['code' => 'PEDIDO']))->json())->toBe([]);
+    expect($this->getJson(route('employee.pos.alternatives', ['product_id' => pid('PEDIDO')]))->json())->toBe([]);
 
     loginEmployee([Employee::PRIV_VER_INVENTARIO]);
-    $this->get(route('employee.pos.alternatives', ['code' => 'PEDIDO']))->assertRedirect(route('employee.home'));
+    $this->get(route('employee.pos.alternatives', ['product_id' => pid('PEDIDO')]))->assertRedirect(route('employee.home'));
 });

@@ -78,13 +78,13 @@
                 <div class="text-center">
                     <p class="text-xs text-slate-400 mb-0.5">Total entradas</p>
                     <p class="text-lg font-bold text-emerald-600">
-                        {{ $movimientos->where('type', 'entrada')->sum('quantity') }}
+                        {{ $movimientos->sum('in_quantity') + 0 }}
                     </p>
                 </div>
                 <div class="text-center">
                     <p class="text-xs text-slate-400 mb-0.5">Total salidas</p>
                     <p class="text-lg font-bold text-red-500">
-                        {{ $movimientos->where('type', 'salida')->sum('quantity') }}
+                        {{ $movimientos->sum('out_quantity') + 0 }}
                     </p>
                 </div>
                 <div class="text-center">
@@ -154,8 +154,9 @@
 
                         {{-- Entrada --}}
                         <td class="px-5 py-3 text-center bg-emerald-50/30">
-                            @if($mov->type === 'entrada')
-                                <span class="font-semibold text-emerald-700">+{{ $mov->quantity }}</span>
+                            {{-- Los ajustes positivos (inventario inicial) también son entradas --}}
+                            @if($mov->in_quantity > 0)
+                                <span class="font-semibold {{ $mov->type === 'ajuste' ? 'text-amber-600' : 'text-emerald-700' }}">+{{ $mov->in_quantity + 0 }}</span>
                             @else
                                 <span class="text-slate-300">—</span>
                             @endif
@@ -163,10 +164,8 @@
 
                         {{-- Salida --}}
                         <td class="px-5 py-3 text-center bg-red-50/30">
-                            @if($mov->type === 'salida')
-                                <span class="font-semibold text-red-600">-{{ $mov->quantity }}</span>
-                            @elseif($mov->type === 'ajuste')
-                                <span class="font-semibold text-amber-600">{{ $mov->quantity }}</span>
+                            @if($mov->out_quantity > 0)
+                                <span class="font-semibold {{ $mov->type === 'ajuste' ? 'text-amber-600' : 'text-red-600' }}">-{{ $mov->out_quantity + 0 }}</span>
                             @else
                                 <span class="text-slate-300">—</span>
                             @endif

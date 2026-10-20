@@ -31,13 +31,13 @@ class PrescriptionController extends Controller
         $prescriptions = $query->orderByDesc('id')->paginate(15)->withQueryString();
 
         // Productos de cada venta que exigían receta
-        $codes    = $prescriptions->getCollection()->flatMap(fn ($p) => $p->order?->items->pluck('product_code') ?? [])->unique();
-        $products = Product::withTrashed()->whereIn('code', $codes)->get(['code', 'requires_recipe', 'controlled_type'])->keyBy('code');
+        $productIds = $prescriptions->getCollection()->flatMap(fn ($p) => $p->order?->items->pluck('product_id') ?? [])->unique();
+        $products   = Product::withTrashed()->whereIn('id', $productIds)->get(['id', 'requires_recipe', 'controlled_type'])->keyBy('id');
 
         $prescriptions->getCollection()->each(function (Prescription $p) use ($products) {
             $p->recipe_items = ($p->order?->items ?? collect())
-                ->filter(fn ($i) => ($products[$i->product_code]->recipe_level ?? 0) > 0)
-                ->map(fn ($i) => ['name' => $i->product_name, 'qty' => (float) $i->quantity, 'controlled' => ($products[$i->product_code]->recipe_level ?? 0) === 2])
+                ->filter(fn ($i) => ($products[$i->product_id]->recipe_level ?? 0) > 0)
+                ->map(fn ($i) => ['name' => $i->product_name, 'qty' => (float) $i->quantity, 'controlled' => ($products[$i->product_id]->recipe_level ?? 0) === 2])
                 ->values();
         });
 

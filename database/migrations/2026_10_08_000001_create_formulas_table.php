@@ -32,7 +32,7 @@ return new class extends Migration
 
             // Venta en el POS: si está activo, el preparado ingresa al stock del producto vinculado
             $table->boolean('sell_in_pos')->default(false);
-            $table->string('product_code', 20)->nullable()->index()
+            $table->unsignedBigInteger('product_id')->nullable()->index()
                   ->comment('Producto del catálogo que recibe el stock cuando sell_in_pos = true');
 
             $table->smallInteger('status')->default(1)->comment('1=activa, 0=inactiva');
@@ -49,7 +49,7 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('formula_id')->index();
-            $table->string('product_code', 20)->index();            // insumo (producto del catálogo)
+            $table->unsignedBigInteger('product_id')->index();      // insumo (producto del catálogo)
             $table->decimal('quantity', 12, 2)->comment('Cantidad del insumo por fórmula base, en la unidad del producto');
             $table->string('notes', 255)->nullable();               // ej. "tamizar", "disolver en caliente"
 

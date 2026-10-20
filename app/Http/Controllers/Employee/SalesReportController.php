@@ -177,16 +177,16 @@ class SalesReportController extends Controller
         $rows = $this->soldByProduct($employee, $from, $to)
             ->orderByDesc('qty')->limit($limit)->get();
 
-        $names = Product::withTrashed()->whereIn('code', $rows->pluck('product_code'))->pluck('name', 'code');
+        $products = Product::withTrashed()->whereIn('id', $rows->pluck('product_id'))->get(['id', 'code', 'name'])->keyBy('id');
 
         if ($request->query('export') === 'csv') {
             return CsvExport::download('mas_vendidos_' . $from->format('Ymd') . '_' . $to->format('Ymd'), ['Código', 'Producto', 'Unidades vendidas', 'Venta neta'],
-                $rows->map(fn ($r) => [$r->product_code, $names[$r->product_code] ?? '', (float) $r->qty, (float) $r->net]));
+                $rows->map(fn ($r) => [$products[$r->product_id]->code ?? '', $products[$r->product_id]->name ?? '', (float) $r->qty, (float) $r->net]));
         }
 
         return view('employee.pages.reports.best-sellers', [
             'rows'  => $rows,
-            'names' => $names,
+            'products' => $products,
             'from'  => $from,
             'to'    => $to,
             'limit' => $limit,
@@ -202,25 +202,25 @@ class SalesReportController extends Controller
         $employee = auth()->guard('employee')->user();
         $days = min(365, max(7, (int) $request->input('dias', 60)));
 
-        $soldCodes = DB::table('order_detail')
+        $soldIds = DB::table('order_detail')
             ->join('orders', 'orders.id', '=', 'order_detail.order_id')
             ->where('orders.company_id', $employee->company_id)
             ->where('orders.branch_id', $employee->branch_id)
             ->where('orders.status', 1)
             ->whereDate('orders.created_at', '>=', now()->subDays($days)->toDateString())
-            ->distinct()->pluck('order_detail.product_code');
+            ->distinct()->pluck('order_detail.product_id');
 
-        $stocks = BranchStock::where('branch_id', $employee->branch_id)->where('stock_actual', '>', 0)->pluck('stock_actual', 'product_code');
+        $stocks = BranchStock::where('branch_id', $employee->branch_id)->where('stock_actual', '>', 0)->pluck('stock_actual', 'product_id');
 
         $products = Product::with(['category:id,name', 'laboratory:id,name'])
             ->where('company_id', $employee->company_id)
             ->where('status', 1)
-            ->whereIn('code', $stocks->keys())
-            ->whereNotIn('code', $soldCodes)
+            ->whereIn('id', $stocks->keys())
+            ->whereNotIn('id', $soldIds)
             ->orderBy('name')
             ->get()
             ->each(function (Product $p) use ($stocks) {
-                $p->stock_actual = (float) $stocks[$p->code];
+                $p->stock_actual = (float) $stocks[$p->id];
                 $p->stock_value  = round($p->stock_actual * (float) $p->purchase_price, 2);
             })
             ->sortByDesc('stock_value')->values();
@@ -247,16 +247,16 @@ class SalesReportController extends Controller
         [$from, $to] = $this->dateRange($request);
 
         $rows = $this->soldByProduct($employee, $from, $to)->get();
-        $products = Product::withTrashed()->whereIn('code', $rows->pluck('product_code'))->get(['code', 'name', 'purchase_price'])->keyBy('code');
+        $products = Product::withTrashed()->whereIn('id', $rows->pluck('product_id'))->get(['id', 'code', 'name', 'purchase_price'])->keyBy('id');
 
         $rows = $rows->map(function ($r) use ($products) {
-            $cost   = round((float) $r->qty * (float) ($products[$r->product_code]->purchase_price ?? 0), 2);
+            $cost   = round((float) $r->qty * (float) ($products[$r->product_id]->purchase_price ?? 0), 2);
             $sales  = round((float) $r->net, 2);
             $profit = round($sales - $cost, 2);
 
             return (object) [
-                'code'   => $r->product_code,
-                'name'   => $products[$r->product_code]->name ?? $r->product_code,
+                'code'   => $products[$r->product_id]->code ?? '',
+                'name'   => $products[$r->product_id]->name ?? '—',
                 'qty'    => (float) $r->qty,
                 'sales'  => $sales,
                 'cost'   => $cost,
@@ -379,11 +379,11 @@ class SalesReportController extends Controller
             ->whereDate('orders.created_at', '>=', $from->toDateString())
             ->whereDate('orders.created_at', '<=', $to->toDateString())
             ->select(
-                'order_detail.product_code',
+                'order_detail.product_id',
                 DB::raw('SUM(order_detail.quantity * order_detail.units_per_item) as qty'),
                 DB::raw('SUM(order_detail.subtotal) as net')
             )
-            ->groupBy('order_detail.product_code');
+            ->groupBy('order_detail.product_id');
     }
 
     /** Totales de una colección de órdenes */

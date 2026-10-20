@@ -80,7 +80,7 @@ class CompanyProductCatalog
             // Empaque con varias unidades: presentación "Caja x N" a precio por unidad × N
             if ((int) $item['pack_amount'] > 1 && isset($units['Caja'])) {
                 $presentations[] = [
-                    'product_code'      => $code,
+                    'product_code'      => $code,           // clave temporal: se cambia por product_id al insertar
                     'unit_id'           => $units['Caja'],
                     'equivalent_amount' => (int) $item['pack_amount'],
                     'sale_price'        => round((float) $item['unit_price'] * (int) $item['pack_amount'], 2),
@@ -105,7 +105,10 @@ class CompanyProductCatalog
         foreach (array_chunk($products, 500) as $chunk) {
             DB::table('products')->insert($chunk);
         }
-        foreach (array_chunk($presentations, 500) as $chunk) {
+
+        // Las presentaciones se armaron con el correlativo: ya insertados los productos, se cambia por su id
+        $ids = self::productIds($company, array_column($products, 'code'));
+        foreach (array_chunk(self::withProductIds($presentations, $ids), 500) as $chunk) {
             DB::table('presentations')->insert($chunk);
         }
 
@@ -119,6 +122,38 @@ class CompanyProductCatalog
         $medicines = is_file($path) ? max(0, count(file($path, FILE_SKIP_EMPTY_LINES)) - 1) : 0;
 
         return $medicines + count(self::others());
+    }
+
+    /**
+     * Ids de los productos recién insertados de la compañía: [correlativo => id].
+     *
+     * @param  array<int, string>  $codes
+     * @return array<string, int>
+     */
+    public static function productIds(Company $company, array $codes): array
+    {
+        $ids = [];
+        foreach (array_chunk($codes, 5000) as $chunk) {
+            $ids += DB::table('products')->where('company_id', $company->id)->whereIn('code', $chunk)->pluck('id', 'code')->all();
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Cambia la clave temporal 'product_code' de cada fila por 'product_id'.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @param  array<string, int>  $ids  [correlativo => id]
+     */
+    public static function withProductIds(array $rows, array $ids): array
+    {
+        return array_map(function (array $row) use ($ids) {
+            $row['product_id'] = $ids[$row['product_code']];
+            unset($row['product_code']);
+
+            return $row;
+        }, $rows);
     }
 
     /** Fila de producto con los valores por defecto del catálogo precargado */

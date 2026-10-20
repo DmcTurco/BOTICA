@@ -41,6 +41,8 @@ class CompanyRequest extends FormRequest
             $rules['branch_name']    = 'required|string|max:100';
             $rules['branch_address'] = 'nullable|string|max:200';
             $rules['load_products']  = 'nullable|boolean';   // precargar el catálogo de productos (stock 0)
+            // Datos de un cliente que migra de otro sistema: carpeta de database/data/client_packs
+            $rules['client_pack']    = ['nullable', 'string', Rule::in(\App\Services\CompanyClientDataPack::available())];
         }
 
         return $rules;

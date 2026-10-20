@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Company;
 use App\Models\DocumentSeries;
 use App\Models\DocumentType;
+use App\Services\CompanyClientDataPack;
 use App\Services\CompanyProductCatalog;
 use App\Services\CompanyStarterCatalog;
 use Illuminate\Http\Request;
@@ -35,7 +36,16 @@ class CompanyController extends Controller
     public function create()
     {
         // Cuántos productos trae el catálogo precargable (se muestra en la casilla)
-        return view('admin.pages.companies.form', ['catalogSize' => CompanyProductCatalog::size()]);
+        // y los packs de datos de clientes que migran de otro sistema (nombre => [etiqueta, cantidad])
+        $clientPacks = [];
+        foreach (CompanyClientDataPack::available() as $pack) {
+            $clientPacks[$pack] = [CompanyClientDataPack::label($pack), CompanyClientDataPack::size($pack)];
+        }
+
+        return view('admin.pages.companies.form', [
+            'catalogSize' => CompanyProductCatalog::size(),
+            'clientPacks' => $clientPacks,
+        ]);
     }
 
     /**
@@ -48,7 +58,7 @@ class CompanyController extends Controller
      */
     public function store(CompanyRequest $request)
     {
-        [$company, $loaded] = DB::transaction(function () use ($request) {
+        [$company, $loaded, $packLoaded] = DB::transaction(function () use ($request) {
             $company = Company::create($request->safe()->only(['name', 'ruc', 'address', 'phone', 'email', 'password']));
 
             $branch = Branch::create([
@@ -69,12 +79,18 @@ class CompanyController extends Controller
             // Opcional: productos precargados con stock 0 (medicamentos DIGEMID + no medicamentos)
             $loaded = $request->boolean('load_products') ? CompanyProductCatalog::seed($company) : null;
 
-            return [$company, $loaded];
+            // Opcional: productos y stock de un cliente que migra de otro sistema (database/data/client_packs)
+            $packLoaded = $request->filled('client_pack') ? CompanyClientDataPack::seed($company, $branch, $request->input('client_pack')) : null;
+
+            return [$company, $loaded, $packLoaded];
         });
 
         $productsNote = $loaded
             ? ' Se cargaron ' . number_format($loaded['medicines'] + $loaded['others']) . ' productos con stock en 0.'
             : '';
+        if ($packLoaded) {
+            $productsNote .= ' Se cargaron ' . number_format($packLoaded['products']) . ' productos del cliente (' . number_format($packLoaded['with_stock']) . ' con stock).';
+        }
 
         return redirect()->route('admin.companies.index')
             ->with('success', "Empresa «{$company->name}» creada (gratis por ahora).{$productsNote} Ya puede entrar con {$company->email} en /company/login. Para cobrarle, configúrala en Suscripciones.");

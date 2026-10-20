@@ -77,7 +77,7 @@ class CreditNoteService
 
     /**
      * Devuelve a la sede el stock de cada ítem anulado y registra la entrada en el kardex.
-     * Se bloquean las filas de stock en orden por código (evita bloqueos cruzados).
+     * Se bloquean las filas de stock en orden por producto (evita bloqueos cruzados).
      */
     private function restoreStock(Order $order, CreditNote $note, Employee $employee): void
     {
@@ -85,14 +85,14 @@ class CreditNoteService
         app(\App\Services\BatchService::class)->restore('order', $order->id);
 
         $stocks = BranchStock::where('branch_id', $order->branch_id)
-            ->whereIn('product_code', $order->items->pluck('product_code')->unique())
-            ->orderBy('product_code')
+            ->whereIn('product_id', $order->items->pluck('product_id')->unique())
+            ->orderBy('product_id')
             ->lockForUpdate()
             ->get()
-            ->keyBy('product_code');
+            ->keyBy('product_id');
 
         foreach ($order->items as $item) {
-            $stock = $stocks->get($item->product_code);
+            $stock = $stocks->get($item->product_id);
 
             if (!$stock) {
                 continue; // el producto ya no existe en la sede: no hay stock que devolver
@@ -104,7 +104,7 @@ class CreditNoteService
             StockMovement::create([
                 'company_id'     => $order->company_id,
                 'branch_id'      => $order->branch_id,
-                'product_code'   => $item->product_code,
+                'product_id'     => $item->product_id,
                 'type'           => 'entrada',
                 'reference_type' => 'credit_note',
                 'reference_id'   => $note->id,

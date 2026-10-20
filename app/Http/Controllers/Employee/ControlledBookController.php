@@ -40,7 +40,7 @@ class ControlledBookController extends Controller
         return Product::where('company_id', auth()->guard('employee')->user()->company_id)
             ->whereNotNull('controlled_type')
             ->orderBy('name')
-            ->get(['code', 'name', 'controlled_type']);
+            ->get(['id', 'code', 'name', 'controlled_type']);
     }
 
     /**
@@ -54,22 +54,22 @@ class ControlledBookController extends Controller
         $to       = $month->copy()->endOfMonth();
 
         $products = $this->controlledProducts()
-            ->when($request->filled('producto'), fn ($c) => $c->where('code', $request->producto));
+            ->when($request->filled('producto'), fn ($c) => $c->where('id', (int) $request->producto));
 
         $movements = StockMovement::where('branch_id', $employee->branch_id)
-            ->whereIn('product_code', $products->pluck('code'))
+            ->whereIn('product_id', $products->pluck('id'))
             ->whereDate('created_at', '>=', $from->toDateString())
             ->whereDate('created_at', '<=', $to->toDateString())
             ->orderBy('created_at')->orderBy('id')
             ->get()
-            ->groupBy('product_code');
+            ->groupBy('product_id');
 
         // Recetas de las ventas del período
         $orderIds      = $movements->flatten()->where('reference_type', 'order')->pluck('reference_id')->unique();
         $prescriptions = Prescription::whereIn('order_id', $orderIds)->get()->keyBy('order_id');
 
         $sections = $products->map(function (Product $product) use ($employee, $movements, $prescriptions, $from) {
-            $rows  = $movements->get($product->code, collect());
+            $rows  = $movements->get($product->id, collect());
             $first = $rows->first();
 
             // Saldo inicial: el saldo antes del primer movimiento del mes, o el último saldo anterior
@@ -77,7 +77,7 @@ class ControlledBookController extends Controller
                 $signed  = $first->type === 'salida' ? -$first->quantity : $first->quantity;
                 $opening = round($first->balance - $signed, 2);
             } else {
-                $opening = (float) StockMovement::where('branch_id', $employee->branch_id)->where('product_code', $product->code)
+                $opening = (float) StockMovement::where('branch_id', $employee->branch_id)->where('product_id', $product->id)
                     ->whereDate('created_at', '<', $from->toDateString())->orderByDesc('id')->value('balance');
             }
 

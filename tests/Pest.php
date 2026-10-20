@@ -70,10 +70,16 @@ function loginEmployee(?array $privileges = null, int $branchId = 1): Employee
     return $employee;
 }
 
+/** Id de un producto a partir de su correlativo (los tests nombran los productos por código: 'P1') */
+function pid(string $code): ?int
+{
+    return Product::withTrashed()->where('code', $code)->value('id');
+}
+
 /** Producto de la compañía 1 con stock en una sede */
 function stockProduct(string $code, float $stock = 0, float $purchasePrice = 1, ?float $minimum = null, int $branchId = 1): Product
 {
-    $product = Product::find($code) ?? new Product([
+    $product = Product::where('code', $code)->first() ?? new Product([
         'code' => $code, 'company_id' => 1, 'name' => "Producto {$code}",
         'purchase_price' => $purchasePrice, 'unit_sale_price' => $purchasePrice * 2, 'igv_affectation' => '20',
         'employee_id' => 1, 'status' => 1,
@@ -81,7 +87,7 @@ function stockProduct(string $code, float $stock = 0, float $purchasePrice = 1, 
     $product->save();
 
     BranchStock::updateOrCreate(
-        ['branch_id' => $branchId, 'product_code' => $code],
+        ['branch_id' => $branchId, 'product_id' => $product->id],
         ['stock_actual' => $stock, 'stock_minimum' => $minimum]
     );
 
@@ -90,7 +96,7 @@ function stockProduct(string $code, float $stock = 0, float $purchasePrice = 1, 
 
 function stockOf(string $code, int $branchId = 1): float
 {
-    return (float) BranchStock::where('branch_id', $branchId)->where('product_code', $code)->value('stock_actual');
+    return (float) BranchStock::where('branch_id', $branchId)->where('product_id', pid($code))->value('stock_actual');
 }
 
 /** Abre una caja normal del empleado, con efectivo de apertura y una venta en efectivo */
@@ -132,7 +138,7 @@ function posSetup(\App\Models\Employee $employee): void
 function posSale(array $extra = []): Illuminate\Testing\TestResponse
 {
     return test()->postJson(route('employee.orders.store'), array_merge([
-        'items'        => [['code' => 'P1', 'name' => 'Producto P1', 'price' => 10, 'qty' => 2]],
+        'items'        => [['product_id' => pid('P1'), 'name' => 'Producto P1', 'price' => 10, 'qty' => 2]],
         'payment_type' => 1, 'voucher_type' => 3,
     ], $extra));
 }
@@ -158,7 +164,7 @@ function reportSale(\App\Models\Employee $employee, string $code, float $qty, fl
     }
 
     \App\Models\OrderItem::create([
-        'order_id' => $order->id, 'product_code' => $code, 'product_name' => "Producto {$code}",
+        'order_id' => $order->id, 'product_id' => pid($code) ?? stockProduct($code)->id, 'product_name' => "Producto {$code}",
         'unit_price' => $net / $qty, 'quantity' => $qty, 'subtotal' => $net, 'igv_affectation' => '20', 'igv_amount' => 0,
     ]);
 
@@ -168,9 +174,9 @@ function reportSale(\App\Models\Employee $employee, string $code, float $qty, fl
 /** Ingresa un lote directamente (stock total + lote), sin pasar por una compra */
 function addBatch(string $code, float $qty, ?string $expires, string $batch, int $branchId = 1): \App\Models\StockBatch
 {
-    \App\Models\BranchStock::where('branch_id', $branchId)->where('product_code', $code)->increment('stock_actual', $qty);
+    \App\Models\BranchStock::where('branch_id', $branchId)->where('product_id', pid($code))->increment('stock_actual', $qty);
 
-    return app(\App\Services\BatchService::class)->receive(1, $branchId, $code, $qty, $batch, $expires, 1, 'purchase', null);
+    return app(\App\Services\BatchService::class)->receive(1, $branchId, pid($code), $qty, $batch, $expires, 1, 'purchase', null);
 }
 
 function remaining(string $batch): float

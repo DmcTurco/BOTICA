@@ -42,7 +42,7 @@
                 @forelse($rows as $i => $r)
                 <tr class="hover:bg-slate-50">
                     <td class="px-5 py-2.5 text-center text-xs text-slate-400">{{ $i + 1 }}</td>
-                    <td class="px-5 py-2.5"><p class="text-xs font-medium text-slate-800">{{ $names[$r->product_code] ?? $r->product_code }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $r->product_code }}</p></td>
+                    <td class="px-5 py-2.5"><p class="text-xs font-medium text-slate-800">{{ $products[$r->product_id]->name ?? '—' }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $products[$r->product_id]->code ?? '' }}</p></td>
                     <td class="px-5 py-2.5 text-center text-xs font-semibold text-slate-800">{{ $fmt($r->qty) }}</td>
                     <td class="px-5 py-2.5 text-right text-xs text-slate-700">{{ $money($r->net) }}</td>
                     <td class="px-5 py-2.5 hidden sm:table-cell"><div class="h-2 bg-sky-500 rounded" style="width: {{ round($r->qty / $max * 100) }}%"></div></td>

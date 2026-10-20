@@ -11,7 +11,7 @@ class PurchaseOrderItem extends Model
 
     protected $fillable = [
         'purchase_order_id',
-        'product_code',
+        'product_id',
         'quantity',
         'unit_cost',
     ];
@@ -30,6 +30,6 @@ class PurchaseOrderItem extends Model
     /** Producto pedido */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code')->withTrashed();
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 }

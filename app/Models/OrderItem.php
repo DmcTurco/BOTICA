@@ -10,7 +10,7 @@ class OrderItem extends Model
 
     protected $fillable = [
         'order_id',
-        'product_code',
+        'product_id',
         'product_name',
         'presentation_id',
         'units_per_item',
@@ -40,7 +40,7 @@ class OrderItem extends Model
     // Relación con el producto
     public function product()
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code');
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     // Presentación vendida (null = unidad base del producto)

@@ -52,7 +52,7 @@ class InventoryReportController extends Controller
             $base->where('laboratory_id', $request->laboratory);
         }
         if ($config['only_stock']) {
-            $base->whereIn('code', BranchStock::select('product_code')->where('branch_id', $branchId)->where('stock_actual', '>', 0));
+            $base->whereIn('id', BranchStock::select('product_id')->where('branch_id', $branchId)->where('stock_actual', '>', 0));
         }
 
         // Listado ordenado (por laboratorio si corresponde; los sin laboratorio al final) con el stock de la sede
@@ -60,12 +60,12 @@ class InventoryReportController extends Controller
             ->with(['category:id,name', 'laboratory:id,name', 'unit:id,abbreviation'])
             ->select('products.*')
             ->addSelect(['stock_actual' => BranchStock::select('stock_actual')
-                ->whereColumn('product_code', 'products.code')->where('branch_id', $branchId)->limit(1)])
+                ->whereColumn('product_id', 'products.id')->where('branch_id', $branchId)->limit(1)])
             ->when($config['by_lab'], fn ($q) => $q
                 ->orderByRaw('laboratory_id IS NULL')
                 ->orderBy(Laboratory::select('name')->whereColumn('laboratories.id', 'products.laboratory_id')->limit(1)))
             ->orderBy('name')
-            ->orderBy('code');
+            ->orderBy('id');
 
         $withValues = function (Product $p) {
             $p->stock_actual = (float) ($p->stock_actual ?? 0);
@@ -122,8 +122,8 @@ class InventoryReportController extends Controller
     private function totals(Builder $base, int $branchId): QueryBuilder
     {
         return DB::table('products as p')
-            ->leftJoin('branch_stock as bs', fn ($join) => $join->on('bs.product_code', '=', 'p.code')->where('bs.branch_id', $branchId))
-            ->whereIn('p.code', (clone $base)->select('code'))
+            ->leftJoin('branch_stock as bs', fn ($join) => $join->on('bs.product_id', '=', 'p.id')->where('bs.branch_id', $branchId))
+            ->whereIn('p.id', (clone $base)->select('id'))
             ->selectRaw('COUNT(*) AS products')
             ->selectRaw('COALESCE(SUM(bs.stock_actual), 0) AS units')
             ->selectRaw('COALESCE(SUM(ROUND(bs.stock_actual * p.purchase_price, 2)), 0) AS cost')
@@ -140,7 +140,7 @@ class InventoryReportController extends Controller
         $all      = $request->input('dias') === 'todos';
         $days     = $all ? null : min(365, max(7, (int) $request->input('dias', 60)));
 
-        $batches = StockBatch::with('product:code,name')
+        $batches = StockBatch::with('product:id,code,name')
             ->where('company_id', $employee->company_id)
             ->where('branch_id', $employee->branch_id)
             ->where('quantity_remaining', '>', 0)
@@ -149,18 +149,18 @@ class InventoryReportController extends Controller
             ->orderBy('expiration_date')
             ->get();
 
-        $stocks = BranchStock::where('branch_id', $employee->branch_id)->pluck('stock_actual', 'product_code');
+        $stocks = BranchStock::where('branch_id', $employee->branch_id)->pluck('stock_actual', 'product_id');
 
         $rows = $batches->map(fn (StockBatch $b) => [
             'id'      => $b->id,
-            'code'    => $b->product_code,
-            'name'    => $b->product?->name ?? $b->product_code,
+            'code'    => $b->product?->code,
+            'name'    => $b->product?->name ?? '—',
             'batch'   => $b->batch,
             'origin'  => ['purchase' => 'Compra', 'production' => 'Preparado', 'transfer' => 'Traspaso', 'adjustment' => 'Ajuste'][$b->source_type] ?? $b->source_type,
             'qty'     => $b->quantity_remaining,
             'expires' => $b->expiration_date,
             'days'    => $b->daysToExpire(),
-            'stock'   => (float) ($stocks[$b->product_code] ?? 0),
+            'stock'   => (float) ($stocks[$b->product_id] ?? 0),
             'link'    => !$b->source_id ? null : match ($b->source_type) {
                 'purchase'   => route('employee.purchases.show', $b->source_id),
                 'production' => route('employee.productions.show', $b->source_id),

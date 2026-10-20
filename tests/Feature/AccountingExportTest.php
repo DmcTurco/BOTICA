@@ -61,7 +61,7 @@ it('el registro de compras suma lo vigente y exporta con RUC del proveedor', fun
     foreach ([100, 40] as $i => $cost) {
         $this->post(route('employee.purchases.store'), [
             'document_type' => 2, 'document_number' => 'F001-' . ($i + 1), 'purchased_at' => today()->toDateString(), 'supplier_id' => $supplier->id, 'tax' => $cost * 0.18,
-            'items' => [['product_code' => 'P1', 'quantity' => 1, 'unit_cost' => $cost]],
+            'items' => [['product_id' => pid('P1'), 'quantity' => 1, 'unit_cost' => $cost]],
         ])->assertSessionHasNoErrors();
     }
     $this->post(route('employee.purchases.void', App\Models\Purchase::first()), ['void_reason' => 'x'])->assertSessionHasNoErrors();

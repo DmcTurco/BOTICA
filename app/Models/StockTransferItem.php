@@ -11,7 +11,7 @@ class StockTransferItem extends Model
 
     protected $fillable = [
         'stock_transfer_id',
-        'product_code',
+        'product_id',
         'quantity',
     ];
 
@@ -28,6 +28,6 @@ class StockTransferItem extends Model
     /** Producto traspasado */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code')->withTrashed();
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 }

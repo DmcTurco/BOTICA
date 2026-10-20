@@ -14,10 +14,7 @@ class Product extends Model
     use Searchable;
     use HasFactory, SoftDeletes;
 
-    protected $table      = 'products';
-    protected $primaryKey = 'code';
-    protected $keyType    = 'string';
-    public    $incrementing = false;
+    protected $table = 'products';
 
     protected $fillable = [
         'code',
@@ -106,19 +103,19 @@ class Product extends Model
     /** Presentaciones disponibles (tableta, blíster, caja…) */
     public function presentations(): HasMany
     {
-        return $this->hasMany(Presentation::class, 'product_code', 'code');
+        return $this->hasMany(Presentation::class);
     }
 
     /** Stock por sede */
     public function branchStocks(): HasMany
     {
-        return $this->hasMany(BranchStock::class, 'product_code', 'code');
+        return $this->hasMany(BranchStock::class);
     }
 
     /** Movimientos de stock (kardex) */
     public function stockMovements(): HasMany
     {
-        return $this->hasMany(StockMovement::class, 'product_code', 'code');
+        return $this->hasMany(StockMovement::class);
     }
 
     // ── Helpers de stock (requieren branch_id) ───────────────────

@@ -12,7 +12,7 @@ class StockBatch extends Model
     protected $fillable = [
         'company_id',
         'branch_id',
-        'product_code',
+        'product_id',
         'batch',
         'expiration_date',
         'quantity_initial',
@@ -32,7 +32,7 @@ class StockBatch extends Model
     /** Producto del lote */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code')->withTrashed();
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     /** Sede donde está el lote */

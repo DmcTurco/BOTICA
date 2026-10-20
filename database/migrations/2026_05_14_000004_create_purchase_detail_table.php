@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('purchase_id')->index();
-            $table->string('product_code', 20)->index();
+            $table->unsignedBigInteger('product_id')->index();
 
             $table->integer('quantity');
             $table->decimal('unit_cost', 10, 2)->comment('Precio de compra unitario al momento de la compra');

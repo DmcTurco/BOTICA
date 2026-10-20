@@ -36,14 +36,14 @@ class BatchController extends Controller
             $qty   = $batch->quantity_remaining;
 
             $stock->move(
-                $employee->company_id, $employee->branch_id, $batch->product_code, -$qty, 'manual', null,
+                $employee->company_id, $employee->branch_id, $batch->product_id, -$qty, 'manual', null,
                 $batch->unit_cost, 'Baja por vencimiento · lote ' . ($batch->batch ?: 'sin lote'), 'ajuste'
             );
             $batch->update(['quantity_remaining' => 0]);
 
             DB::commit();
 
-            \App\Models\AuditLog::record('batch.write_off', 'Dio de baja el lote vencido ' . ($batch->batch ?: 'sin lote') . ' de ' . $batch->product_code, $batch->product_code, ['unidades' => $qty]);
+            \App\Models\AuditLog::record('batch.write_off', 'Dio de baja el lote vencido ' . ($batch->batch ?: 'sin lote') . ' de ' . $batch->product?->name, $batch->product?->code, ['unidades' => $qty]);
 
             return back()->with('success', 'Se dieron de baja ' . rtrim(rtrim(number_format($qty, 2), '0'), '.') . ' unidades vencidas.');
         } catch (\RuntimeException $e) {

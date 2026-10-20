@@ -41,7 +41,7 @@
                     @forelse($adjustments as $mov)
                     <tr class="hover:bg-slate-50">
                         <td class="px-5 py-2.5 text-xs text-slate-600">{{ $mov->created_at->format('d/m/Y H:i') }}</td>
-                        <td class="px-5 py-2.5 text-xs text-slate-800">{{ $mov->product?->name ?? $mov->product_code }}</td>
+                        <td class="px-5 py-2.5 text-xs text-slate-800">{{ $mov->product?->name ?? '—' }}</td>
                         <td class="px-5 py-2.5 text-center">
                             <span class="font-semibold text-xs {{ $mov->quantity >= 0 ? 'text-emerald-700' : 'text-red-600' }}">{{ $mov->quantity > 0 ? '+' : '' }}{{ $mov->quantity }}</span>
                         </td>

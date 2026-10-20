@@ -27,9 +27,9 @@ class LostSaleRequest extends FormRequest
 
         return [
             'product_name' => 'required|string|max:150',
-            'product_code' => [
+            'product_id' => [
                 'nullable',
-                Rule::exists('products', 'code')->where('company_id', $companyId)->whereNull('deleted_at'),
+                Rule::exists('products', 'id')->where('company_id', $companyId)->whereNull('deleted_at'),
             ],
             'quantity' => 'required|numeric|min:0.01|max:99999',
             'reason'   => ['required', Rule::in(array_keys(LostSale::REASONS))],

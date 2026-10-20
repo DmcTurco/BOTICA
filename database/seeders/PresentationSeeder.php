@@ -12,7 +12,7 @@ class PresentationSeeder extends Seeder
         $now = now();
 
         // Resuelve el code del producto buscando por nombre
-        $prod = fn(string $name) => DB::table('products')->where('name', $name)->value('code');
+        $prod = fn(string $name) => DB::table('products')->where('name', $name)->value('id');
         $unit = fn(string $n)    => DB::table('units')->where('name', $n)->value('id');
 
         $presentations = [
@@ -81,16 +81,16 @@ class PresentationSeeder extends Seeder
         ];
 
         foreach ($presentations as $p) {
-            $code = $prod($p['product']);
+            $productId = $prod($p['product']);
 
-            if (!$code) {
+            if (!$productId) {
                 throw new \RuntimeException(
                     "Producto no encontrado en BD: '{$p['product']}'. Verifica que el ProductSeeder corrió correctamente."
                 );
             }
 
             DB::table('presentations')->insert([
-                'product_code'      => $code,
+                'product_id'        => $productId,
                 'unit_id'           => $unit($p['unit']),
                 'equivalent_amount' => $p['equivalent_amount'],
                 'sale_price'        => $p['sale_price'],

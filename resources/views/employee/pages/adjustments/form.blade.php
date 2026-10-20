@@ -44,12 +44,12 @@
                 {{-- Producto: buscador sobre los productos de la compañía con su stock en la sede --}}
                 <div class="relative">
                     <label for="buscadorProducto" class="block text-sm font-medium text-slate-700 mb-1.5">Producto <span class="text-red-500">*</span></label>
-                    <input type="hidden" name="product_code" id="productCode" value="{{ old('product_code') }}">
-                    <input type="text" id="buscadorProducto" autocomplete="off" placeholder="Busca por nombre o código..."
-                           class="{{ $inputClass }} @error('product_code') border-red-400 @enderror">
+                    <input type="hidden" name="product_id" id="productId" value="{{ old('product_id') }}">
+                    <input type="text" id="buscadorProducto" autocomplete="off" placeholder="Busca por nombre, código o código de barras..."
+                           class="{{ $inputClass }} @error('product_id') border-red-400 @enderror">
                     <div id="resultados" class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-auto"></div>
                     <p id="infoStock" class="text-xs text-slate-500 mt-1"></p>
-                    @error('product_code')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    @error('product_id')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 {{-- Tipo de ajuste: una tarjeta por opción --}}
@@ -129,11 +129,11 @@
 const productos = @json($products);
 const inpBuscar = document.getElementById('buscadorProducto');
 const lista = document.getElementById('resultados');
-const inpCodigo = document.getElementById('productCode');
+const inpCodigo = document.getElementById('productId');
 const inpCantidad = document.getElementById('quantity');
 
 const esc = t => { const d = document.createElement('div'); d.textContent = t ?? ''; return d.innerHTML; };
-const actual = () => productos.find(p => p.code === inpCodigo.value);
+const actual = () => productos.find(p => String(p.id) === inpCodigo.value);
 const modo = () => document.querySelector('input[name="mode"]:checked')?.value || 'set';
 
 // Vista previa: en cuánto queda el stock con el ajuste
@@ -160,9 +160,10 @@ inpBuscar.addEventListener('input', () => {
     inpCodigo.value = '';
     previsualizar();
     if (!q) { lista.classList.add('hidden'); return; }
-    const hallados = productos.filter(p => (p.name + ' ' + p.code).toLowerCase().includes(q)).slice(0, 30);
+    // Por nombre, correlativo (código) o código de barras
+    const hallados = productos.filter(p => [p.name, p.code, p.barcode].join(' ').toLowerCase().includes(q)).slice(0, 30);
     lista.innerHTML = hallados.length ? hallados.map(p => `
-        <button type="button" data-code="${esc(p.code)}" class="item w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-slate-100 last:border-0">
+        <button type="button" data-id="${p.id}" class="item w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-slate-100 last:border-0">
             <p class="text-xs font-medium text-slate-800">${esc(p.name)}</p>
             <p class="text-[10px] text-slate-400 font-mono">${esc(p.code)} · stock ${p.stock}</p>
         </button>`).join('') : '<p class="px-3 py-3 text-xs text-slate-400">Sin resultados</p>';
@@ -172,7 +173,7 @@ inpBuscar.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDef
 lista.addEventListener('click', e => {
     const item = e.target.closest('.item');
     if (!item) return;
-    inpCodigo.value = item.dataset.code;
+    inpCodigo.value = item.dataset.id;
     inpBuscar.value = actual().name;
     lista.classList.add('hidden');
     previsualizar();

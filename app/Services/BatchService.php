@@ -24,7 +24,7 @@ class BatchService
     public function receive(
         int $companyId,
         int $branchId,
-        string $productCode,
+        int $productId,
         float $quantity,
         ?string $batch,
         Carbon|string|null $expiration,
@@ -39,7 +39,7 @@ class BatchService
         return StockBatch::create([
             'company_id'         => $companyId,
             'branch_id'          => $branchId,
-            'product_code'       => $productCode,
+            'product_id'       => $productId,
             'batch'              => $batch ?: null,
             'expiration_date'    => $expiration ?: null,
             'quantity_initial'   => round($quantity, 2),
@@ -59,7 +59,7 @@ class BatchService
      */
     public function consume(
         int $branchId,
-        string $productCode,
+        int $productId,
         float $quantity,
         ?string $referenceType = null,
         ?int $referenceId = null,
@@ -70,7 +70,7 @@ class BatchService
         $lines     = [];
 
         $batches = StockBatch::where('branch_id', $branchId)
-            ->where('product_code', $productCode)
+            ->where('product_id', $productId)
             ->where('quantity_remaining', '>', 0)
             ->when($skipExpired, fn ($q) => $q->where(fn ($w) => $w->whereNull('expiration_date')->orWhereDate('expiration_date', '>=', today()->toDateString())))
             ->orderByRaw('expiration_date IS NULL')
@@ -128,27 +128,27 @@ class BatchService
     /**
      * Unidades de lotes vencidos que hay en la sede para un producto (no vendibles).
      */
-    public function expiredQuantity(int $branchId, string $productCode): float
+    public function expiredQuantity(int $branchId, int $productId): float
     {
         return (float) StockBatch::where('branch_id', $branchId)
-            ->where('product_code', $productCode)
+            ->where('product_id', $productId)
             ->whereNotNull('expiration_date')
             ->whereDate('expiration_date', '<', today()->toDateString())
             ->sum('quantity_remaining');
     }
 
     /**
-     * Unidades vencidas por producto: [código => cantidad]. Una sola consulta para varios productos.
+     * Unidades vencidas por producto: [product_id => cantidad]. Una sola consulta para varios productos.
      */
-    public function expiredMap(int $branchId, array $productCodes): array
+    public function expiredMap(int $branchId, array $productIds): array
     {
         return StockBatch::where('branch_id', $branchId)
-            ->whereIn('product_code', array_unique($productCodes))
+            ->whereIn('product_id', array_unique($productIds))
             ->whereNotNull('expiration_date')
             ->whereDate('expiration_date', '<', today()->toDateString())
-            ->selectRaw('product_code, SUM(quantity_remaining) as expired')
-            ->groupBy('product_code')
-            ->pluck('expired', 'product_code')
+            ->selectRaw('product_id, SUM(quantity_remaining) as expired')
+            ->groupBy('product_id')
+            ->pluck('expired', 'product_id')
             ->map(fn ($v) => (float) $v)
             ->all();
     }
@@ -156,23 +156,23 @@ class BatchService
     /**
      * Unidades que realmente se pueden vender: stock total menos lo vencido.
      */
-    public function sellable(int $branchId, string $productCode): float
+    public function sellable(int $branchId, int $productId): float
     {
-        $stock = (float) BranchStock::where('branch_id', $branchId)->where('product_code', $productCode)->value('stock_actual');
+        $stock = (float) BranchStock::where('branch_id', $branchId)->where('product_id', $productId)->value('stock_actual');
 
-        return max(0, round($stock - $this->expiredQuantity($branchId, $productCode), 2));
+        return max(0, round($stock - $this->expiredQuantity($branchId, $productId), 2));
     }
 
     /**
      * Mantiene la regla "los lotes nunca suman más que el stock": si algún movimiento bajó el total
      * sin pasar por los lotes (ajuste, anulación), recorta el exceso empezando por los que vencen más tarde.
      */
-    public function reconcile(int $branchId, string $productCode): void
+    public function reconcile(int $branchId, int $productId): void
     {
-        $stock = (float) BranchStock::where('branch_id', $branchId)->where('product_code', $productCode)->value('stock_actual');
+        $stock = (float) BranchStock::where('branch_id', $branchId)->where('product_id', $productId)->value('stock_actual');
 
         $batches = StockBatch::where('branch_id', $branchId)
-            ->where('product_code', $productCode)
+            ->where('product_id', $productId)
             ->where('quantity_remaining', '>', 0)
             ->orderByRaw('expiration_date IS NOT NULL')       // sin vencimiento primero (se recortan antes)
             ->orderByDesc('expiration_date')

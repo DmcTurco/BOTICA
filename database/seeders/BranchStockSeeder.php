@@ -16,7 +16,7 @@ class BranchStockSeeder extends Seeder
         $now      = now();
         $branchId = 1; // Sede Principal
 
-        // Stock inicial por producto (buscamos el code generado por DocumentSeries)
+        // Stock inicial por producto (se busca el producto por nombre)
         $stock = [
             ['name' => 'Paracetamol 500mg',        'stock_actual' => 500, 'stock_minimum' =>  50, 'stock_maximum' => 1000],
             ['name' => 'Ibuprofeno 400mg',          'stock_actual' => 400, 'stock_minimum' =>  40, 'stock_maximum' =>  800],
@@ -48,9 +48,9 @@ class BranchStockSeeder extends Seeder
         ];
 
         foreach ($stock as $item) {
-            $productCode = DB::table('products')->where('name', $item['name'])->value('code');
+            $productId = DB::table('products')->where('name', $item['name'])->value('id');
 
-            if (!$productCode) {
+            if (!$productId) {
                 throw new \RuntimeException(
                     "Producto no encontrado: '{$item['name']}'. Asegúrate de correr ProductSeeder primero."
                 );
@@ -58,7 +58,7 @@ class BranchStockSeeder extends Seeder
 
             DB::table('branch_stock')->insert([
                 'branch_id'    => $branchId,
-                'product_code' => $productCode,
+                'product_id'   => $productId,
                 'stock_actual' => $item['stock_actual'],
                 'stock_minimum'=> $item['stock_minimum'],
                 'stock_maximum'=> $item['stock_maximum'],

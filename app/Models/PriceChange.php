@@ -16,7 +16,7 @@ class PriceChange extends Model
 
     protected $fillable = [
         'company_id',
-        'product_code',
+        'product_id',
         'field',
         'old_value',
         'new_value',
@@ -51,7 +51,7 @@ class PriceChange extends Model
 
             self::create([
                 'company_id'   => $product->company_id,
-                'product_code' => $product->code,
+                'product_id'   => $product->id,
                 'field'        => $field,
                 'old_value'    => $old,
                 'new_value'    => $new,
@@ -72,7 +72,7 @@ class PriceChange extends Model
     /** Producto cuyo precio cambió */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code')->withTrashed();
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     /** Empleado que hizo el cambio */

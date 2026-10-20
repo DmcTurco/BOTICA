@@ -12,7 +12,7 @@ class StockMovement extends Model
     protected $fillable = [
         'company_id',
         'branch_id',
-        'product_code',
+        'product_id',
         'type',
         'reference_type',
         'reference_id',
@@ -45,7 +45,7 @@ class StockMovement extends Model
     /** Producto afectado */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code');
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     // ── Accessors ───────────────────────────────────────────────
@@ -57,6 +57,29 @@ class StockMovement extends Model
             'entrada' => ['label' => 'Entrada', 'class' => 'bg-emerald-50 text-emerald-700'],
             'salida'  => ['label' => 'Salida',  'class' => 'bg-red-50 text-red-600'],
             default   => ['label' => 'Ajuste',  'class' => 'bg-amber-50 text-amber-700'],
+        };
+    }
+
+    /**
+     * Cantidad que entra: las entradas y los ajustes positivos (inventario inicial, carga de datos).
+     * Los ajustes guardan la cantidad con signo; entradas y salidas, en valor absoluto.
+     */
+    public function getInQuantityAttribute(): float
+    {
+        return match ($this->type) {
+            'entrada' => (float) $this->quantity,
+            'ajuste'  => max((float) $this->quantity, 0),
+            default   => 0,
+        };
+    }
+
+    /** Cantidad que sale: las salidas y los ajustes negativos (en valor absoluto) */
+    public function getOutQuantityAttribute(): float
+    {
+        return match ($this->type) {
+            'salida' => (float) $this->quantity,
+            'ajuste' => abs(min((float) $this->quantity, 0)),
+            default  => 0,
         };
     }
 

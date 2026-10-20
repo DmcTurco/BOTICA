@@ -43,7 +43,7 @@
                             <input type="text" name="product_name" id="productName" maxlength="150" autocomplete="off" value="{{ old('product_name') }}"
                                    placeholder="Busca en el catálogo o escribe el nombre" class="{{ $inputClass }} pl-9 @error('product_name') border-red-400 @enderror">
                         </div>
-                        <input type="hidden" name="product_code" id="productCode" value="{{ old('product_code') }}">
+                        <input type="hidden" name="product_id" id="productId" value="{{ old('product_id') }}">
                         <div id="resultados" class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-auto"></div>
                         <p id="hintCatalogo" class="text-xs text-slate-400 mt-1">Si no está en el catálogo, escríbelo igual: sirve para saber qué incorporar.</p>
                         @error('product_name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
@@ -92,15 +92,15 @@
 @section('scripts')
 <script>
 // Buscador del catálogo (igual que en ajustes y compras). Si se elige un producto se guarda su
-// código; si no está, se anota con el nombre escrito (sirve para saber qué incorporar).
+// id; si no está, se anota con el nombre escrito (sirve para saber qué incorporar).
 const catalogo = @json($products);
 const inpNombre = document.getElementById('productName');
-const inpCodigo = document.getElementById('productCode');
+const inpCodigo = document.getElementById('productId');
 const lista = document.getElementById('resultados');
 const hint = document.getElementById('hintCatalogo');
 
 const esc = t => { const d = document.createElement('div'); d.textContent = t ?? ''; return d.innerHTML; };
-const deCatalogo = () => catalogo.find(p => p.code === inpCodigo.value);
+const deCatalogo = () => catalogo.find(p => String(p.id) === inpCodigo.value);
 
 function pintarHint() {
     const p = deCatalogo();
@@ -114,7 +114,7 @@ function pintarHint() {
 }
 
 function elegir(p) {
-    inpCodigo.value = p.code;
+    inpCodigo.value = p.id;
     inpNombre.value = p.name;
     lista.classList.add('hidden');
     pintarHint();
@@ -124,9 +124,10 @@ function elegir(p) {
 function mostrarResultados() {
     const q = inpNombre.value.toLowerCase().trim();
     if (!q) { lista.classList.add('hidden'); return; }
-    const hallados = catalogo.filter(p => (p.name + ' ' + p.code).toLowerCase().includes(q)).slice(0, 30);
+    // Por nombre, correlativo (código) o código de barras
+    const hallados = catalogo.filter(p => [p.name, p.code, p.barcode].join(' ').toLowerCase().includes(q)).slice(0, 30);
     let html = hallados.map(p => `
-        <button type="button" data-code="${esc(p.code)}" class="item w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-slate-100 last:border-0">
+        <button type="button" data-id="${p.id}" class="item w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-slate-100 last:border-0">
             <p class="text-xs font-medium text-slate-800">${esc(p.name)}</p>
             <p class="text-[10px] text-slate-400 font-mono">${esc(p.code)} · stock ${p.stock}</p>
         </button>`).join('');
@@ -143,7 +144,7 @@ function mostrarResultados() {
 // Al escribir se suelta el producto elegido: manda lo escrito (salvo que coincida exacto con uno)
 inpNombre.addEventListener('input', () => {
     const igual = catalogo.find(p => p.name.toLowerCase() === inpNombre.value.trim().toLowerCase());
-    inpCodigo.value = igual ? igual.code : '';
+    inpCodigo.value = igual ? igual.id : '';
     mostrarResultados();
     pintarHint();
 });
@@ -152,7 +153,7 @@ inpNombre.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDef
 lista.addEventListener('mousedown', e => {
     e.preventDefault();
     const item = e.target.closest('.item');
-    if (item) { elegir(catalogo.find(p => p.code === item.dataset.code)); return; }
+    if (item) { elegir(catalogo.find(p => String(p.id) === item.dataset.id)); return; }
     if (e.target.closest('.libre')) { lista.classList.add('hidden'); pintarHint(); document.getElementById('quantity').focus(); }
 });
 document.addEventListener('click', e => { if (!e.target.closest('#productName') && !e.target.closest('#resultados')) lista.classList.add('hidden'); });

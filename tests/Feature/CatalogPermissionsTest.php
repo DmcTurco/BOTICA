@@ -15,8 +15,8 @@ it('ver productos permite consultar pero no crear ni editar', function () {
     $this->get(route('employee.units.index'))->assertOk()->assertDontSee('Nueva Unidad');
 
     $this->get(route('employee.products.create'))->assertRedirect(route('employee.home'));
-    $this->get(route('employee.products.edit', 'P1'))->assertRedirect(route('employee.home'));
-    $this->delete(route('employee.products.destroy', 'P1'))->assertRedirect(route('employee.home'));
+    $this->get(route('employee.products.edit', pid('P1')))->assertRedirect(route('employee.home'));
+    $this->delete(route('employee.products.destroy', pid('P1')))->assertRedirect(route('employee.home'));
     $this->get(route('employee.categories.create'))->assertRedirect(route('employee.home'));
     $this->get(route('employee.laboratories.create'))->assertRedirect(route('employee.home'));
     $this->post(route('employee.units.store'), ['name' => 'X', 'abbreviation' => 'X', 'sunat_code' => 'NIU', 'status' => 1])
@@ -29,7 +29,7 @@ it('crear y editar productos habilita el formulario de productos', function () {
 
     $this->get(route('employee.products.index'))->assertOk()->assertSee('Nuevo Producto');
     $this->get(route('employee.products.create'))->assertOk();
-    $this->get(route('employee.products.edit', 'P1'))->assertOk();
+    $this->get(route('employee.products.edit', pid('P1')))->assertOk();
     // Pero sigue sin poder tocar categorías
     $this->get(route('employee.categories.create'))->assertRedirect(route('employee.home'));
 });

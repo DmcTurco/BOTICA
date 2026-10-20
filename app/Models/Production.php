@@ -24,7 +24,7 @@ class Production extends Model
         'expiration_date',
         'total_cost',
         'unit_cost',
-        'product_code',
+        'product_id',
         'notes',
         'status',
         'voided_at',
@@ -64,7 +64,7 @@ class Production extends Model
     /** Producto del catálogo que recibió el stock (null si no se vende en POS) */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code')->withTrashed();
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     /** Insumos consumidos */

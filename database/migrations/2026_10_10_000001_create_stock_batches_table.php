@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->unsignedBigInteger('company_id')->index();
             $table->unsignedBigInteger('branch_id')->index();
-            $table->string('product_code', 20)->index();
+            $table->unsignedBigInteger('product_id')->index();
 
             $table->string('batch', 30)->nullable();                   // número de lote del fabricante o del preparado
             $table->date('expiration_date')->nullable();               // sin fecha = no vence
@@ -32,7 +32,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Búsqueda FEFO: lotes de un producto en una sede ordenados por vencimiento
-            $table->index(['branch_id', 'product_code', 'expiration_date'], 'stock_batches_fefo_index');
+            $table->index(['branch_id', 'product_id', 'expiration_date'], 'stock_batches_fefo_index');
             $table->index(['source_type', 'source_id']);
         });
 

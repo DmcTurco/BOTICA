@@ -11,7 +11,7 @@ class ProductionIngredient extends Model
 
     protected $fillable = [
         'production_id',
-        'product_code',
+        'product_id',
         'quantity',
         'unit_cost',
         'subtotal',
@@ -32,6 +32,6 @@ class ProductionIngredient extends Model
     /** Insumo consumido */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code')->withTrashed();
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 }

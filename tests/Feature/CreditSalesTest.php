@@ -140,7 +140,7 @@ it('las ventas a crédito no se editan y el crédito exige privilegio para cobra
     CashRegister::query()->update(['approval_status' => CashRegister::APPROVAL_PENDING]);
 
     $this->putJson(route('employee.orders.update-historical', $order), [
-        'items' => [['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 1]], 'payment_type' => 1, 'total' => 11.8,
+        'items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 1]], 'payment_type' => 1, 'total' => 11.8,
     ])->assertStatus(422);
 
     $this->actingAs(Employee::create([

@@ -282,7 +282,7 @@
         <tr>
             <td class="center">{{ rtrim(rtrim(number_format($item->quantity, 2), '0'), '.') }}</td>
             <td class="center" style="font-size:10px; color:#555;">NIU</td>
-            <td class="center" style="font-size:10px; color:#555;">{{ $item->product_code }}</td>
+            <td class="center" style="font-size:10px; color:#555;">{{ $item->product?->code }}</td>
             <td>{{ $item->product_name }}</td>
             <td class="right">S/ {{ number_format($item->unit_price, 2) }}</td>
             <td class="right">S/ {{ number_format($item->subtotal, 2) }}</td>

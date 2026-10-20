@@ -14,7 +14,7 @@ class Presentation extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'product_code',
+        'product_id',
         'unit_id',
         'equivalent_amount',
         'sale_price',
@@ -30,7 +30,7 @@ class Presentation extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class, 'product_id');
+        return $this->belongsTo(Product::class);
     }
 
     public function Unit()

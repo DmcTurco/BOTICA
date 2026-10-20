@@ -47,10 +47,9 @@ class PurchaseController extends Controller
     {
         $employee = auth()->guard('employee')->user();
 
-        // Si se llega con ?product=CODE, precargar ese producto
-        $productoCodigo = $request->query('product');
-        $producto       = $productoCodigo
-            ? Product::where('code', $productoCodigo)
+        // Si se llega con ?product=ID, precargar ese producto
+        $producto = $request->filled('product')
+            ? Product::whereKey((int) $request->query('product'))
                 ->where('company_id', $employee->company_id)
                 ->first()
             : null;
@@ -64,7 +63,7 @@ class PurchaseController extends Controller
                 'presentations' => fn ($q) => $q->where('status', 1)->with('unit:id,name'),
             ])
             ->orderBy('name')
-            ->get(['code', 'barcode', 'name', 'purchase_price', 'unit_id']);
+            ->get(['id', 'code', 'barcode', 'name', 'purchase_price', 'unit_id']);
 
         $suppliers = Supplier::where('company_id', $employee->company_id)->where('status', 1)->orderBy('name')->get(['id', 'name', 'ruc']);
 
@@ -81,7 +80,7 @@ class PurchaseController extends Controller
             ? PurchaseOrder::with('items')->where('company_id', $employee->company_id)->where('status', 'pending')->find($request->query('order'))
             : null;
 
-        $preload = $order ? $order->items->map(fn ($i) => ['code' => $i->product_code, 'qty' => (float) $i->quantity, 'cost' => (float) $i->unit_cost])->values()->all() : [];
+        $preload = $order ? $order->items->map(fn ($i) => ['product_id' => $i->product_id, 'qty' => (float) $i->quantity, 'cost' => (float) $i->unit_cost])->values()->all() : [];
 
         return view('employee.pages.purchases.form', compact('productos', 'producto', 'suppliers', 'order', 'preload'));
     }
@@ -144,7 +143,7 @@ class PurchaseController extends Controller
             foreach ($items as $item) {
                 PurchaseDetail::create([
                     'purchase_id'     => $compra->id,
-                    'product_code'    => $item['product_code'],
+                    'product_id'      => $item['product_id'],
                     'quantity'        => $item['quantity'],
                     'unit_cost'       => $item['unit_cost'],
                     'subtotal'        => $item['subtotal'],
@@ -154,14 +153,14 @@ class PurchaseController extends Controller
 
                 // Desglose por lote y vencimiento (para vender primero lo que vence antes)
                 app(BatchService::class)->receive(
-                    $employee->company_id, $employee->branch_id, $item['product_code'], (float) $item['quantity'],
+                    $employee->company_id, $employee->branch_id, $item['product_id'], (float) $item['quantity'],
                     $item['batch'] ?? null, $item['expiration_date'] ?? null, (float) $item['unit_cost'], 'purchase', $compra->id
                 );
 
                 // Incrementar stock en branch_stock con lockForUpdate para evitar condiciones de carrera.
                 // Si no existe el registro, se crea con el stock recibido.
                 $branchStock = BranchStock::where('branch_id', $employee->branch_id)
-                    ->where('product_code', $item['product_code'])
+                    ->where('product_id', $item['product_id'])
                     ->lockForUpdate()
                     ->first();
 
@@ -172,7 +171,7 @@ class PurchaseController extends Controller
                     $nuevoStock  = $item['quantity'];
                     $branchStock = BranchStock::create([
                         'branch_id'    => $employee->branch_id,
-                        'product_code' => $item['product_code'],
+                        'product_id'   => $item['product_id'],
                         'stock_actual' => $nuevoStock,
                     ]);
                 }
@@ -181,7 +180,7 @@ class PurchaseController extends Controller
                 StockMovement::create([
                     'company_id'     => $employee->company_id,
                     'branch_id'      => $employee->branch_id,
-                    'product_code'   => $item['product_code'],
+                    'product_id'     => $item['product_id'],
                     'type'           => 'entrada',
                     'reference_type' => 'purchase',
                     'reference_id'   => $compra->id,
@@ -224,7 +223,7 @@ class PurchaseController extends Controller
             $factor       = $presentation ? max((float) $presentation->equivalent_amount, 0.01) : 1;
 
             return [
-                'product_code'    => $item['product_code'],
+                'product_id'      => $item['product_id'],
                 'quantity'        => (int) round($item['quantity'] * $factor),
                 'unit_cost'       => round($item['unit_cost'] / $factor, 2),
                 'subtotal'        => round($item['quantity'] * $item['unit_cost'], 2),
@@ -275,16 +274,16 @@ class PurchaseController extends Controller
                 throw new \RuntimeException('Parte de los lotes de esta compra ya se vendió o se movió.');
             }
 
-            foreach ($purchase->items()->orderBy('product_code')->get() as $item) {
+            foreach ($purchase->items()->orderBy('product_id')->get() as $item) {
                 $stock->move(
-                    $employee->company_id, $employee->branch_id, $item->product_code, -(float) $item->quantity,
+                    $employee->company_id, $employee->branch_id, $item->product_id, -(float) $item->quantity,
                     'purchase_void', $purchase->id, (float) $item->unit_cost, 'Anulación de compra'
                 );
             }
 
             $batches->discardSource('purchase', $purchase->id, $employee->branch_id);
             foreach ($purchase->items as $item) {
-                $batches->reconcile($employee->branch_id, $item->product_code);
+                $batches->reconcile($employee->branch_id, $item->product_id);
             }
 
             $purchase->update(['status' => 0, 'voided_at' => now(), 'void_reason' => $request->void_reason]);

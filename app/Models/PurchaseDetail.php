@@ -14,7 +14,7 @@ class PurchaseDetail extends Model
 
     protected $fillable = [
         'purchase_id',
-        'product_code',
+        'product_id',
         'quantity',
         'unit_cost',
         'subtotal',
@@ -39,6 +39,6 @@ class PurchaseDetail extends Model
     /** Producto comprado */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_code', 'code');
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 }

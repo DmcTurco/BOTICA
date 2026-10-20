@@ -17,10 +17,10 @@ uses(RefreshDatabase::class);
  */
 function blisterOfP1(float $stock = 20): Presentation
 {
-    BranchStock::where('product_code', 'P1')->update(['stock_actual' => $stock]);
+    BranchStock::where('product_id', pid('P1'))->update(['stock_actual' => $stock]);
     $unit = Unit::create(['company_id' => 1, 'name' => 'Blíster', 'abbreviation' => 'BL', 'sunat_code' => 'BX', 'status' => 1]);
 
-    return Presentation::create(['product_code' => 'P1', 'unit_id' => $unit->id, 'equivalent_amount' => 10, 'sale_price' => 90, 'status' => 1]);
+    return Presentation::create(['product_id' => pid('P1'), 'unit_id' => $unit->id, 'equivalent_amount' => 10, 'sale_price' => 90, 'status' => 1]);
 }
 
 it('vende unidad y blíster del mismo producto en líneas separadas y descuenta las unidades reales', function () {
@@ -29,8 +29,8 @@ it('vende unidad y blíster del mismo producto en líneas separadas y descuenta 
 
     // 3 unidades × S/ 10 + 1 blíster × S/ 90 = S/ 120 + IGV 18% = S/ 141.60
     posSale(['items' => [
-        ['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 3],
-        ['code' => 'P1', 'name' => 'x', 'price' => 90, 'qty' => 1, 'presentation_id' => $blister->id],
+        ['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 3],
+        ['product_id' => pid('P1'), 'name' => 'x', 'price' => 90, 'qty' => 1, 'presentation_id' => $blister->id],
     ], 'total' => 141.60])->assertOk();
 
     $items = OrderItem::orderBy('id')->get();
@@ -54,8 +54,8 @@ it('suma todas las presentaciones del producto al validar el stock', function ()
 
     // 3 unidades + 1 blíster = 13 tabletas y solo hay 12
     posSale(['items' => [
-        ['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 3],
-        ['code' => 'P1', 'name' => 'x', 'price' => 90, 'qty' => 1, 'presentation_id' => $blister->id],
+        ['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 3],
+        ['product_id' => pid('P1'), 'name' => 'x', 'price' => 90, 'qty' => 1, 'presentation_id' => $blister->id],
     ], 'total' => 141.60])->assertStatus(422)->assertJsonFragment(['success' => false]);
 
     expect(stockOf('P1'))->toBe(12.0)->and(Order::count())->toBe(0);
@@ -66,13 +66,13 @@ it('el precio de la presentación lo pone el servidor, no el navegador', functio
     $blister = blisterOfP1(20);
 
     // Se envía el blíster con precio de unidad: el servidor usa S/ 90 y el total no cuadra
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 1, 'presentation_id' => $blister->id]], 'total' => 11.80])
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 1, 'presentation_id' => $blister->id]], 'total' => 11.80])
         ->assertStatus(422);
 
     // Presentación de otro producto
     stockProduct('P2', 5);
-    $ajena = Presentation::create(['product_code' => 'P2', 'unit_id' => $blister->unit_id, 'equivalent_amount' => 5, 'sale_price' => 40, 'status' => 1]);
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 40, 'qty' => 1, 'presentation_id' => $ajena->id]], 'total' => 47.20])
+    $ajena = Presentation::create(['product_id' => pid('P2'), 'unit_id' => $blister->unit_id, 'equivalent_amount' => 5, 'sale_price' => 40, 'status' => 1]);
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 40, 'qty' => 1, 'presentation_id' => $ajena->id]], 'total' => 47.20])
         ->assertStatus(422);
 
     expect(stockOf('P1'))->toBe(20.0);
@@ -83,7 +83,7 @@ it('un POS abierto antes del cambio (sin presentation_id) igual descuenta el bl�
     blisterOfP1(20);
 
     // Solo precio de blíster, sin presentation_id: se identifica por su precio único
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 90, 'qty' => 1]], 'total' => 106.20])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 90, 'qty' => 1]], 'total' => 106.20])->assertOk();
 
     expect(stockOf('P1'))->toBe(10.0)
         ->and((float) OrderItem::first()->units_per_item)->toBe(10.0);
@@ -93,14 +93,14 @@ it('al editar una venta devuelve las unidades reales del blíster y descuenta la
     posSetup(loginEmployee());
     $blister = blisterOfP1(20);
 
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 90, 'qty' => 1, 'presentation_id' => $blister->id]], 'total' => 106.20])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 90, 'qty' => 1, 'presentation_id' => $blister->id]], 'total' => 106.20])->assertOk();
     expect(stockOf('P1'))->toBe(10.0);
 
     // Caja pendiente de aprobación: la venta se puede editar
     CashRegister::query()->update(['approval_status' => CashRegister::APPROVAL_PENDING]);
 
     $this->putJson(route('employee.orders.update-historical', Order::firstOrFail()), [
-        'items' => [['code' => 'P1', 'name' => 'x', 'price' => 10, 'qty' => 2]], 'payment_type' => 1, 'total' => 23.60,
+        'items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 2]], 'payment_type' => 1, 'total' => 23.60,
     ])->assertOk();
 
     // Se devuelven 10 (el blíster) y salen 2 unidades
@@ -114,7 +114,7 @@ it('rechazar la caja devuelve las unidades reales del blíster', function () {
     posSetup($admin);
     $blister = blisterOfP1(20);
 
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 90, 'qty' => 2, 'presentation_id' => $blister->id]], 'total' => 212.40])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 90, 'qty' => 2, 'presentation_id' => $blister->id]], 'total' => 212.40])->assertOk();
     expect(stockOf('P1'))->toBe(0.0);
 
     $register = CashRegister::firstOrFail();
@@ -129,7 +129,7 @@ it('los reportes cuentan unidades base para que la ganancia use el costo correct
     posSetup(loginEmployee());
     $blister = blisterOfP1(20);
 
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 90, 'qty' => 1, 'presentation_id' => $blister->id]], 'total' => 106.20])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 90, 'qty' => 1, 'presentation_id' => $blister->id]], 'total' => 106.20])->assertOk();
 
     // Costo: 10 tabletas × S/ 4 (precio de compra de P1) = S/ 40; venta neta S/ 90
     $row = $this->get(route('employee.reports.profit'))->assertOk()->viewData('rows')->firstWhere('code', 'P1');

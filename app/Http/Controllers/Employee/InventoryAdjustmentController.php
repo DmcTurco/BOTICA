@@ -21,7 +21,7 @@ class InventoryAdjustmentController extends Controller
     {
         $employee = auth()->guard('employee')->user();
 
-        $adjustments = StockMovement::with('product:code,name')
+        $adjustments = StockMovement::with('product:id,code,name')
             ->where('branch_id', $employee->branch_id)
             ->where('reference_type', 'manual')
             ->orderByDesc('id')
@@ -37,18 +37,20 @@ class InventoryAdjustmentController extends Controller
     {
         $employee = auth()->guard('employee')->user();
 
-        $stocks = BranchStock::where('branch_id', $employee->branch_id)->pluck('stock_actual', 'product_code');
+        $stocks = BranchStock::where('branch_id', $employee->branch_id)->pluck('stock_actual', 'product_id');
 
         $products = Product::with('unit:id,abbreviation')
             ->where('company_id', $employee->company_id)
             ->where('status', 1)
             ->orderBy('name')
-            ->get(['code', 'name', 'unit_id', 'purchase_price'])
+            ->get(['id', 'code', 'barcode', 'name', 'unit_id', 'purchase_price'])
             ->map(fn ($p) => [
-                'code'  => $p->code,
-                'name'  => $p->name,
+                'id'      => $p->id,
+                'code'    => $p->code,
+                'barcode' => $p->barcode,
+                'name'    => $p->name,
                 'unit'  => $p->unit?->abbreviation,
-                'stock' => (float) ($stocks[$p->code] ?? 0),
+                'stock' => (float) ($stocks[$p->id] ?? 0),
             ])->values()->all();
 
         return view('employee.pages.adjustments.form', [
@@ -64,14 +66,14 @@ class InventoryAdjustmentController extends Controller
     public function store(InventoryAdjustmentRequest $request, StockService $stock)
     {
         $employee = auth()->guard('employee')->user();
-        $product  = Product::where('company_id', $employee->company_id)->findOrFail($request->product_code);
+        $product  = Product::where('company_id', $employee->company_id)->findOrFail($request->product_id);
         $quantity = round((float) $request->quantity, 2);
 
         DB::beginTransaction();
 
         try {
             $current = (float) BranchStock::where('branch_id', $employee->branch_id)
-                ->where('product_code', $product->code)
+                ->where('product_id', $product->id)
                 ->lockForUpdate()
                 ->value('stock_actual');
 
@@ -90,21 +92,21 @@ class InventoryAdjustmentController extends Controller
             $notes  = $reason . ($request->filled('notes') ? ': ' . $request->notes : '');
 
             $stock->move(
-                $employee->company_id, $employee->branch_id, $product->code, $delta,
+                $employee->company_id, $employee->branch_id, $product->id, $delta,
                 'manual', null, (float) $product->purchase_price, mb_substr($notes, 0, 255), 'ajuste'
             );
 
             // Lotes: al restar se descuenta por FEFO (incluye vencidos); al sumar se puede indicar lote y vencimiento
             $batches = app(BatchService::class);
             if ($delta < 0) {
-                $batches->consume($employee->branch_id, $product->code, abs($delta), null, null, false, false);
+                $batches->consume($employee->branch_id, $product->id, abs($delta), null, null, false, false);
             } elseif ($request->filled('batch') || $request->filled('expiration_date')) {
                 $batches->receive(
-                    $employee->company_id, $employee->branch_id, $product->code, $delta,
+                    $employee->company_id, $employee->branch_id, $product->id, $delta,
                     $request->batch, $request->expiration_date, (float) $product->purchase_price, 'adjustment', null
                 );
             }
-            $batches->reconcile($employee->branch_id, $product->code);
+            $batches->reconcile($employee->branch_id, $product->id);
 
             DB::commit();
 

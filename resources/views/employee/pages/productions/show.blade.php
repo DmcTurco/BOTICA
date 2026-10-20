@@ -93,7 +93,7 @@
             <div class="col-span-2 sm:col-span-4">
                 <p class="text-xs text-slate-400 mb-1">Destino</p>
                 <p class="text-sm font-medium text-slate-800">
-                    @if($production->product_code)
+                    @if($production->product_id)
                         Ingresó al stock de «{{ $production->product?->name }}» para venderse en el POS
                     @else
                         Solo registro de lote (no se vende en el POS)
@@ -128,8 +128,8 @@
                     @foreach($production->ingredients as $ing)
                     <tr>
                         <td class="px-5 py-3">
-                            <p class="text-xs font-medium text-slate-800">{{ $ing->product?->name ?? $ing->product_code }}</p>
-                            <p class="text-[10px] text-slate-400 font-mono">{{ $ing->product_code }}</p>
+                            <p class="text-xs font-medium text-slate-800">{{ $ing->product?->name ?? '—' }}</p>
+                            <p class="text-[10px] text-slate-400 font-mono">{{ $ing->product?->code }}</p>
                         </td>
                         <td class="px-5 py-3 text-center text-xs text-slate-700">{{ $fmt($ing->quantity) }} {{ $ing->product?->unit?->abbreviation }}</td>
                         <td class="px-5 py-3 text-right text-xs text-slate-600">S/. {{ number_format($ing->unit_cost, 2) }}</td>
@@ -156,7 +156,7 @@
             <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0"><i class="fas fa-ban text-red-600 text-sm"></i></div>
             <h3 class="text-base font-semibold text-slate-800">Anular lote {{ $production->batch }}</h3>
         </div>
-        <p class="text-sm text-slate-600">Los insumos vuelven al stock{{ $production->product_code ? ' y se retira el producto final del stock de venta (solo si aún no se vendió)' : '' }}.</p>
+        <p class="text-sm text-slate-600">Los insumos vuelven al stock{{ $production->product_id ? ' y se retira el producto final del stock de venta (solo si aún no se vendió)' : '' }}.</p>
         <input type="text" name="void_reason" required maxlength="255" placeholder="Motivo de la anulación"
                class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400">
         <div class="flex gap-3 justify-end">

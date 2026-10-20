@@ -26,7 +26,7 @@ class InitialInventoryService
     }
 
     /**
-     * @param  array<int, array{code: string, quantity?: mixed, cost?: mixed, price?: mixed, batch?: mixed, expiration?: mixed, line?: int}>  $rows
+     * @param  array<int, array{product_id?: int, code?: string, quantity?: mixed, cost?: mixed, price?: mixed, batch?: mixed, expiration?: mixed, line?: int}>  $rows
      * @return array{counted: int, prices: int, errors: array<int, string>}
      */
     public function apply(Employee $employee, array $rows): array
@@ -36,17 +36,20 @@ class InitialInventoryService
         $errors  = [];
         $reason  = InventoryAdjustmentRequest::REASONS['inicial'];
 
+        // La pantalla identifica cada fila por product_id; la plantilla de Excel, por el correlativo (code)
         $products = Product::where('company_id', $employee->company_id)
-            ->whereIn('code', array_column($rows, 'code'))
-            ->get()
-            ->keyBy('code');
+            ->where(fn ($q) => $q->whereIn('id', array_filter(array_column($rows, 'product_id')))
+                ->orWhereIn('code', array_filter(array_column($rows, 'code'))))
+            ->get();
+        $byId   = $products->keyBy('id');
+        $byCode = $products->keyBy('code');
 
         foreach ($rows as $row) {
-            $label   = isset($row['line']) ? 'Fila ' . $row['line'] : ($row['code'] ?? '');
-            $product = $products->get($row['code'] ?? '');
+            $product = isset($row['product_id']) ? $byId->get((int) $row['product_id']) : $byCode->get($row['code'] ?? '');
+            $label   = isset($row['line']) ? 'Fila ' . $row['line'] : ($product?->code ?? $row['code'] ?? '');
 
             if (!$product) {
-                $errors[] = "{$label}: el producto «" . ($row['code'] ?? '') . '» no existe en tu catálogo.';
+                $errors[] = "{$label}: el producto «" . ($row['code'] ?? $row['product_id'] ?? '') . '» no existe en tu catálogo.';
                 continue;
             }
 
@@ -85,7 +88,7 @@ class InitialInventoryService
     private function count(Employee $employee, Product $product, float $quantity, array $row, string $reason): bool
     {
         $current = (float) BranchStock::where('branch_id', $employee->branch_id)
-            ->where('product_code', $product->code)
+            ->where('product_id', $product->id)
             ->lockForUpdate()
             ->value('stock_actual');
 
@@ -96,7 +99,7 @@ class InitialInventoryService
         }
 
         $this->stock->move(
-            $employee->company_id, $employee->branch_id, $product->code, $delta,
+            $employee->company_id, $employee->branch_id, $product->id, $delta,
             'manual', null, (float) $product->purchase_price, $reason, 'ajuste'
         );
 
@@ -105,17 +108,17 @@ class InitialInventoryService
         if ($delta > 0) {
             if (filled($row['batch'] ?? null) || filled($row['expiration'] ?? null)) {
                 $this->batches->receive(
-                    $employee->company_id, $employee->branch_id, $product->code, $delta,
+                    $employee->company_id, $employee->branch_id, $product->id, $delta,
                     filled($row['batch'] ?? null) ? mb_substr(trim((string) $row['batch']), 0, 30) : null,
                     filled($row['expiration'] ?? null) ? $row['expiration'] : null,
                     (float) $product->purchase_price, 'adjustment', null
                 );
             }
         } else {
-            $this->batches->consume($employee->branch_id, $product->code, abs($delta), null, null, false, false);
+            $this->batches->consume($employee->branch_id, $product->id, abs($delta), null, null, false, false);
         }
 
-        $this->batches->reconcile($employee->branch_id, $product->code);
+        $this->batches->reconcile($employee->branch_id, $product->id);
 
         return true;
     }

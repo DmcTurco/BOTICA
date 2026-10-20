@@ -1,9 +1,9 @@
 {{--
     Buscador de productos + tabla de líneas con cantidad. Se usa dentro de un <form>.
     Variables:
-      $pickerProducts : [['code','name','unit','stock'], ...]
-      $pickerName     : prefijo de los campos (por defecto "items") → items[0][product_code], items[0][quantity]
-      $pickerInitial  : líneas iniciales [['product_code' => , 'quantity' => ]]
+      $pickerProducts : [['id','code','barcode','name','unit','stock'], ...]
+      $pickerName     : prefijo de los campos (por defecto "items") → items[0][product_id], items[0][quantity]
+      $pickerInitial  : líneas iniciales [['product_id' => , 'quantity' => ]]
       $pickerLimit    : true = la cantidad no puede superar el stock del producto
       $pickerCost     : true = agrega una columna de costo unitario (unit_cost)
 --}}
@@ -52,18 +52,18 @@
 
     const esc = t => { const d = document.createElement('div'); d.textContent = t ?? ''; return d.innerHTML; };
 
-    function agregar(code, cantidad, costo) {
-        if (filas.querySelector(`tr[data-code="${CSS.escape(code)}"]`)) return;
-        const p = productos.find(x => x.code === code);
+    function agregar(id, cantidad, costo) {
+        if (filas.querySelector(`tr[data-id="${id}"]`)) return;
+        const p = productos.find(x => String(x.id) === String(id));
         if (!p) return;
         const i = idx++;
         const tr = document.createElement('tr');
-        tr.dataset.code = code;
+        tr.dataset.id = p.id;
         tr.innerHTML = `
             <td class="px-3 py-2">
-                <input type="hidden" name="${prefijo}[${i}][product_code]" value="${esc(code)}">
+                <input type="hidden" name="${prefijo}[${i}][product_id]" value="${p.id}">
                 <p class="font-medium text-slate-800 text-xs">${esc(p.name)}</p>
-                <p class="text-[10px] text-slate-400 font-mono">${esc(code)}</p>
+                <p class="text-[10px] text-slate-400 font-mono">${esc(p.code)}</p>
             </td>
             <td class="px-3 py-2 text-center text-xs text-slate-600">${p.stock ?? '—'}</td>
             <td class="px-3 py-2">
@@ -96,9 +96,10 @@
     buscador.addEventListener('input', () => {
         const q = buscador.value.toLowerCase().trim();
         if (!q) { resultados.classList.add('hidden'); return; }
-        const hallados = productos.filter(p => (p.name + ' ' + p.code).toLowerCase().includes(q)).slice(0, 30);
+        // Por nombre, correlativo (código) o código de barras
+        const hallados = productos.filter(p => [p.name, p.code, p.barcode].join(' ').toLowerCase().includes(q)).slice(0, 30);
         resultados.innerHTML = hallados.length ? hallados.map(p => `
-            <button type="button" data-code="${esc(p.code)}" class="picker-item w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-slate-100 last:border-0">
+            <button type="button" data-id="${p.id}" class="picker-item w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-slate-100 last:border-0">
                 <p class="text-xs font-medium text-slate-800">${esc(p.name)}</p>
                 <p class="text-[10px] text-slate-400 font-mono">${esc(p.code)}${p.stock != null ? ' · stock ' + p.stock : ''}</p>
             </button>`).join('') : '<p class="px-3 py-3 text-xs text-slate-400">Sin resultados</p>';
@@ -108,7 +109,7 @@
     resultados.addEventListener('click', e => {
         const item = e.target.closest('.picker-item');
         if (!item) return;
-        agregar(item.dataset.code, '');
+        agregar(item.dataset.id, '');
         buscador.value = '';
         resultados.classList.add('hidden');
         filas.lastElementChild?.querySelector('input[type=number]')?.focus();
@@ -117,7 +118,7 @@
         if (!e.target.closest('#pickerSearch') && !e.target.closest('#pickerResults')) resultados.classList.add('hidden');
     });
 
-    @json($pickerInitial).forEach(l => agregar(l.product_code, l.quantity, l.unit_cost));
+    @json($pickerInitial).forEach(l => agregar(l.product_id, l.quantity, l.unit_cost));
     actualizar();
 })();
 </script>

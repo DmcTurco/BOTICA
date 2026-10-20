@@ -20,7 +20,7 @@ class LostSale extends Model
         'company_id',
         'branch_id',
         'employee_id',
-        'product_code',
+        'product_id',
         'product_name',
         'quantity',
         'reason',

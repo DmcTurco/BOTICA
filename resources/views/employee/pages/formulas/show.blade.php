@@ -91,7 +91,7 @@
                     @foreach($formula->ingredients as $ing)
                     <tr>
                         <td class="px-5 py-2.5">
-                            <p class="text-xs font-medium text-slate-800">{{ $ing->product?->name ?? $ing->product_code }}</p>
+                            <p class="text-xs font-medium text-slate-800">{{ $ing->product?->name ?? '—' }}</p>
                             @if($ing->notes)<p class="text-[10px] text-slate-400">{{ $ing->notes }}</p>@endif
                         </td>
                         <td class="px-5 py-2.5 text-center text-xs text-slate-700">{{ $fmt($ing->quantity) }} {{ $ing->product?->unit?->abbreviation }}</td>

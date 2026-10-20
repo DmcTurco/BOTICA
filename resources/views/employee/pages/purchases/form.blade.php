@@ -170,7 +170,7 @@
                                         ])->values();
                                     @endphp
                                     <tr class="hover:bg-sky-50 transition-colors cursor-pointer fila-producto"
-                                        data-code="{{ $p->code }}" data-barcode="{{ $p->barcode }}" data-name="{{ $p->name }}"
+                                        data-id="{{ $p->id }}" data-code="{{ $p->code }}" data-barcode="{{ $p->barcode }}" data-name="{{ $p->name }}"
                                         data-unit="{{ $p->unit?->name ?? 'Unidad' }}"
                                         data-presentations="{{ json_encode($presData) }}"
                                         data-cost="{{ $p->purchase_price ?? 0 }}">
@@ -383,21 +383,23 @@
             const fila = e.target.closest('.fila-producto');
             if (!fila) return;
 
-            const code = fila.dataset.code;
+            const id = fila.dataset.id;
+            const code = fila.dataset.code;   // correlativo, solo para mostrar
             const name = fila.dataset.name;
             const cost = parseFloat(fila.dataset.cost) || 0;
             const unit = fila.dataset.unit || 'Unidad';
             const presentations = JSON.parse(fila.dataset.presentations || '[]');
 
-            if (seleccionados.has(code)) {
+            if (seleccionados.has(id)) {
                 // Si ya está, incrementar cantidad
-                const item = seleccionados.get(code);
+                const item = seleccionados.get(id);
                 item.quantity++;
-                seleccionados.set(code, item);
-                actualizarFilaSeleccionada(code);
+                seleccionados.set(id, item);
+                actualizarFilaSeleccionada(id);
             } else {
                 // Agregar nuevo ítem
-                seleccionados.set(code, {
+                seleccionados.set(id, {
+                    code,
                     name,
                     unit,
                     presentations,
@@ -407,49 +409,49 @@
                     unitCost: cost,       // costo por presentación elegida
                     idx: itemIdx++
                 });
-                renderizarFilaSeleccionada(code);
+                renderizarFilaSeleccionada(id);
             }
 
             actualizarUI();
         });
 
         // ── Renderiza una fila nueva en la tabla de seleccionados ───────────────────
-        function renderizarFilaSeleccionada(code) {
-            const item = seleccionados.get(code);
+        function renderizarFilaSeleccionada(id) {
+            const item = seleccionados.get(id);
             const idx = item.idx;
 
             const lista = document.getElementById('filasSeleccionados');
             const fila = document.createElement('div');
             fila.className = 'item-seleccionado px-4 py-3 hover:bg-slate-50 transition-colors';
-            fila.dataset.code = code;
+            fila.dataset.id = id;
             fila.innerHTML = `
-            <input type="hidden" name="items[${idx}][product_code]" value="${code}">
+            <input type="hidden" name="items[${idx}][product_id]" value="${id}">
             <div class="flex items-start gap-3">
                 <div class="flex-1 min-w-0">
                     <p class="font-medium text-slate-800 text-sm leading-tight nombre-item"></p>
-                    <p class="text-[10px] text-slate-400 font-mono">${code}</p>
+                    <p class="text-[10px] text-slate-400 font-mono">${item.code}</p>
                 </div>
                 ${item.presentations.length ? `
-                <select name="items[${idx}][presentation_id]" data-code="${code}" data-field="presentation"
+                <select name="items[${idx}][presentation_id]" data-id="${id}" data-field="presentation"
                     class="input-seleccionado w-40 shrink-0 px-2 py-1 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
                     <option value="" data-factor="1">${item.unit} (1 unidad)</option>
                     ${item.presentations.map(p => `<option value="${p.id}" data-factor="${p.amount}">${p.label} (${p.amount} unid.)</option>`).join('')}
                 </select>` : ''}
-                <p class="shrink-0 w-24 text-right text-sm font-semibold text-slate-700 celda-subtotal" data-code="${code}">
+                <p class="shrink-0 w-24 text-right text-sm font-semibold text-slate-700 celda-subtotal" data-id="${id}">
                     S/. ${(item.quantity * item.unitCost).toFixed(2)}
                 </p>
-                <button type="button" data-code="${code}" title="Quitar"
+                <button type="button" data-id="${id}" title="Quitar"
                         class="btn-quitar shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
                     <i class="fas fa-trash text-[10px] pointer-events-none"></i>
                 </button>
             </div>
-            <p class="text-[10px] text-emerald-700 mt-0.5 hint-unidades" data-code="${code}"></p>
+            <p class="text-[10px] text-emerald-700 mt-0.5 hint-unidades" data-id="${id}"></p>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                 <label class="block">
                     <span class="block text-[10px] font-medium text-slate-500 mb-0.5">Cantidad</span>
                     <input type="number" name="items[${idx}][quantity]"
                         value="${item.quantity}" min="1" step="1" required
-                        data-code="${code}" data-field="quantity"
+                        data-id="${id}" data-field="quantity"
                         class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-sky-500 input-seleccionado">
                 </label>
                 <label class="block">
@@ -458,7 +460,7 @@
                         <span class="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">S/.</span>
                         <input type="number" name="items[${idx}][unit_cost]"
                             value="${item.unitCost.toFixed(2)}" min="0" step="0.01" required
-                            data-code="${code}" data-field="unitCost"
+                            data-id="${id}" data-field="unitCost"
                             class="w-full pl-6 pr-2 py-1.5 text-xs border border-slate-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-sky-500 input-seleccionado">
                     </span>
                 </label>
@@ -479,13 +481,13 @@
             fila.querySelector('.nombre-item').textContent = item.name;
 
             lista.appendChild(fila);
-            pintarHintUnidades(code);
+            pintarHintUnidades(id);
         }
 
         // ── Resumen en unidades: "= 50 unidades · S/ 0.15 c/u" (solo si hay otra presentación) ──
-        function pintarHintUnidades(code) {
-            const item = seleccionados.get(code);
-            const hint = document.querySelector(`.hint-unidades[data-code="${CSS.escape(code)}"]`);
+        function pintarHintUnidades(id) {
+            const item = seleccionados.get(id);
+            const hint = document.querySelector(`.hint-unidades[data-id="${id}"]`);
             if (!item || !hint) return;
             if (item.factor === 1) { hint.textContent = ''; return; }
             const unidades = Math.round(item.quantity * item.factor * 100) / 100;
@@ -494,26 +496,26 @@
         }
 
         // ── Actualiza los inputs de una fila ya existente ───────────────────────────
-        function actualizarFilaSeleccionada(code) {
-            const item = seleccionados.get(code);
-            const fila = document.querySelector(`#filasSeleccionados .item-seleccionado[data-code="${code}"]`);
+        function actualizarFilaSeleccionada(id) {
+            const item = seleccionados.get(id);
+            const fila = document.querySelector(`#filasSeleccionados .item-seleccionado[data-id="${id}"]`);
             if (!fila) return;
             fila.querySelector(`input[data-field="quantity"]`).value = item.quantity;
             const subtotal = item.quantity * item.unitCost;
             fila.querySelector(`.celda-subtotal`).textContent = 'S/. ' + subtotal.toFixed(2);
-            pintarHintUnidades(code);
+            pintarHintUnidades(id);
         }
 
         // ── Delegación de eventos en la tabla de seleccionados ──────────────────────
         document.getElementById('filasSeleccionados').addEventListener('input', function(e) {
             const input = e.target;
             if (!input.classList.contains('input-seleccionado')) return;
-            const code = input.dataset.code;
+            const id = input.dataset.id;
             const field = input.dataset.field;
-            const item = seleccionados.get(code);
+            const item = seleccionados.get(id);
             if (!item) return;
 
-            const fila = document.querySelector(`#filasSeleccionados .item-seleccionado[data-code="${code}"]`);
+            const fila = document.querySelector(`#filasSeleccionados .item-seleccionado[data-id="${id}"]`);
 
             if (field === 'quantity') item.quantity = parseInt(input.value) || 1;
             if (field === 'unitCost') item.unitCost = parseFloat(input.value) || 0;
@@ -523,11 +525,11 @@
                 item.unitCost = Math.round(item.baseCost * item.factor * 100) / 100;
                 fila.querySelector('input[data-field="unitCost"]').value = item.unitCost.toFixed(2);
             }
-            seleccionados.set(code, item);
+            seleccionados.set(id, item);
 
             fila.querySelector('.celda-subtotal').textContent =
                 'S/. ' + (item.quantity * item.unitCost).toFixed(2);
-            pintarHintUnidades(code);
+            pintarHintUnidades(id);
 
             recalcularTotales();
         });
@@ -536,9 +538,9 @@
         document.getElementById('filasSeleccionados').addEventListener('click', function(e) {
             const btn = e.target.closest('.btn-quitar');
             if (!btn) return;
-            const code = btn.dataset.code;
-            seleccionados.delete(code);
-            document.querySelector(`#filasSeleccionados .item-seleccionado[data-code="${code}"]`).remove();
+            const id = btn.dataset.id;
+            seleccionados.delete(id);
+            document.querySelector(`#filasSeleccionados .item-seleccionado[data-id="${id}"]`).remove();
             actualizarUI();
         });
 
@@ -683,10 +685,10 @@
         const itemsAnteriores = @json($itemsAnteriores);
 
         function restaurarItem(anterior) {
-            const fila = document.querySelector(`.fila-producto[data-code="${CSS.escape(anterior.product_code || '')}"]`);
+            const fila = document.querySelector(`.fila-producto[data-id="${anterior.product_id || ''}"]`);
             if (!fila) return;
             fila.click();
-            const row = document.querySelector(`#filasSeleccionados .item-seleccionado[data-code="${CSS.escape(anterior.product_code)}"]`);
+            const row = document.querySelector(`#filasSeleccionados .item-seleccionado[data-id="${anterior.product_id}"]`);
             if (!row) return;
             const poner = (selector, valor, evento) => {
                 const el = row.querySelector(selector);
@@ -712,15 +714,17 @@
                 return;
             }
             precarga.forEach(p => {
-                const fila = document.querySelector(`.fila-producto[data-code="${CSS.escape(p.code)}"]`);
+                // El carrito usa el id como texto (viene de data-id)
+                const id = String(p.product_id);
+                const fila = document.querySelector(`.fila-producto[data-id="${id}"]`);
                 if (!fila) return;
                 fila.click();
-                const item = seleccionados.get(p.code);
+                const item = seleccionados.get(id);
                 item.quantity = p.qty;
                 item.unitCost = p.cost;
-                seleccionados.set(p.code, item);
-                actualizarFilaSeleccionada(p.code);
-                document.querySelector(`#filasSeleccionados .item-seleccionado[data-code="${CSS.escape(p.code)}"] input[data-field="unitCost"]`).value = p.cost.toFixed(2);
+                seleccionados.set(id, item);
+                actualizarFilaSeleccionada(id);
+                document.querySelector(`#filasSeleccionados .item-seleccionado[data-id="${id}"] input[data-field="unitCost"]`).value = p.cost.toFixed(2);
                 recalcularTotales();
             });
         });
@@ -729,7 +733,7 @@
         @if ($producto)
             document.addEventListener('DOMContentLoaded', () => {
                 if (itemsAnteriores.length) return;   // ya se reconstruyó la lista enviada
-                const fila = document.querySelector(`.fila-producto[data-code="{{ $producto->code }}"]`);
+                const fila = document.querySelector(`.fila-producto[data-id="{{ $producto->id }}"]`);
                 if (fila) fila.querySelector('.btn-agregar').click();
             });
         @endif

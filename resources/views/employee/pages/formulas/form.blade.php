@@ -8,7 +8,9 @@
 
     // Catálogo para el buscador de insumos y el selector de producto final
     $catalogData = $products->map(fn ($p) => [
-        'code' => $p->code,
+        'id'      => $p->id,
+        'code'    => $p->code,
+        'barcode' => $p->barcode,
         'name' => $p->name,
         'unit' => $p->unit?->abbreviation,
         'cost' => (float) $p->purchase_price,
@@ -143,11 +145,11 @@
 
                 <div id="bloqueProducto" class="{{ $sellInPos ? '' : 'hidden' }} max-w-xl">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Producto del catálogo que recibe el stock <span class="text-red-500">*</span></label>
-                    <select data-search name="product_code" id="productCode"
+                    <select data-search name="product_id" id="productId"
                             class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
                         <option value="">— Selecciona un producto —</option>
                         @foreach($products as $p)
-                            <option value="{{ $p->code }}" {{ (string) old('product_code', $formula->product_code ?? '') === (string) $p->code ? 'selected' : '' }}>
+                            <option value="{{ $p->id }}" {{ (string) old('product_id', $formula->product_id ?? '') === (string) $p->id ? 'selected' : '' }}>
                                 {{ $p->name }} ({{ $p->code }})
                             </option>
                         @endforeach
@@ -237,18 +239,18 @@ function escapar(t) {
 }
 
 // Agrega una fila de insumo (si ya está, no se duplica)
-function agregarInsumo(codigo, cantidad, nota) {
-    if (filas.querySelector(`tr[data-code="${CSS.escape(codigo)}"]`)) return;
-    const p = catalogo.find(x => x.code === codigo);
+function agregarInsumo(productId, cantidad, nota) {
+    if (filas.querySelector(`tr[data-id="${productId}"]`)) return;
+    const p = catalogo.find(x => String(x.id) === String(productId));
     if (!p) return;
     const i = idx++;
     const tr = document.createElement('tr');
-    tr.dataset.code = codigo;
+    tr.dataset.id = p.id;
     tr.innerHTML = `
         <td class="px-3 py-2">
-            <input type="hidden" name="ingredients[${i}][product_code]" value="${escapar(codigo)}">
+            <input type="hidden" name="ingredients[${i}][product_id]" value="${p.id}">
             <p class="font-medium text-slate-800 text-xs">${escapar(p.name)}</p>
-            <p class="text-[10px] text-slate-400 font-mono">${escapar(codigo)}</p>
+            <p class="text-[10px] text-slate-400 font-mono">${escapar(p.code)}</p>
         </td>
         <td class="px-3 py-2">
             <div class="flex items-center gap-1">
@@ -289,11 +291,12 @@ function mostrarResultados() {
     const q = buscador.value.toLowerCase().trim();
     if (q.length < 1) { resultados.classList.add('hidden'); return; }
     const hallados = catalogo
-        .filter(p => (p.name + ' ' + p.code).toLowerCase().includes(q))
+        // Por nombre, correlativo (código) o código de barras
+        .filter(p => [p.name, p.code, p.barcode].join(' ').toLowerCase().includes(q))
         .slice(0, 30);
     resultados.innerHTML = hallados.length
         ? hallados.map(p => `
-            <button type="button" data-code="${escapar(p.code)}"
+            <button type="button" data-id="${p.id}"
                     class="item-resultado w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-slate-100 last:border-0">
                 <p class="text-xs font-medium text-slate-800">${escapar(p.name)}</p>
                 <p class="text-[10px] text-slate-400 font-mono">${escapar(p.code)} · ${escapar(p.unit || 'sin unidad')}</p>
@@ -306,7 +309,7 @@ buscador.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefa
 resultados.addEventListener('click', e => {
     const item = e.target.closest('.item-resultado');
     if (!item) return;
-    agregarInsumo(item.dataset.code, '', '');
+    agregarInsumo(item.dataset.id, '', '');
     buscador.value = '';
     resultados.classList.add('hidden');
     // Enfoca la cantidad del insumo recién agregado
@@ -352,7 +355,7 @@ document.getElementById('sellInPos').addEventListener('change', function () {
 })();
 
 // Carga inicial (edición o regreso por error de validación)
-insumosIniciales.forEach(i => agregarInsumo(i.product_code, i.quantity, i.notes));
+insumosIniciales.forEach(i => agregarInsumo(i.product_id, i.quantity, i.notes));
 actualizarContador();
 </script>
 @endsection

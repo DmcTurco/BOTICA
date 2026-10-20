@@ -41,7 +41,7 @@
                     @forelse($changes as $c)
                     <tr class="hover:bg-slate-50">
                         <td class="px-5 py-2.5 text-xs text-slate-500">{{ $c->created_at->format('d/m/Y H:i') }}</td>
-                        <td class="px-5 py-2.5"><p class="text-xs font-medium text-slate-800">{{ $c->product?->name ?? $c->product_code }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $c->product_code }}</p></td>
+                        <td class="px-5 py-2.5"><p class="text-xs font-medium text-slate-800">{{ $c->product?->name ?? '—' }}</p><p class="text-[10px] text-slate-400 font-mono">{{ $c->product?->code }}</p></td>
                         <td class="px-5 py-2.5 text-xs text-slate-500 hidden sm:table-cell">{{ \App\Models\PriceChange::FIELD_LABELS[$c->field] ?? $c->field }}</td>
                         <td class="px-5 py-2.5 text-xs text-slate-700">S/ {{ number_format($c->old_value, 2) }} → <strong>S/ {{ number_format($c->new_value, 2) }}</strong></td>
                         <td class="px-5 py-2.5 text-xs text-slate-500 hidden md:table-cell">{{ $c->employee?->name }}</td>

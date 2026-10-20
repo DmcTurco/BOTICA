@@ -139,6 +139,7 @@
                         <tbody id="tablaProductos" class="divide-y divide-slate-100">
                             @forelse($products as $product)
                             <tr class="hover:bg-sky-50/40 transition-colors cursor-default producto-row"
+                                data-id="{{ $product->id }}"
                                 data-code="{{ $product->code }}"
                                 data-barcode="{{ $product->barcode }}"
                                 data-search="{{ strtolower($product->name . ' ' . $product->code . ' ' . $product->barcode . ' ' . $product->active_ingredient) }}"
@@ -177,6 +178,7 @@
                                         })->values();
                                     @endphp
                                     <button class="btn-agregar w-7 h-7 flex items-center justify-center rounded-lg bg-sky-600 hover:bg-sky-700 active:scale-95 text-white transition-all"
+                                            data-id="{{ $product->id }}"
                                             data-code="{{ $product->code }}"
                                             data-name="{{ $product->name }}"
                                             data-price="{{ $product->unit_sale_price }}"
@@ -824,7 +826,7 @@ function pintarAlternativas($destino, lista) {
 }
 
 $('#btnAlternativas').on('click', function () {
-    $.getJSON('{{ route("employee.pos.alternatives") }}', { code: modalProducto.code }, lista => pintarAlternativas($('#altLista'), lista));
+    $.getJSON('{{ route("employee.pos.alternatives") }}', { product_id: modalProducto.id }, lista => pintarAlternativas($('#altLista'), lista));
 });
 
 $('#btnBuscarPrincipio').on('click', function () {
@@ -838,22 +840,22 @@ $(document).on('click', '.alt-item', function () {
 });
 
 // ── Presentaciones y stock ────────────────────────────────────
-// El carrito tiene una línea por producto + presentación (clave "código|id" o "código|base"):
+// El carrito tiene una línea por producto + presentación (clave "idProducto|idPresentación" o "idProducto|base"):|id" o "código|base"):
 // así la unidad y el blíster del mismo producto quedan separados, cada uno con su precio.
 // El stock del producto está en unidades base; cada línea ocupa cantidad × factor
 // (1 blíster x10 = 10 unidades), y entre todas sus líneas no pueden superar el stock.
-function claveLinea(code, presentationId) {
-    return code + '|' + (presentationId || 'base');
+function claveLinea(productId, presentationId) {
+    return productId + '|' + (presentationId || 'base');
 }
 
 // Unidades base que ya ocupan en el carrito las líneas de un producto (sin contar una de ellas)
-function unidadesEnCarrito(code, exceptoClave) {
-    return Object.entries(carrito).reduce((s, [k, i]) => s + (i.code === code && k !== exceptoClave ? i.qty * i.factor : 0), 0);
+function unidadesEnCarrito(productId, exceptoClave) {
+    return Object.entries(carrito).reduce((s, [k, i]) => s + (i.id === productId && k !== exceptoClave ? i.qty * i.factor : 0), 0);
 }
 
 // Cantidad máxima de una presentación según el stock libre del producto
-function maxCantidad(code, factor, stock, exceptoClave) {
-    return Math.floor(Math.max(stock - unidadesEnCarrito(code, exceptoClave), 0) / factor + 1e-9);
+function maxCantidad(productId, factor, stock, exceptoClave) {
+    return Math.floor(Math.max(stock - unidadesEnCarrito(productId, exceptoClave), 0) / factor + 1e-9);
 }
 
 function escapar(texto) {
@@ -869,7 +871,7 @@ let modalPresentacion = { id: null, factor: 1, label: '' };
 // presentación se suma al agregar, así que cuenta como ocupado)
 function modalMax() {
     if (!modalProducto) return 9999;
-    return maxCantidad(modalProducto.code, modalPresentacion.factor, modalProducto.stock, null);
+    return maxCantidad(modalProducto.id, modalPresentacion.factor, modalProducto.stock, null);
 }
 
 function pintarStockModal() {
@@ -881,18 +883,20 @@ function pintarStockModal() {
 }
 
 $(document).on('click', '.btn-agregar', function() {
-    const code          = $(this).data('code');
+    const id            = parseInt($(this).data('id'));
+    // attr y no data(): el correlativo se muestra tal cual
+    const code          = String($(this).attr('data-code') || '');
     const name          = String($(this).data('name'));
     const price         = parseFloat($(this).data('price'));
     // Al editar una venta, sus líneas traen el stock que ya tenía descontado (stock + lo vendido)
-    const enCarrito     = Object.values(carrito).find(i => i.code === code);
+    const enCarrito     = Object.values(carrito).find(i => i.id === id);
     const stock         = Math.max(parseInt($(this).data('stock')) || 0, enCarrito ? enCarrito.stock : 0);
     const afectacion    = String($(this).data('afectacion') || '20');
     const receta        = parseInt($(this).data('receta')) || 0;
     const ingredient    = String($(this).data('ingredient') || '');
     const presentations = $(this).data('presentations') || [];
 
-    modalProducto = { code, name, stock, afectacion, receta, ingredient };
+    modalProducto = { id, code, name, stock, afectacion, receta, ingredient };
     $('#altLista').empty();
     $('#altBox').toggleClass('hidden', !ingredient);
     modalPrecio   = price;
@@ -968,7 +972,7 @@ $('#modalBtnInc').on('click', function() {
 
 $('#modalBtnAgregar').on('click', function() {
     if (!modalProducto) return;
-    const { code, name, stock, afectacion, receta } = modalProducto;
+    const { id, code, name, stock, afectacion, receta } = modalProducto;
     const { id: presentationId, factor, label } = modalPresentacion;
     const max = modalMax();
 
@@ -978,12 +982,12 @@ $('#modalBtnAgregar').on('click', function() {
     }
 
     const qty   = Math.min(Math.max(parseInt($('#modalCantidad').val()) || 1, 1), max);
-    const clave = claveLinea(code, presentationId);
+    const clave = claveLinea(id, presentationId);
 
     if (carrito[clave]) {
         carrito[clave].qty += qty;
     } else {
-        carrito[clave] = { code, name, label, presentationId, factor, price: modalPrecio, stock, qty, afectacion, receta };
+        carrito[clave] = { id, code, name, label, presentationId, factor, price: modalPrecio, stock, qty, afectacion, receta };
     }
 
     cerrarModalAgregar();
@@ -1003,7 +1007,7 @@ $(document).on('keydown', function(e) {
 // Máximo de una línea: lo que deja libre el resto de líneas del mismo producto
 function maxLinea(clave) {
     const i = carrito[clave];
-    return maxCantidad(i.code, i.factor, i.stock, clave);
+    return maxCantidad(i.id, i.factor, i.stock, clave);
 }
 
 $(document).on('input', '.input-cantidad', function() {
@@ -1331,7 +1335,7 @@ $('#btnTerminarVenta').on('click', function() {
     // El servidor toma precio y unidades de la presentación desde la base de datos;
     // el precio se envía solo para detectar si cambió mientras la página estaba abierta
     const items = Object.values(carrito).map(item => ({
-        code:            item.code,
+        product_id:      item.id,
         presentation_id: item.presentationId,
         name:            item.name,
         price:           item.price,
@@ -1427,8 +1431,8 @@ $('#btnTerminarVenta').on('click', function() {
 if (EDIT_ORDER) {
     // El nombre guardado ya incluye la presentación (ej. "Paracetamol (Blíster x10)"), por eso sin etiqueta aparte
     EDIT_ORDER.items.forEach(function(i) {
-        carrito[claveLinea(i.code, i.presentation_id)] = {
-            code: i.code, name: i.name, label: '', presentationId: i.presentation_id || null,
+        carrito[claveLinea(i.product_id, i.presentation_id)] = {
+            id: i.product_id, code: i.code, name: i.name, label: '', presentationId: i.presentation_id || null,
             factor: parseFloat(i.factor) || 1, price: i.price, stock: i.stock, qty: i.qty,
             afectacion: String(i.afectacion), receta: parseInt(i.receta) || 0,
         };

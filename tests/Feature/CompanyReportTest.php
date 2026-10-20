@@ -37,7 +37,7 @@ it('compara las ventas, inventario, vencidos y deudas de todas las sedes', funct
     expect($rows['Sede Norte']->gross)->toBe(40.0)->and($rows['Sede Norte']->low_stock)->toBe(1)->and($rows['Sede Norte']->inventory)->toBe(8.0)
         ->and($principal->gross)->toBe(100.0)->and($principal->expired)->toBe(3.0)->and($principal->receivable)->toBe(25.0)
         ->and($view->viewData('totals')['gross'])->toBe(140.0)
-        ->and($view->viewData('top')->first()->product_code)->toBe('A');
+        ->and($view->viewData('top')->first()->product_id)->toBe(pid('A'));
 });
 
 it('descarga el resumen por sedes en CSV', function () {

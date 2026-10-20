@@ -56,7 +56,7 @@ class ProductionController extends Controller
     {
         $employee = auth()->guard('employee')->user();
 
-        $formulas = Formula::with(['ingredients.product.unit', 'product:code,name', 'yieldUnit'])
+        $formulas = Formula::with(['ingredients.product.unit', 'product:id,code,name', 'yieldUnit'])
             ->where('company_id', $employee->company_id)
             ->where('status', 1)
             ->orderBy('name')
@@ -70,10 +70,10 @@ class ProductionController extends Controller
             return $requirements->view();
         }
 
-        $codes  = $formulas->flatMap(fn ($f) => $f->ingredients->pluck('product_code'))->unique()->values();
+        $productIds = $formulas->flatMap(fn ($f) => $f->ingredients->pluck('product_id'))->unique()->values();
         $stocks = BranchStock::where('branch_id', $employee->branch_id)
-            ->whereIn('product_code', $codes)
-            ->pluck('stock_actual', 'product_code');
+            ->whereIn('product_id', $productIds)
+            ->pluck('stock_actual', 'product_id');
 
         // Datos que consume el JS del formulario
         $formulasData = $formulas->map(fn ($f) => [
@@ -86,12 +86,13 @@ class ProductionController extends Controller
             'sell_in_pos'  => $f->sell_in_pos,
             'product_name' => $f->product?->name,
             'ingredients'  => $f->ingredients->map(fn ($i) => [
-                'code'  => $i->product_code,
+                'id'    => $i->product_id,
+                'code'  => $i->product?->code,
                 'name'  => $i->product?->name,
                 'unit'  => $i->product?->unit?->abbreviation,
                 'qty'   => $i->quantity,
                 'cost'  => (float) ($i->product?->purchase_price ?? 0),
-                'stock' => (float) ($stocks[$i->product_code] ?? 0),
+                'stock' => (float) ($stocks[$i->product_id] ?? 0),
             ])->values(),
         ])->values();
 
@@ -130,29 +131,29 @@ class ProductionController extends Controller
                     return redirect()->back()->withInput()
                         ->with('error', 'La cantidad a preparar es muy pequeña: algún insumo se redondea a 0. Aumenta la cantidad.');
                 }
-                $needs[$ingredient->product_code] = $needed;
+                $needs[$ingredient->product_id] = $needed;
             }
 
-            // Bloquear el stock de los insumos en orden por código (evita bloqueos cruzados)
+            // Bloquear el stock de los insumos en orden por producto (evita bloqueos cruzados)
             ksort($needs);
             $stocks = BranchStock::where('branch_id', $employee->branch_id)
-                ->whereIn('product_code', array_keys($needs))
-                ->orderBy('product_code')
+                ->whereIn('product_id', array_keys($needs))
+                ->orderBy('product_id')
                 ->lockForUpdate()
                 ->get()
-                ->keyBy('product_code');
+                ->keyBy('product_id');
 
-            $prices = Product::whereIn('code', array_keys($needs))->pluck('purchase_price', 'code');
+            $prices = Product::whereIn('id', array_keys($needs))->pluck('purchase_price', 'id');
 
             // Verificar que alcance el stock de todos los insumos
             $batchService = app(BatchService::class);
 
-            foreach ($needs as $code => $needed) {
+            foreach ($needs as $productId => $needed) {
                 // Los insumos vencidos no se usan: solo cuenta el stock vendible
-                $available = $batchService->sellable($employee->branch_id, $code);
+                $available = $batchService->sellable($employee->branch_id, $productId);
                 if ($available < $needed) {
                     DB::rollBack();
-                    $name = $formula->ingredients->firstWhere('product_code', $code)?->product?->name ?? $code;
+                    $name = $formula->ingredients->firstWhere('product_id', $productId)?->product?->name ?? (string) $productId;
                     return redirect()->back()->withInput()
                         ->with('error', "Stock insuficiente de «{$name}»: se necesitan {$needed} y hay {$available}.");
                 }
@@ -165,8 +166,8 @@ class ProductionController extends Controller
                 : ($formula->shelf_life_days ? $producedAt->copy()->addDays($formula->shelf_life_days) : null);
 
             $totalCost = 0;
-            foreach ($needs as $code => $needed) {
-                $totalCost += round($needed * (float) ($prices[$code] ?? 0), 2);
+            foreach ($needs as $productId => $needed) {
+                $totalCost += round($needed * (float) ($prices[$productId] ?? 0), 2);
             }
             $unitCost = $quantity > 0 ? round($totalCost / $quantity, 2) : 0;
 
@@ -182,18 +183,18 @@ class ProductionController extends Controller
                 'expiration_date'   => $expiration,
                 'total_cost'        => $totalCost,
                 'unit_cost'         => $unitCost,
-                'product_code'      => $formula->sell_in_pos ? $formula->product_code : null,
+                'product_id'        => $formula->sell_in_pos ? $formula->product_id : null,
                 'notes'             => $request->notes,
             ]);
 
             // Descontar cada insumo, guardar el detalle y registrar la salida en el kardex
-            foreach ($needs as $code => $needed) {
-                $price      = (float) ($prices[$code] ?? 0);
-                $newBalance = (float) $stocks[$code]->stock_actual - $needed;
-                $stocks[$code]->update(['stock_actual' => $newBalance]);
+            foreach ($needs as $productId => $needed) {
+                $price      = (float) ($prices[$productId] ?? 0);
+                $newBalance = (float) $stocks[$productId]->stock_actual - $needed;
+                $stocks[$productId]->update(['stock_actual' => $newBalance]);
 
                 $production->ingredients()->create([
-                    'product_code' => $code,
+                    'product_id'   => $productId,
                     'quantity'     => $needed,
                     'unit_cost'    => $price,
                     'subtotal'     => round($needed * $price, 2),
@@ -202,7 +203,7 @@ class ProductionController extends Controller
                 StockMovement::create([
                     'company_id'     => $employee->company_id,
                     'branch_id'      => $employee->branch_id,
-                    'product_code'   => $code,
+                    'product_id'     => $productId,
                     'type'           => 'salida',
                     'reference_type' => 'production',
                     'reference_id'   => $production->id,
@@ -213,13 +214,13 @@ class ProductionController extends Controller
                 ]);
 
                 // Sale de los lotes de insumo que vencen primero
-                $batchService->consume($employee->branch_id, $code, $needed, 'production', $production->id);
+                $batchService->consume($employee->branch_id, $productId, $needed, 'production', $production->id);
             }
 
             // Si se vende en el POS, el producto final ingresa al stock de la sede
-            if ($formula->sell_in_pos && $formula->product_code) {
+            if ($formula->sell_in_pos && $formula->product_id) {
                 $finalStock = BranchStock::where('branch_id', $employee->branch_id)
-                    ->where('product_code', $formula->product_code)
+                    ->where('product_id', $formula->product_id)
                     ->lockForUpdate()
                     ->first();
 
@@ -230,7 +231,7 @@ class ProductionController extends Controller
                     $finalBalance = $quantity;
                     BranchStock::create([
                         'branch_id'    => $employee->branch_id,
-                        'product_code' => $formula->product_code,
+                        'product_id'   => $formula->product_id,
                         'stock_actual' => $finalBalance,
                     ]);
                 }
@@ -238,7 +239,7 @@ class ProductionController extends Controller
                 StockMovement::create([
                     'company_id'     => $employee->company_id,
                     'branch_id'      => $employee->branch_id,
-                    'product_code'   => $formula->product_code,
+                    'product_id'     => $formula->product_id,
                     'type'           => 'entrada',
                     'reference_type' => 'production',
                     'reference_id'   => $production->id,
@@ -250,7 +251,7 @@ class ProductionController extends Controller
 
                 // El preparado entra como un lote propio con su vencimiento
                 $batchService->receive(
-                    $employee->company_id, $employee->branch_id, $formula->product_code, $quantity,
+                    $employee->company_id, $employee->branch_id, $formula->product_id, $quantity,
                     $production->batch, $expiration, $unitCost, 'production', $production->id
                 );
             }
@@ -319,29 +320,29 @@ class ProductionController extends Controller
             $batches = app(BatchService::class);
 
             // Primero se retira el producto final: si ya se vendió, se corta antes de tocar nada
-            if ($production->product_code && !$batches->isIntact('production', $production->id, $employee->branch_id)) {
+            if ($production->product_id && !$batches->isIntact('production', $production->id, $employee->branch_id)) {
                 throw new \RuntimeException('Parte de ese preparado ya se vendió.');
             }
 
-            if ($production->product_code) {
+            if ($production->product_id) {
                 $stock->move(
-                    $employee->company_id, $employee->branch_id, $production->product_code, -(float) $production->quantity_produced,
+                    $employee->company_id, $employee->branch_id, $production->product_id, -(float) $production->quantity_produced,
                     'production_void', $production->id, (float) $production->unit_cost, 'Anulación del lote ' . $production->batch
                 );
             }
 
-            foreach ($production->ingredients()->orderBy('product_code')->get() as $ingredient) {
+            foreach ($production->ingredients()->orderBy('product_id')->get() as $ingredient) {
                 $stock->move(
-                    $employee->company_id, $employee->branch_id, $ingredient->product_code, (float) $ingredient->quantity,
+                    $employee->company_id, $employee->branch_id, $ingredient->product_id, (float) $ingredient->quantity,
                     'production_void', $production->id, (float) $ingredient->unit_cost, 'Anulación del lote ' . $production->batch
                 );
             }
 
             // Insumos de vuelta a sus lotes; el preparado sale del control de lotes
             $batches->restore('production', $production->id);
-            if ($production->product_code) {
+            if ($production->product_id) {
                 $batches->discardSource('production', $production->id, $employee->branch_id);
-                $batches->reconcile($employee->branch_id, $production->product_code);
+                $batches->reconcile($employee->branch_id, $production->product_id);
             }
 
             $production->update(['status' => 0, 'voided_at' => now(), 'void_reason' => $request->void_reason]);

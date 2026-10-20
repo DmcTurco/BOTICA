@@ -36,9 +36,9 @@ class InventoryAdjustmentRequest extends FormRequest
         $companyId = auth()->guard('employee')->user()->company_id;
 
         return [
-            'product_code' => [
+            'product_id' => [
                 'required',
-                Rule::exists('products', 'code')->where('company_id', $companyId)->whereNull('deleted_at'),
+                Rule::exists('products', 'id')->where('company_id', $companyId)->whereNull('deleted_at'),
             ],
             // set = fijar el stock contado · add = sumar · subtract = restar
             'mode'     => 'required|in:set,add,subtract',
@@ -59,8 +59,8 @@ class InventoryAdjustmentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'product_code.required' => 'Selecciona el producto a ajustar.',
-            'product_code.exists'   => 'El producto seleccionado no existe.',
+            'product_id.required' => 'Selecciona el producto a ajustar.',
+            'product_id.exists'   => 'El producto seleccionado no existe.',
             'mode.required'         => 'Indica el tipo de ajuste.',
             'quantity.required'     => 'Indica la cantidad.',
             'quantity.min'          => 'La cantidad no puede ser negativa.',

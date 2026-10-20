@@ -24,7 +24,7 @@ class FormulaRequest extends FormRequest
         $this->merge([
             'sell_in_pos' => $this->boolean('sell_in_pos'),
             // Si no se vende en el POS no se vincula ningún producto
-            'product_code' => $this->boolean('sell_in_pos') ? $this->input('product_code') : null,
+            'product_id' => $this->boolean('sell_in_pos') ? $this->input('product_id') : null,
         ]);
     }
 
@@ -51,18 +51,18 @@ class FormulaRequest extends FormRequest
 
             // Venta en el POS: exige un producto de la compañía que reciba el stock
             'sell_in_pos'  => 'boolean',
-            'product_code' => [
+            'product_id' => [
                 Rule::requiredIf(fn () => $this->boolean('sell_in_pos')),
                 'nullable',
-                Rule::exists('products', 'code')->where('company_id', $companyId)->whereNull('deleted_at'),
+                Rule::exists('products', 'id')->where('company_id', $companyId)->whereNull('deleted_at'),
             ],
 
             // Insumos: al menos uno, sin repetir producto
             'ingredients'                => 'required|array|min:1',
-            'ingredients.*.product_code' => [
+            'ingredients.*.product_id' => [
                 'required',
                 'distinct',
-                Rule::exists('products', 'code')->where('company_id', $companyId)->whereNull('deleted_at'),
+                Rule::exists('products', 'id')->where('company_id', $companyId)->whereNull('deleted_at'),
             ],
             'ingredients.*.quantity'     => 'required|numeric|min:0.01|max:99999999',
             'ingredients.*.notes'        => 'nullable|string|max:255',
@@ -76,10 +76,10 @@ class FormulaRequest extends FormRequest
     {
         return [
             function (Validator $validator) {
-                $codes = array_column($this->input('ingredients', []), 'product_code');
+                $productIds = array_column($this->input('ingredients', []), 'product_id');
 
-                if ($this->boolean('sell_in_pos') && in_array($this->input('product_code'), $codes, true)) {
-                    $validator->errors()->add('product_code', 'El producto final no puede ser también un insumo de la fórmula.');
+                if ($this->boolean('sell_in_pos') && in_array($this->input('product_id'), $productIds)) {
+                    $validator->errors()->add('product_id', 'El producto final no puede ser también un insumo de la fórmula.');
                 }
             },
         ];
@@ -96,13 +96,13 @@ class FormulaRequest extends FormRequest
             'name.required'                       => 'El nombre de la fórmula es obligatorio.',
             'yield_quantity.required'             => 'Indica cuánto rinde la fórmula.',
             'yield_quantity.min'                  => 'El rendimiento debe ser mayor a 0.',
-            'product_code.required'               => 'Selecciona el producto que se venderá en el POS.',
-            'product_code.exists'                 => 'El producto seleccionado no existe.',
+            'product_id.required'               => 'Selecciona el producto que se venderá en el POS.',
+            'product_id.exists'                 => 'El producto seleccionado no existe.',
             'ingredients.required'                => 'Agrega al menos un insumo.',
             'ingredients.min'                     => 'Agrega al menos un insumo.',
-            'ingredients.*.product_code.required' => 'Selecciona el insumo.',
-            'ingredients.*.product_code.distinct' => 'Un insumo está repetido en la fórmula.',
-            'ingredients.*.product_code.exists'   => 'Un insumo seleccionado no existe.',
+            'ingredients.*.product_id.required' => 'Selecciona el insumo.',
+            'ingredients.*.product_id.distinct' => 'Un insumo está repetido en la fórmula.',
+            'ingredients.*.product_id.exists'   => 'Un insumo seleccionado no existe.',
             'ingredients.*.quantity.required'     => 'Indica la cantidad de cada insumo.',
             'ingredients.*.quantity.min'          => 'La cantidad de cada insumo debe ser mayor a 0.',
         ];

@@ -69,7 +69,7 @@
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-5 py-3">
                             <p class="font-medium text-slate-800">{{ $item->product->name ?? 'Producto eliminado' }}</p>
-                            <p class="text-xs text-slate-400 font-mono">{{ $item->product_code }}</p>
+                            <p class="text-xs text-slate-400 font-mono">{{ $item->product?->code }}</p>
                         </td>
                         <td class="px-5 py-3 text-center font-medium text-slate-700">{{ $item->quantity }}</td>
                         <td class="px-5 py-3 text-right text-slate-600 text-xs">S/. {{ number_format($item->unit_cost, 2) }}</td>

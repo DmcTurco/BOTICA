@@ -19,7 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('branch_id')->index();
             $table->unsignedBigInteger('employee_id')->index();
 
-            $table->string('product_code', 20)->nullable()->index();   // si el producto existe en el catálogo
+            $table->unsignedBigInteger('product_id')->nullable()->index(); // si el producto existe en el catálogo
             $table->string('product_name', 150);                       // nombre pedido (libre si no existe)
             $table->decimal('quantity', 10, 2)->default(1);
             $table->string('reason', 20)->default('no_stock')->comment('no_stock | not_carried | price | other');

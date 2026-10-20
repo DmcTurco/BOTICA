@@ -17,7 +17,7 @@
             <input type="month" name="mes" value="{{ $month->format('Y-m') }}" class="px-3 py-2 text-sm border border-slate-300 rounded-lg">
             <select data-search name="producto" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
                 <option value="">Todos los controlados</option>
-                @foreach($controlled as $c)<option value="{{ $c->code }}" {{ $selected === $c->code ? 'selected' : '' }}>{{ $c->name }}</option>@endforeach
+                @foreach($controlled as $c)<option value="{{ $c->id }}" {{ (string) $selected === (string) $c->id ? 'selected' : '' }}>{{ $c->name }}</option>@endforeach
             </select>
             <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg"><i class="fas fa-filter text-xs mr-1"></i> Ver</button>
             <a href="{{ route('employee.controlled-book.print', request()->query()) }}" target="_blank" class="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg"><i class="fas fa-print text-xs mr-1"></i> Imprimir</a>

@@ -39,7 +39,7 @@ class PurchaseRequest extends FormRequest
 
             // Detalle: al menos un ítem
             'items'                      => 'required|array|min:1',
-            'items.*.product_code'       => ['required', Rule::exists('products', 'code')->where('company_id', $companyId)],
+            'items.*.product_id'       => ['required', Rule::exists('products', 'id')->where('company_id', $companyId)],
             'items.*.presentation_id'    => 'nullable|integer',
             'items.*.quantity'           => 'required|integer|min:1|max:1000000',
             'items.*.unit_cost'          => 'required|numeric|gt:0|max:99999999',
@@ -62,7 +62,7 @@ class PurchaseRequest extends FormRequest
                     continue;
                 }
                 $valid = \App\Models\Presentation::where('id', $item['presentation_id'])
-                    ->where('product_code', $item['product_code'] ?? '')
+                    ->where('product_id', $item['product_id'] ?? '')
                     ->where('status', 1)
                     ->exists();
                 if (!$valid) {
@@ -104,7 +104,7 @@ class PurchaseRequest extends FormRequest
             'due_date'                => 'fecha límite de pago',
             'supplier'                => 'proveedor',
             'tax'                     => 'IGV / impuesto',
-            'items.*.product_code'    => 'producto',
+            'items.*.product_id'    => 'producto',
             'items.*.quantity'        => 'cantidad',
             'items.*.unit_cost'       => 'costo',
             'items.*.expiration_date' => 'vencimiento',
@@ -134,8 +134,8 @@ class PurchaseRequest extends FormRequest
             'purchase_order_id.exists'       => 'La orden de compra no existe o ya fue recibida.',
             'items.required'                 => 'Debe agregar al menos un producto.',
             'items.min'                      => 'Debe agregar al menos un producto.',
-            'items.*.product_code.required'  => 'Seleccione un producto.',
-            'items.*.product_code.exists'    => 'El producto seleccionado no existe.',
+            'items.*.product_id.required'  => 'Seleccione un producto.',
+            'items.*.product_id.exists'    => 'El producto seleccionado no existe.',
             'items.*.quantity.required'      => 'La cantidad es obligatoria.',
             'items.*.quantity.min'           => 'La cantidad debe ser al menos 1.',
             'items.*.unit_cost.required'     => 'El costo unitario es obligatorio.',

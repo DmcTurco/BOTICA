@@ -12,7 +12,7 @@ class KardexController extends Controller
 {
     /**
      * Muestra el kardex de la sede del empleado en un rango de fechas
-     * (por defecto el mes actual). Si se pasa ?producto=CODE filtra por ese producto.
+     * (por defecto el mes actual). Si se pasa ?producto=ID filtra por ese producto.
      */
     public function index(Request $request)
     {
@@ -21,10 +21,10 @@ class KardexController extends Controller
         // Lista de productos de la compañía con su stock en la sede del empleado
         $productos = Product::where('company_id', $employee->company_id)
             ->orderBy('name')
-            ->get(['code', 'name'])
+            ->get(['id', 'code', 'name'])
             ->map(function ($p) use ($employee) {
                 $p->stock_actual = BranchStock::where('branch_id', $employee->branch_id)
-                    ->where('product_code', $p->code)
+                    ->where('product_id', $p->id)
                     ->value('stock_actual') ?? 0;
                 return $p;
             });
@@ -34,7 +34,7 @@ class KardexController extends Controller
         $fechaHasta = $request->input('fecha_hasta') ?: now()->endOfMonth()->toDateString();
 
         // Las fechas siempre aplican; el producto es un filtro opcional
-        $query = StockMovement::with('product:code,name')
+        $query = StockMovement::with('product:id,code,name')
             ->where('branch_id', $employee->branch_id)
             ->whereDate('created_at', '>=', $fechaDesde)
             ->whereDate('created_at', '<=', $fechaHasta)
@@ -43,19 +43,19 @@ class KardexController extends Controller
         $producto = null;
 
         if ($request->filled('producto')) {
-            $producto = Product::where('code', $request->producto)
+            $producto = Product::whereKey((int) $request->producto)
                 ->where('company_id', $employee->company_id)
                 ->first();
 
             if ($producto) {
                 // Mapear stock y mínimo desde branch_stock para la vista
                 $branchStock = BranchStock::where('branch_id', $employee->branch_id)
-                    ->where('product_code', $producto->code)
+                    ->where('product_id', $producto->id)
                     ->first();
                 $producto->stock_actual  = $branchStock?->stock_actual ?? 0;
                 $producto->stock_minimum = $branchStock?->stock_minimum;
 
-                $query->where('product_code', $producto->code);
+                $query->where('product_id', $producto->id);
             }
         }
 

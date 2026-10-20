@@ -42,8 +42,8 @@ class BranchReportController extends Controller
             ->groupBy('branch_id')->get()->keyBy('branch_id');
 
         // Inventario valorizado a costo y productos bajo el mínimo
-        $costs  = Product::where('company_id', $company->id)->pluck('purchase_price', 'code');
-        $stocks = BranchStock::whereIn('branch_id', $ids)->get(['branch_id', 'product_code', 'stock_actual', 'stock_minimum'])->groupBy('branch_id');
+        $costs  = Product::where('company_id', $company->id)->pluck('purchase_price', 'id');
+        $stocks = BranchStock::whereIn('branch_id', $ids)->get(['branch_id', 'product_id', 'stock_actual', 'stock_minimum'])->groupBy('branch_id');
 
         // Unidades vencidas por sede, valoradas a su costo de lote
         $expired = StockBatch::where('company_id', $company->id)->whereIn('branch_id', $ids)->where('quantity_remaining', '>', 0)
@@ -70,7 +70,7 @@ class BranchReportController extends Controller
                 'documents'   => (int) ($s->documents ?? 0),
                 'net'         => (float) ($s->net ?? 0),
                 'gross'       => (float) ($s->gross ?? 0),
-                'inventory'   => round($rowsStock->sum(fn ($r) => (float) $r->stock_actual * (float) ($costs[$r->product_code] ?? 0)), 2),
+                'inventory'   => round($rowsStock->sum(fn ($r) => (float) $r->stock_actual * (float) ($costs[$r->product_id] ?? 0)), 2),
                 'low_stock'   => $rowsStock->filter(fn ($r) => $r->stock_minimum !== null && $r->stock_minimum > 0 && (float) $r->stock_actual <= $r->stock_minimum)->count(),
                 'expired'     => round((float) ($expired[$b->id] ?? 0), 2),
                 'receivable'  => round((float) ($receivable[$b->id] ?? 0), 2),
@@ -82,11 +82,11 @@ class BranchReportController extends Controller
         // Más vendidos de toda la empresa (cantidad en unidades base: un blíster x10 cuenta 10)
         // El nombre sale del producto: product_name del ítem incluye la presentación vendida
         $top = DB::table('order_detail')->join('orders', 'orders.id', '=', 'order_detail.order_id')
-            ->leftJoin('products', 'products.code', '=', 'order_detail.product_code')
+            ->leftJoin('products', 'products.id', '=', 'order_detail.product_id')
             ->where('orders.company_id', $company->id)->where('orders.status', 1)
             ->whereDate('orders.created_at', '>=', $from->toDateString())->whereDate('orders.created_at', '<=', $to->toDateString())
-            ->select('order_detail.product_code', DB::raw('COALESCE(MAX(products.name), MAX(order_detail.product_name)) as name'), DB::raw('SUM(order_detail.quantity * order_detail.units_per_item) as qty'), DB::raw('SUM(order_detail.subtotal) as net'))
-            ->groupBy('order_detail.product_code')->orderByDesc('qty')->limit(10)->get();
+            ->select('order_detail.product_id', DB::raw('MAX(products.code) as code'), DB::raw('COALESCE(MAX(products.name), MAX(order_detail.product_name)) as name'), DB::raw('SUM(order_detail.quantity * order_detail.units_per_item) as qty'), DB::raw('SUM(order_detail.subtotal) as net'))
+            ->groupBy('order_detail.product_id')->orderByDesc('qty')->limit(10)->get();
 
         if ($request->query('export') === 'csv') {
             return CsvExport::download(

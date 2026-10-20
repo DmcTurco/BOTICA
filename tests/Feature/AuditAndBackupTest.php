@@ -16,11 +16,11 @@ it('registra quién anuló una compra, ajustó stock y cambió precios', functio
 
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
-        'items' => [['product_code' => 'P1', 'quantity' => 5, 'unit_cost' => 2]],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 5, 'unit_cost' => 2]],
     ]);
     $this->post(route('employee.purchases.void', Purchase::firstOrFail()), ['void_reason' => 'Se duplicó']);
-    $this->post(route('employee.adjustments.store'), ['product_code' => 'P1', 'mode' => 'add', 'quantity' => 3, 'reason' => 'conteo']);
-    $this->put(route('employee.prices.update'), ['prices' => ['P1' => ['purchase_price' => 2, 'unit_sale_price' => 9]]]);
+    $this->post(route('employee.adjustments.store'), ['product_id' => pid('P1'), 'mode' => 'add', 'quantity' => 3, 'reason' => 'conteo']);
+    $this->put(route('employee.prices.update'), ['prices' => [pid('P1') => ['purchase_price' => 2, 'unit_sale_price' => 9]]]);
 
     $actions = AuditLog::orderBy('id')->pluck('action')->all();
     expect($actions)->toBe(['purchase.void', 'stock.adjust', 'price.update']);

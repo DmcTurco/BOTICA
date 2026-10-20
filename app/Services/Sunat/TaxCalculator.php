@@ -24,10 +24,10 @@ class TaxCalculator
     const INAFECTO  = '30';
 
     /**
-     * @param  array<int, array{code: string, price: float|int|string, qty: float|int|string}>  $items
-     * @param  array<string, string>  $affectations  código de producto => afectación (10, 20 o 30)
+     * @param  array<int, array{product_id: int, price: float|int|string, qty: float|int|string}>  $items
+     * @param  array<int, string>  $affectations  product_id => afectación (10, 20 o 30)
      * @return array{
-     *     lines: array<int, array{code: string, base: float, discount: float, igv: float, affectation: string}>,
+     *     lines: array<int, array{product_id: int, base: float, discount: float, igv: float, affectation: string}>,
      *     taxable: float, exonerated: float, unaffected: float,
      *     subtotal: float, discount: float, igv: float, total: float
      * }
@@ -56,13 +56,13 @@ class TaxCalculator
         $taxable = $exonerated = $unaffected = $igv = $discountTotal = 0.0;
 
         foreach ($items as $index => $item) {
-            $code = $item['code'];
+            $productId = $item['product_id'];
 
-            if (!isset($affectations[$code])) {
-                throw new InvalidArgumentException("Producto sin afectación de IGV: {$code}");
+            if (!isset($affectations[$productId])) {
+                throw new InvalidArgumentException("Producto sin afectación de IGV: {$productId}");
             }
 
-            $affectation = $affectations[$code];
+            $affectation = $affectations[$productId];
             $gross       = $grosses[$index];
 
             // Descuento por monto: se reparte proporcional al importe de cada línea y la última absorbe el centavo que sobre
@@ -88,7 +88,7 @@ class TaxCalculator
             $discountTotal += $discount;
 
             $lines[$index] = [
-                'code'        => $code,
+                'product_id'  => $productId,
                 'base'        => $base,
                 'discount'    => $discount,
                 'igv'         => $lineIgv,

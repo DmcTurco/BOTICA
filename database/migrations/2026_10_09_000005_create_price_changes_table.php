@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('company_id')->index();
-            $table->string('product_code', 20)->index();
+            $table->unsignedBigInteger('product_id')->index();
             $table->string('field', 30)->comment('purchase_price | unit_sale_price');
             $table->decimal('old_value', 10, 2);
             $table->decimal('new_value', 10, 2);

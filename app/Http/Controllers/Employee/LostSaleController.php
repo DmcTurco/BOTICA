@@ -45,11 +45,11 @@ class LostSaleController extends Controller
     {
         $employee = auth()->guard('employee')->user();
 
-        $stocks = \App\Models\BranchStock::where('branch_id', $employee->branch_id)->pluck('stock_actual', 'product_code');
+        $stocks = \App\Models\BranchStock::where('branch_id', $employee->branch_id)->pluck('stock_actual', 'product_id');
 
         $products = Product::where('company_id', $employee->company_id)->where('status', 1)
-            ->orderBy('name')->get(['code', 'name'])
-            ->map(fn ($p) => ['code' => $p->code, 'name' => $p->name, 'stock' => (float) ($stocks[$p->code] ?? 0)])
+            ->orderBy('name')->get(['id', 'code', 'barcode', 'name'])
+            ->map(fn ($p) => ['id' => $p->id, 'code' => $p->code, 'barcode' => $p->barcode, 'name' => $p->name, 'stock' => (float) ($stocks[$p->id] ?? 0)])
             ->all();
 
         return view('employee.pages.lost-sales.form', compact('products'));
@@ -66,7 +66,7 @@ class LostSaleController extends Controller
             'company_id'   => $employee->company_id,
             'branch_id'    => $employee->branch_id,
             'employee_id'  => $employee->id,
-            'product_code' => $request->product_code ?: null,
+            'product_id'   => $request->product_id ?: null,
             'product_name' => $request->product_name,
             'quantity'     => $request->quantity,
             'reason'       => $request->reason,

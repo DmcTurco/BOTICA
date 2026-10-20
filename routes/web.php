@@ -21,6 +21,13 @@ Route::prefix(MyApp::ADMINS_SUBDIR)->middleware('auth:admin')->name('admin.')->g
     // Compañías (boticas clientes): el admin las registra con su primera sede
     Route::resource('companies', Admin\CompanyController::class)->except(['show', 'destroy']);
 
+    // Importar los productos y el stock de un cliente que migra de otro sistema (modelo → vista previa → confirmar)
+    Route::get('client-imports', [Admin\ClientImportController::class, 'create'])->name('client-imports.create');
+    Route::get('client-imports/template', [Admin\ClientImportController::class, 'template'])->name('client-imports.template');
+    Route::post('client-imports/preview', [Admin\ClientImportController::class, 'preview'])->name('client-imports.preview');
+    Route::get('client-imports/{token}', [Admin\ClientImportController::class, 'show'])->where('token', '[A-Za-z0-9]{40}')->name('client-imports.show');
+    Route::post('client-imports', [Admin\ClientImportController::class, 'store'])->name('client-imports.store');
+
     // Suscripciones: cobro de la mensualidad (plan, prueba gratis, pagos), separado de los datos de la empresa
     Route::get('subscriptions', [Admin\SubscriptionController::class, 'index'])->name('subscriptions.index');
     Route::get('subscriptions/{company}', [Admin\SubscriptionController::class, 'show'])->name('subscriptions.show');

@@ -31,7 +31,7 @@ it('al crear la compañía con la casilla marcada, nace con el catálogo de prod
     expect($products->count())->toBe(CompanyProductCatalog::size())
         ->and(CompanyProductCatalog::size())->toBeGreaterThan(3000)
         // Stock 0: no hay filas de stock (se crean con la primera compra o ajuste)
-        ->and(BranchStock::whereIn('product_code', $products->pluck('code'))->count())->toBe(0)
+        ->and(BranchStock::whereIn('product_id', $products->pluck('id'))->count())->toBe(0)
         // Códigos de 8 dígitos, cargados por el sistema (sin empleado)
         ->and((clone $products)->orderBy('code')->value('code'))->toMatch('/^P-\d{8}$/')
         ->and((clone $products)->whereNotNull('employee_id')->count())->toBe(0);
@@ -76,7 +76,7 @@ it('no deja vender un producto sin precio de venta', function () {
     posSetup($employee);
     Product::where('code', 'P1')->update(['unit_sale_price' => 0]);
 
-    posSale(['items' => [['code' => 'P1', 'name' => 'x', 'price' => 0, 'qty' => 1]], 'total' => 0])
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 0, 'qty' => 1]], 'total' => 0])
         ->assertStatus(422)
         ->assertJsonFragment(['message' => '«Producto P1» no tiene precio de venta. Ponle su precio en Productos antes de venderlo.']);
 });

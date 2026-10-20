@@ -31,7 +31,7 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('stock_transfer_id')->index();
-            $table->string('product_code', 20)->index();
+            $table->unsignedBigInteger('product_id')->index();
             $table->decimal('quantity', 10, 2);
 
             $table->timestamps();

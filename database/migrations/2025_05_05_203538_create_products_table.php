@@ -13,7 +13,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-            $table->string('code', 20)->primary();                    // PK interna, la genera el sistema (P-00000001)
+            $table->id();                                             // PK: las demás tablas apuntan aquí con product_id
+            $table->string('code', 20)->unique();                     // correlativo interno que ve el usuario, lo genera el sistema (P-00000001)
             $table->unsignedBigInteger('company_id')->index();        // compañía dueña del catálogo
             $table->string('barcode', 30)->nullable();                // código de barras (EAN) de la caja; opcional
             $table->string('name', 150);

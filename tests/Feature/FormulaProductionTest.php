@@ -32,7 +32,7 @@ function fmProduct(string $code, float $purchasePrice, float $stock): Product
         'employee_id' => 1, 'status' => 1,
     ]);
     $product->save();
-    BranchStock::create(['branch_id' => 1, 'product_code' => $code, 'stock_actual' => $stock]);
+    BranchStock::create(['branch_id' => 1, 'product_id' => pid($code), 'stock_actual' => $stock]);
 
     return $product;
 }
@@ -43,8 +43,8 @@ function fmFormulaPayload(array $overrides = []): array
     return array_merge([
         'name' => 'Crema de urea 10%', 'yield_quantity' => 100, 'status' => 1, 'shelf_life_days' => 30,
         'ingredients' => [
-            ['product_code' => 'UREA', 'quantity' => 10],
-            ['product_code' => 'BASE', 'quantity' => 90],
+            ['product_id' => pid('UREA'), 'quantity' => 10],
+            ['product_id' => pid('BASE'), 'quantity' => 90],
         ],
     ], $overrides);
 }
@@ -61,7 +61,7 @@ it('registra una fórmula con sus insumos y código correlativo', function () {
     $formula = Formula::first();
     expect($formula->code)->toBe('FM-0001')
         ->and($formula->sell_in_pos)->toBeFalse()
-        ->and($formula->product_code)->toBeNull()
+        ->and($formula->product_id)->toBeNull()
         ->and($formula->ingredients)->toHaveCount(2)
         ->and($formula->estimatedCost())->toBe(14.0); // 10×0.50 + 90×0.10
 });
@@ -72,7 +72,7 @@ it('exige un producto cuando la fórmula se vende en el POS', function () {
     fmProduct('BASE', 0.10, 1000);
 
     $this->post(route('employee.formulas.store'), fmFormulaPayload(['sell_in_pos' => 1]))
-        ->assertSessionHasErrors('product_code');
+        ->assertSessionHasErrors('product_id');
 
     expect(Formula::count())->toBe(0);
 });
@@ -83,9 +83,9 @@ it('ignora el producto vinculado si la venta en POS está apagada', function () 
     fmProduct('BASE', 0.10, 1000);
     fmProduct('CREMA', 0, 0);
 
-    $this->post(route('employee.formulas.store'), fmFormulaPayload(['product_code' => 'CREMA']))->assertRedirect();
+    $this->post(route('employee.formulas.store'), fmFormulaPayload(['product_id' => pid('CREMA')]))->assertRedirect();
 
-    expect(Formula::first()->product_code)->toBeNull();
+    expect(Formula::first()->product_id)->toBeNull();
 });
 
 it('rechaza insumos repetidos y el producto final como insumo', function () {
@@ -93,13 +93,13 @@ it('rechaza insumos repetidos y el producto final como insumo', function () {
     fmProduct('UREA', 0.50, 1000);
 
     $this->post(route('employee.formulas.store'), fmFormulaPayload([
-        'ingredients' => [['product_code' => 'UREA', 'quantity' => 1], ['product_code' => 'UREA', 'quantity' => 2]],
-    ]))->assertSessionHasErrors('ingredients.0.product_code');
+        'ingredients' => [['product_id' => pid('UREA'), 'quantity' => 1], ['product_id' => pid('UREA'), 'quantity' => 2]],
+    ]))->assertSessionHasErrors('ingredients.0.product_id');
 
     $this->post(route('employee.formulas.store'), fmFormulaPayload([
-        'sell_in_pos' => 1, 'product_code' => 'UREA',
-        'ingredients' => [['product_code' => 'UREA', 'quantity' => 1]],
-    ]))->assertSessionHasErrors('product_code');
+        'sell_in_pos' => 1, 'product_id' => pid('UREA'),
+        'ingredients' => [['product_id' => pid('UREA'), 'quantity' => 1]],
+    ]))->assertSessionHasErrors('product_id');
 });
 
 // ── Preparaciones ─────────────────────────────────────────────
@@ -130,11 +130,11 @@ it('descuenta los insumos, calcula costos y genera lote sin tocar el POS', funct
         ->and((float) $production->total_cost)->toBe(28.0)   // 20×0.50 + 180×0.10
         ->and((float) $production->unit_cost)->toBe(0.14)
         ->and($production->expiration_date->toDateString())->toBe(today()->addDays(30)->toDateString())
-        ->and($production->product_code)->toBeNull()
+        ->and($production->product_id)->toBeNull()
         ->and($production->ingredients)->toHaveCount(2);
 
-    expect((float) BranchStock::where('product_code', 'UREA')->value('stock_actual'))->toBe(80.0)
-        ->and((float) BranchStock::where('product_code', 'BASE')->value('stock_actual'))->toBe(820.0)
+    expect((float) BranchStock::where('product_id', pid('UREA'))->value('stock_actual'))->toBe(80.0)
+        ->and((float) BranchStock::where('product_id', pid('BASE'))->value('stock_actual'))->toBe(820.0)
         ->and(StockMovement::where('reference_type', 'production')->where('type', 'salida')->count())->toBe(2)
         ->and(StockMovement::where('type', 'entrada')->count())->toBe(0);
 });
@@ -142,18 +142,18 @@ it('descuenta los insumos, calcula costos y genera lote sin tocar el POS', funct
 it('da ingreso al producto final cuando la fórmula se vende en el POS', function () {
     fmLogin();
     fmProduct('CREMA', 0, 0);
-    $formula = fmReadyFormula(['sell_in_pos' => 1, 'product_code' => 'CREMA', 'yield_quantity' => 10]);
+    $formula = fmReadyFormula(['sell_in_pos' => 1, 'product_id' => pid('CREMA'), 'yield_quantity' => 10]);
 
     $this->post(route('employee.productions.store'), [
         'formula_id' => $formula->id, 'quantity_produced' => 10, 'produced_at' => today()->toDateString(),
     ])->assertSessionHasNoErrors();
 
-    $movement = StockMovement::where('product_code', 'CREMA')->firstOrFail();
-    expect((float) BranchStock::where('product_code', 'CREMA')->value('stock_actual'))->toBe(10.0)
+    $movement = StockMovement::where('product_id', pid('CREMA'))->firstOrFail();
+    expect((float) BranchStock::where('product_id', pid('CREMA'))->value('stock_actual'))->toBe(10.0)
         ->and($movement->type)->toBe('entrada')
         ->and($movement->reference_type)->toBe('production')
         ->and($movement->balance)->toBe(10.0)
-        ->and(Production::first()->product_code)->toBe('CREMA');
+        ->and(Production::first()->product_id)->toBe(pid('CREMA'));
 });
 
 it('no prepara si falta stock de un insumo y no deja cambios a medias', function () {
@@ -166,8 +166,8 @@ it('no prepara si falta stock de un insumo y no deja cambios a medias', function
     ])->assertSessionHas('error');
 
     expect(Production::count())->toBe(0)
-        ->and((float) BranchStock::where('product_code', 'UREA')->value('stock_actual'))->toBe(100.0)
-        ->and((float) BranchStock::where('product_code', 'BASE')->value('stock_actual'))->toBe(1000.0)
+        ->and((float) BranchStock::where('product_id', pid('UREA'))->value('stock_actual'))->toBe(100.0)
+        ->and((float) BranchStock::where('product_id', pid('BASE'))->value('stock_actual'))->toBe(1000.0)
         ->and(StockMovement::count())->toBe(0);
 });
 

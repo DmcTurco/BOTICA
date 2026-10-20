@@ -17,7 +17,7 @@ it('fija el stock contado y deja el ajuste en el kardex', function () {
     stockProduct('P1', 50, 2);
 
     $this->post(route('employee.adjustments.store'), [
-        'product_code' => 'P1', 'mode' => 'set', 'quantity' => 42, 'reason' => 'conteo',
+        'product_id' => pid('P1'), 'mode' => 'set', 'quantity' => 42, 'reason' => 'conteo',
     ])->assertSessionHasNoErrors();
 
     $movement = StockMovement::firstOrFail();
@@ -32,10 +32,10 @@ it('suma y resta unidades, y no deja el stock en negativo', function () {
     loginEmployee();
     stockProduct('P1', 10);
 
-    $this->post(route('employee.adjustments.store'), ['product_code' => 'P1', 'mode' => 'add', 'quantity' => 5, 'reason' => 'donacion']);
+    $this->post(route('employee.adjustments.store'), ['product_id' => pid('P1'), 'mode' => 'add', 'quantity' => 5, 'reason' => 'donacion']);
     expect(stockOf('P1'))->toBe(15.0);
 
-    $this->post(route('employee.adjustments.store'), ['product_code' => 'P1', 'mode' => 'subtract', 'quantity' => 100, 'reason' => 'merma'])
+    $this->post(route('employee.adjustments.store'), ['product_id' => pid('P1'), 'mode' => 'subtract', 'quantity' => 100, 'reason' => 'merma'])
         ->assertSessionHas('error');
     expect(stockOf('P1'))->toBe(15.0);
 });
@@ -44,9 +44,9 @@ it('rechaza un ajuste que no cambia nada y exige nota en "otro"', function () {
     loginEmployee();
     stockProduct('P1', 10);
 
-    $this->post(route('employee.adjustments.store'), ['product_code' => 'P1', 'mode' => 'set', 'quantity' => 10, 'reason' => 'conteo'])
+    $this->post(route('employee.adjustments.store'), ['product_id' => pid('P1'), 'mode' => 'set', 'quantity' => 10, 'reason' => 'conteo'])
         ->assertSessionHas('error');
-    $this->post(route('employee.adjustments.store'), ['product_code' => 'P1', 'mode' => 'add', 'quantity' => 1, 'reason' => 'otro'])
+    $this->post(route('employee.adjustments.store'), ['product_id' => pid('P1'), 'mode' => 'add', 'quantity' => 1, 'reason' => 'otro'])
         ->assertSessionHasErrors('notes');
 });
 
@@ -79,7 +79,7 @@ it('traspasa mercadería entre sedes y la anula devolviendo el stock', function 
     stockProduct('P1', 30, 1.5);
 
     $this->post(route('employee.transfers.store'), [
-        'to_branch_id' => $norte->id, 'items' => [['product_code' => 'P1', 'quantity' => 12]],
+        'to_branch_id' => $norte->id, 'items' => [['product_id' => pid('P1'), 'quantity' => 12]],
     ])->assertSessionHasNoErrors();
 
     $transfer = StockTransfer::firstOrFail();
@@ -99,9 +99,9 @@ it('no traspasa más de lo que hay ni a la misma sede', function () {
     $norte = secondBranch();
     stockProduct('P1', 5);
 
-    $this->post(route('employee.transfers.store'), ['to_branch_id' => $norte->id, 'items' => [['product_code' => 'P1', 'quantity' => 6]]])
+    $this->post(route('employee.transfers.store'), ['to_branch_id' => $norte->id, 'items' => [['product_id' => pid('P1'), 'quantity' => 6]]])
         ->assertSessionHas('error');
-    $this->post(route('employee.transfers.store'), ['to_branch_id' => 1, 'items' => [['product_code' => 'P1', 'quantity' => 1]]])
+    $this->post(route('employee.transfers.store'), ['to_branch_id' => 1, 'items' => [['product_id' => pid('P1'), 'quantity' => 1]]])
         ->assertSessionHasErrors('to_branch_id');
 
     expect(StockTransfer::count())->toBe(0)->and(stockOf('P1'))->toBe(5.0);
@@ -112,7 +112,7 @@ it('no anula un traspaso si el destino ya vendió la mercadería', function () {
     $norte = secondBranch();
     stockProduct('P1', 10);
 
-    $this->post(route('employee.transfers.store'), ['to_branch_id' => $norte->id, 'items' => [['product_code' => 'P1', 'quantity' => 10]]]);
+    $this->post(route('employee.transfers.store'), ['to_branch_id' => $norte->id, 'items' => [['product_id' => pid('P1'), 'quantity' => 10]]]);
     App\Models\BranchStock::where('branch_id', $norte->id)->update(['stock_actual' => 4]); // el destino vendió 6
 
     $this->post(route('employee.transfers.void', StockTransfer::first()), ['void_reason' => 'x'])->assertSessionHas('error');
@@ -128,7 +128,7 @@ it('anula una compra descontando lo que ingresó', function () {
 
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
-        'items' => [['product_code' => 'P1', 'quantity' => 20, 'unit_cost' => 1]],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 20, 'unit_cost' => 1]],
     ])->assertSessionHasNoErrors();
     expect(stockOf('P1'))->toBe(20.0);
 
@@ -144,9 +144,9 @@ it('no anula una compra cuya mercadería ya se vendió', function () {
 
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
-        'items' => [['product_code' => 'P1', 'quantity' => 20, 'unit_cost' => 1]],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 20, 'unit_cost' => 1]],
     ]);
-    App\Models\BranchStock::where('product_code', 'P1')->update(['stock_actual' => 5]); // se vendieron 15
+    App\Models\BranchStock::where('product_id', pid('P1'))->update(['stock_actual' => 5]); // se vendieron 15
 
     $this->post(route('employee.purchases.void', Purchase::first()), ['void_reason' => 'x'])->assertSessionHas('error');
 
@@ -159,7 +159,7 @@ it('exige el privilegio de eliminar guía de ingreso para anular compras', funct
 
     $this->post(route('employee.purchases.store'), [
         'document_type' => 1, 'document_number' => 'B001-' . random_int(100000, 99999999), 'purchased_at' => today()->toDateString(),
-        'items' => [['product_code' => 'P1', 'quantity' => 5, 'unit_cost' => 1]],
+        'items' => [['product_id' => pid('P1'), 'quantity' => 5, 'unit_cost' => 1]],
     ]);
 
     $this->post(route('employee.purchases.void', Purchase::first()), ['void_reason' => 'x'])->assertRedirect(route('employee.home'));
@@ -200,8 +200,8 @@ it('anula una preparación devolviendo insumos y retirando el producto final', f
     stockProduct('CREMA', 0, 0);
 
     $this->post(route('employee.formulas.store'), [
-        'name' => 'Crema', 'yield_quantity' => 10, 'status' => 1, 'sell_in_pos' => 1, 'product_code' => 'CREMA',
-        'ingredients' => [['product_code' => 'UREA', 'quantity' => 4]],
+        'name' => 'Crema', 'yield_quantity' => 10, 'status' => 1, 'sell_in_pos' => 1, 'product_id' => pid('CREMA'),
+        'ingredients' => [['product_id' => pid('UREA'), 'quantity' => 4]],
     ])->assertSessionHasNoErrors();
     $formula = App\Models\Formula::firstOrFail();
 
@@ -213,11 +213,11 @@ it('anula una preparación devolviendo insumos y retirando el producto final', f
     $this->get(route('employee.productions.label', $production))->assertOk()->assertSee($production->batch);
 
     // Si ya se vendió parte del preparado, no se puede anular
-    App\Models\BranchStock::where('product_code', 'CREMA')->update(['stock_actual' => 3]);
+    App\Models\BranchStock::where('product_id', pid('CREMA'))->update(['stock_actual' => 3]);
     $this->post(route('employee.productions.void', $production), ['void_reason' => 'x'])->assertSessionHas('error');
     expect(stockOf('UREA'))->toBe(96.0)->and($production->fresh()->status)->toBe(1);
 
-    App\Models\BranchStock::where('product_code', 'CREMA')->update(['stock_actual' => 10]);
+    App\Models\BranchStock::where('product_id', pid('CREMA'))->update(['stock_actual' => 10]);
     $this->post(route('employee.productions.void', $production), ['void_reason' => 'Error de pesada'])->assertSessionHasNoErrors();
     expect(stockOf('UREA'))->toBe(100.0)->and(stockOf('CREMA'))->toBe(0.0)->and($production->fresh()->status)->toBe(0);
 });
@@ -237,13 +237,13 @@ it('el listado y el formulario de ajustes de inventario son pantallas separadas'
 
     // Un ajuste que no cambia el stock vuelve al formulario con lo escrito
     $this->from(route('employee.adjustments.create'))
-        ->post(route('employee.adjustments.store'), ['product_code' => 'P1', 'mode' => 'set', 'quantity' => 10, 'reason' => array_key_first(App\Http\Requests\Company\InventoryAdjustmentRequest::REASONS)])
+        ->post(route('employee.adjustments.store'), ['product_id' => pid('P1'), 'mode' => 'set', 'quantity' => 10, 'reason' => array_key_first(App\Http\Requests\Company\InventoryAdjustmentRequest::REASONS)])
         ->assertRedirect(route('employee.adjustments.create'))
-        ->assertSessionHasInput('product_code', 'P1');
+        ->assertSessionHasInput('product_id', pid('P1'));
 
     // Registrado: vuelve al listado y aparece en él
     $this->from(route('employee.adjustments.create'))
-        ->post(route('employee.adjustments.store'), ['product_code' => 'P1', 'mode' => 'subtract', 'quantity' => 2, 'reason' => array_key_first(App\Http\Requests\Company\InventoryAdjustmentRequest::REASONS)])
+        ->post(route('employee.adjustments.store'), ['product_id' => pid('P1'), 'mode' => 'subtract', 'quantity' => 2, 'reason' => array_key_first(App\Http\Requests\Company\InventoryAdjustmentRequest::REASONS)])
         ->assertRedirect(route('employee.adjustments.index'));
     $this->get(route('employee.adjustments.index'))->assertSee('Producto P1');
 });
