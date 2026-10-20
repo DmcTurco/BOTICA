@@ -77,15 +77,6 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50">
-                    <i class="fas fa-receipt text-slate-400 text-xs"></i>
-                    <span class="text-xs text-slate-500">Comprobante</span>
-                    <span id="nroComprobante"
-                          class="text-xs font-mono text-slate-400 italic">— automático —</span>
-                </div>
-                <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors" title="Imprimir">
-                    <i class="fas fa-print text-xs"></i>
-                </button>
                 <button id="btnNuevaVenta"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors" title="Nueva venta">
                     <i class="fas fa-rotate-left text-xs"></i> Nueva venta
@@ -116,7 +107,7 @@
                     </div>
                     <div class="flex items-center justify-between mt-2 px-0.5">
                         <p class="text-xs text-slate-400">
-                            <span id="contadorProductos">{{ $products->count() }}</span> productos disponibles
+                            <span id="contadorProductos">0</span> productos
                         </p>
                         <label class="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer">
                             <input type="checkbox" id="soloConStock" class="w-3 h-3 rounded" style="accent-color:#16a34a" checked>
@@ -136,80 +127,33 @@
                                 <th class="px-2 py-2.5 w-8"></th>
                             </tr>
                         </thead>
-                        <tbody id="tablaProductos" class="divide-y divide-slate-100">
-                            @forelse($products as $product)
-                            <tr class="hover:bg-sky-50/40 transition-colors cursor-default producto-row"
-                                data-id="{{ $product->id }}"
-                                data-code="{{ $product->code }}"
-                                data-barcode="{{ $product->barcode }}"
-                                data-search="{{ strtolower($product->name . ' ' . $product->code . ' ' . $product->barcode . ' ' . $product->active_ingredient) }}"
-                                data-stock="{{ $product->branchStocks->first()?->stock_actual ?? 0 }}"
-                                data-name="{{ $product->name }}"
-                                data-afectacion="{{ $product->igv_affectation }}"
-                                data-price="{{ $product->unit_sale_price }}">
-                                <td class="px-4 py-2.5">
-                                    <p class="font-medium text-slate-800 leading-tight">{{ $product->name }}</p>
-                                    <p class="text-slate-400 mt-0.5 font-mono">{{ $product->code }}
-                                        @if($product->laboratory)
-                                            · <span class="font-sans">{{ $product->laboratory->name }}</span>
-                                        @endif
-                                    </p>
-                                </td>
-                                <td class="px-3 py-2.5 text-right font-semibold text-slate-700 whitespace-nowrap">
-                                    S/ {{ number_format($product->unit_sale_price, 2) }}
-                                </td>
-                                <td class="px-3 py-2.5 text-center">
-                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold
-                                        {{ ($product->branchStocks->first()?->stock_actual ?? 0) <= ($product->branchStocks->first()?->stock_minimum ?? 0)
-                                            ? 'bg-amber-100 text-amber-700'
-                                            : 'bg-emerald-100 text-emerald-700' }}">
-                                        {{ (int)($product->branchStocks->first()?->stock_actual ?? 0) }}
-                                    </span>
-                                </td>
-                                <td class="px-2 py-2.5">
-                                    @php
-                                        $presData = $product->presentations->where('status', 1)->map(function($p) {
-                                            return [
-                                                'id'     => $p->id,
-                                                'label'  => optional($p->unit)->name ?? 'Presentación',
-                                                'amount' => (float) $p->equivalent_amount,
-                                                'price'  => (float) $p->sale_price,
-                                            ];
-                                        })->values();
-                                    @endphp
-                                    <button class="btn-agregar w-7 h-7 flex items-center justify-center rounded-lg bg-sky-600 hover:bg-sky-700 active:scale-95 text-white transition-all"
-                                            data-id="{{ $product->id }}"
-                                            data-code="{{ $product->code }}"
-                                            data-name="{{ $product->name }}"
-                                            data-price="{{ $product->unit_sale_price }}"
-                                            data-afectacion="{{ $product->igv_affectation }}"
-                                            data-receta="{{ $product->recipe_level }}"
-                                            data-ingredient="{{ $product->active_ingredient }}"
-                                            data-stock="{{ (int)($product->branchStocks->first()?->stock_actual ?? 0) }}"
-                                            data-presentations='@json($presData)'
-                                            title="Agregar al carrito">
-                                        <i class="fas fa-plus text-[10px]"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="4" class="py-16 text-center">
-                                    <i class="fas fa-pills text-4xl text-slate-200 mb-3 block"></i>
-                                    <p class="text-sm text-slate-400">No hay productos con stock disponible</p>
-                                </td>
-                            </tr>
-                            @endforelse
-                            <tr id="sinResultados" class="hidden">
-                                <td colspan="4" class="py-12 text-center">
-                                    <i class="fas fa-magnifying-glass text-3xl text-slate-200 mb-2 block"></i>
-                                    <p class="text-sm text-slate-400">Sin resultados</p>
-                                    <button type="button" id="btnBuscarPrincipio" class="mt-2 text-xs font-medium text-sky-600 hover:text-sky-700"><i class="fas fa-right-left mr-1"></i> Buscar productos con ese principio activo</button>
-                                    <div id="altSinResultados" class="mt-3 space-y-1 max-w-sm mx-auto text-left"></div>
-                                </td>
-                            </tr>
-                        </tbody>
+                        {{-- Se llena por páginas desde pos/products (ver cargarProductos) --}}
+                        <tbody id="tablaProductos" class="divide-y divide-slate-100"></tbody>
                     </table>
+
+                    <div id="cargandoProductos" class="py-12 text-center text-xs text-slate-400">
+                        <i class="fas fa-spinner fa-spin mr-1"></i> Cargando productos...
+                    </div>
+
+                    <div id="sinResultados" class="hidden py-12 text-center px-4">
+                        <i class="fas fa-magnifying-glass text-3xl text-slate-200 mb-2 block"></i>
+                        <p class="text-sm text-slate-400">Sin resultados</p>
+                        <button type="button" id="btnBuscarPrincipio" class="mt-2 text-xs font-medium text-sky-600 hover:text-sky-700"><i class="fas fa-right-left mr-1"></i> Buscar productos con ese principio activo</button>
+                        <div id="altSinResultados" class="mt-3 space-y-1 max-w-sm mx-auto text-left"></div>
+                    </div>
+                </div>
+
+                {{-- Paginación del catálogo --}}
+                <div id="paginacionProductos" class="hidden shrink-0 border-t border-slate-100 bg-slate-50">
+                    <div class="flex items-center justify-between gap-2 px-3 py-1.5 text-xs text-slate-500">
+                        <button type="button" id="btnPaginaAnterior" class="px-2.5 py-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left text-[10px]"></i> Anterior
+                        </button>
+                        <span>Página <strong id="paginaActual">1</strong> de <span id="paginaTotal">1</span></span>
+                        <button type="button" id="btnPaginaSiguiente" class="px-2.5 py-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                            Siguiente <i class="fas fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -414,11 +358,11 @@
 
         </div>
 
-        {{-- ── Footer: totales + acción ────────────────────────── --}}
-        <div class="shrink-0 flex items-center justify-between border-t border-slate-200 px-5 py-3 bg-white gap-6">
+        {{-- ── Footer compacto: acción, descuento y totales en una sola franja ── --}}
+        <div class="shrink-0 flex items-center gap-4 border-t border-slate-200 px-4 py-2 bg-white">
 
             <button id="btnTerminarVenta"
-                    class="px-8 py-2.5 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2 shadow-sm"
+                    class="px-6 py-2 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition-all flex items-center gap-2 shadow-sm"
                     disabled>
                 <i class="fas fa-circle-check text-sm"></i>
                 {{ $editOrder ? 'Guardar Cambios' : 'Confirmar Venta' }}
@@ -426,43 +370,36 @@
             </button>
 
             @if($canDiscount)
-            <div class="flex items-center gap-2" title="Descuento porcentual aplicado a todos los productos (máx. 50%)">
+            {{-- La explicación va en el título (al pasar el mouse) para no ocupar espacio --}}
+            <div class="flex items-center gap-1.5"
+                 title="{{ $salesCfg['amount_discount'] ? 'Usa uno solo. Ej: 10 = 10% menos, o S/ 1.00 menos en toda la venta (máx. 50%)' : 'Número entero. Ej: 10 = 10% menos en toda la venta (máx. 50%)' }}">
                 <label for="descuentoPct" class="text-xs font-medium text-slate-500">Desc. %</label>
                 <input type="number" id="descuentoPct" min="0" max="50" step="1" inputmode="numeric" value="0"
-                       class="w-16 px-2 py-1.5 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
+                       class="w-14 px-2 py-1 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
                 @if($salesCfg['amount_discount'])
                 <span class="text-xs text-slate-400">ó S/</span>
                 <input type="number" id="descuentoMonto" min="0" step="0.10" inputmode="decimal" value="0" title="Descuento en soles sobre toda la venta (antes de IGV)"
-                       class="w-20 px-2 py-1.5 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
+                       class="w-20 px-2 py-1 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
                 @endif
-                <span class="text-xs text-slate-400 leading-tight">
-                    @if($salesCfg['amount_discount'])
-                        Usa uno solo.<br>Ej: 10 = 10% menos, o S/ 1.00 menos
-                    @else
-                        Número entero.<br>Ej: 10 = 10% menos en toda la venta
-                    @endif
-                </span>
             </div>
             @endif
 
-            <div class="flex items-center gap-8 ml-auto">
-                <div class="text-right space-y-0.5">
-                    <p class="text-xs text-slate-400">Op. Gravada</p>
-                    <p class="text-xs text-slate-400">Op. Exonerada</p>
-                    <p class="text-xs text-slate-400">Descuento</p>
-                    <p class="text-xs text-slate-400">IGV (18%)</p>
-                    <p class="text-sm font-bold text-emerald-600">Total</p>
-                    <p id="lblRedondeo" class="text-xs text-slate-400 hidden">Redondeo</p>
-                    <p id="lblCobrar" class="text-sm font-bold text-slate-800 hidden">A cobrar</p>
+            <div class="flex items-center gap-5 ml-auto">
+                {{-- Desglose en dos líneas --}}
+                <div class="grid grid-cols-2 gap-x-4 text-[11px] leading-4 text-slate-400">
+                    <span>Gravada <span id="opGravada" class="text-slate-600">S/ 0.00</span></span>
+                    <span>Exonerada <span id="opExonerada" class="text-slate-600">S/ 0.00</span></span>
+                    <span>Descuento <span id="descuento" class="text-slate-600">S/ 0.00</span></span>
+                    <span>IGV (18%) <span id="igv" class="text-slate-600">S/ 0.00</span></span>
                 </div>
-                <div class="text-right min-w-20 space-y-0.5">
-                    <p id="opGravada"   class="text-xs text-slate-600">S/ 0.00</p>
-                    <p id="opExonerada" class="text-xs text-slate-600">S/ 0.00</p>
-                    <p id="descuento"  class="text-xs text-slate-600">S/ 0.00</p>
-                    <p id="igv"         class="text-xs text-slate-600">S/ 0.00</p>
-                    <p id="total"       class="text-xl font-bold text-slate-800">S/ 0.00</p>
-                    <p id="redondeo"    class="text-xs text-slate-600 hidden">S/ 0.00</p>
-                    <p id="cobrar"      class="text-lg font-bold text-slate-800 hidden">S/ 0.00</p>
+                <div class="text-right leading-tight">
+                    <p class="text-[11px] font-bold text-emerald-600">Total</p>
+                    <p id="total" class="text-xl font-bold text-slate-800">S/ 0.00</p>
+                </div>
+                {{-- Solo con redondeo en efectivo --}}
+                <div class="text-right leading-tight">
+                    <p class="text-[11px] text-slate-400"><span id="lblRedondeo" class="hidden">Redondeo</span> <span id="redondeo" class="hidden">S/ 0.00</span></p>
+                    <p class="text-sm font-bold text-slate-800"><span id="lblCobrar" class="hidden">A cobrar</span> <span id="cobrar" class="hidden">S/ 0.00</span></p>
                 </div>
             </div>
         </div>
@@ -765,56 +702,103 @@ const PUBLIC_CLIENT = {!! json_encode([
 
 const BTN_LABEL = EDIT_ORDER ? 'Guardar Cambios' : 'Confirmar Venta';
 
-// ── Filtrado en tiempo real ───────────────────────────────────
+// ── Catálogo paginado ─────────────────────────────────────────
+// Los productos se piden al servidor de a una página (búsqueda incluida): con catálogos de
+// miles de productos la pantalla no carga todo de una vez.
+const POS_PRODUCTS_URL = '{{ route("employee.pos.products") }}';
+let paginaProductos = 1;
+let ultimaPaginaProductos = 1;
+let pedidoProductos = null;
+let esperaBusqueda = null;
+
+// Fila del catálogo: el botón lleva los datos que usa el modal de cantidad
+function filaProducto(p) {
+    const poco = p.stock <= p.stock_minimum;
+    return `
+        <tr class="hover:bg-sky-50/40 transition-colors cursor-default producto-row">
+            <td class="px-4 py-2.5">
+                <p class="font-medium text-slate-800 leading-tight">${escapar(p.name)}</p>
+                <p class="text-slate-400 mt-0.5 font-mono">${escapar(p.code)}${p.laboratory ? ` · <span class="font-sans">${escapar(p.laboratory)}</span>` : ''}</p>
+            </td>
+            <td class="px-3 py-2.5 text-right font-semibold text-slate-700 whitespace-nowrap">S/ ${p.price.toFixed(2)}</td>
+            <td class="px-3 py-2.5 text-center">
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold ${poco ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">${p.stock}</span>
+            </td>
+            <td class="px-2 py-2.5">
+                <button class="btn-agregar w-7 h-7 flex items-center justify-center rounded-lg bg-sky-600 hover:bg-sky-700 active:scale-95 text-white transition-all"
+                        data-id="${p.id}" data-code="${escapar(p.code)}" data-name="${escapar(p.name)}" data-price="${p.price}"
+                        data-afectacion="${escapar(p.afectacion)}" data-receta="${p.receta}" data-ingredient="${escapar(p.ingredient || '')}"
+                        data-stock="${p.stock}" data-presentations="${escapar(JSON.stringify(p.presentations))}"
+                        title="Agregar al carrito">
+                    <i class="fas fa-plus text-[10px]"></i>
+                </button>
+            </td>
+        </tr>`;
+}
+
+function parametrosCatalogo(extra) {
+    return Object.assign({
+        q:     $('#inputBusqueda').val().trim(),
+        stock: $('#soloConStock').is(':checked') ? 1 : 0,
+    }, extra);
+}
+
+function cargarProductos(pagina) {
+    if (pedidoProductos) pedidoProductos.abort();   // la última búsqueda es la que vale
+    $('#cargandoProductos').removeClass('hidden');
+    $('#sinResultados').addClass('hidden');
+
+    pedidoProductos = $.getJSON(POS_PRODUCTS_URL, parametrosCatalogo({ page: pagina || 1 }), function (res) {
+        paginaProductos       = res.page;
+        ultimaPaginaProductos = res.last_page;
+
+        $('#tablaProductos').html(res.data.map(filaProducto).join(''));
+        $('#contadorProductos').text(res.total);
+        $('#sinResultados').toggleClass('hidden', res.total > 0);
+        $('#altSinResultados').empty();
+
+        $('#paginacionProductos').toggleClass('hidden', res.last_page <= 1);
+        $('#paginaActual').text(res.page);
+        $('#paginaTotal').text(res.last_page);
+        $('#btnPaginaAnterior').prop('disabled', res.page <= 1);
+        $('#btnPaginaSiguiente').prop('disabled', res.page >= res.last_page);
+    }).always(function () {
+        $('#cargandoProductos').addClass('hidden');
+    });
+}
+
 $('#inputBusqueda').on('input', function() {
-    const term = $(this).val().trim().toLowerCase();
-    $('#btnLimpiarBusqueda').toggleClass('hidden', !term);
-    filtrarProductos();
+    $('#btnLimpiarBusqueda').toggleClass('hidden', !$(this).val().trim());
+    // Espera a que se deje de escribir para no pedir una página por cada letra
+    clearTimeout(esperaBusqueda);
+    esperaBusqueda = setTimeout(() => cargarProductos(1), 250);
 });
 
 // Lector de código de barras: escribe el código y envía Enter. Si coincide exacto con el
-// código de barras o el código interno de un producto, se abre directo para agregarlo
+// código de barras o el correlativo de un producto, se abre directo para agregarlo
+// (se pregunta al servidor: el producto puede no estar en la página que se ve)
 $('#inputBusqueda').on('keydown', function(e) {
     if (e.key !== 'Enter') return;
     e.preventDefault();
 
-    const term = $(this).val().trim().toLowerCase();
+    const term = $(this).val().trim();
     if (!term) return;
 
-    const $row = $('.producto-row').filter(function() {
-        // attr y no data(): data() convierte "0012345" en el número 12345 y pierde los ceros
-        return ($(this).attr('data-barcode') || '').toLowerCase() === term
-            || ($(this).attr('data-code') || '').toLowerCase() === term;
-    }).first();
-
-    if ($row.length) {
-        $(this).val('').trigger('input');
-        $row.find('.btn-agregar').trigger('click');
-    }
+    $.getJSON(POS_PRODUCTS_URL, parametrosCatalogo({ exact: 1 }), function (res) {
+        if (res.data.length !== 1) return;   // ninguno o ambiguo: queda la búsqueda normal
+        clearTimeout(esperaBusqueda);
+        $('#inputBusqueda').val('').trigger('input');
+        abrirModalProducto($(filaProducto(res.data[0])).find('.btn-agregar'));
+    });
 });
 
 $('#btnLimpiarBusqueda').on('click', function() {
     $('#inputBusqueda').val('').trigger('input').focus();
 });
 
-$('#soloConStock').on('change', filtrarProductos);
-
-function filtrarProductos() {
-    const term  = $('#inputBusqueda').val().trim().toLowerCase();
-    const stock = $('#soloConStock').is(':checked');
-    let visible = 0;
-
-    $('.producto-row').each(function() {
-        const matchTerm  = !term  || $(this).data('search').includes(term);
-        const matchStock = !stock || parseInt($(this).data('stock')) > 0;
-        const show = matchTerm && matchStock;
-        $(this).toggleClass('hidden', !show);
-        if (show) visible++;
-    });
-
-    $('#sinResultados').toggleClass('hidden', visible > 0);
-    $('#contadorProductos').text(visible);
-}
+$('#soloConStock').on('change', () => cargarProductos(1));
+$('#btnPaginaAnterior').on('click', () => cargarProductos(paginaProductos - 1));
+$('#btnPaginaSiguiente').on('click', () => cargarProductos(paginaProductos + 1));
 
 // ── Alternativas por principio activo ────────────────────────
 function pintarAlternativas($destino, lista) {
@@ -883,18 +867,23 @@ function pintarStockModal() {
 }
 
 $(document).on('click', '.btn-agregar', function() {
-    const id            = parseInt($(this).data('id'));
+    abrirModalProducto($(this));
+});
+
+// Abre el modal de cantidad y presentación con los datos del botón del producto
+function abrirModalProducto($btn) {
+    const id            = parseInt($btn.data('id'));
     // attr y no data(): el correlativo se muestra tal cual
-    const code          = String($(this).attr('data-code') || '');
-    const name          = String($(this).data('name'));
-    const price         = parseFloat($(this).data('price'));
+    const code          = String($btn.attr('data-code') || '');
+    const name          = String($btn.data('name'));
+    const price         = parseFloat($btn.data('price'));
     // Al editar una venta, sus líneas traen el stock que ya tenía descontado (stock + lo vendido)
     const enCarrito     = Object.values(carrito).find(i => i.id === id);
-    const stock         = Math.max(parseInt($(this).data('stock')) || 0, enCarrito ? enCarrito.stock : 0);
-    const afectacion    = String($(this).data('afectacion') || '20');
-    const receta        = parseInt($(this).data('receta')) || 0;
-    const ingredient    = String($(this).data('ingredient') || '');
-    const presentations = $(this).data('presentations') || [];
+    const stock         = Math.max(parseInt($btn.data('stock')) || 0, enCarrito ? enCarrito.stock : 0);
+    const afectacion    = String($btn.data('afectacion') || '20');
+    const receta        = parseInt($btn.data('receta')) || 0;
+    const ingredient    = String($btn.data('ingredient') || '');
+    const presentations = $btn.data('presentations') || [];
 
     modalProducto = { id, code, name, stock, afectacion, receta, ingredient };
     $('#altLista').empty();
@@ -925,7 +914,7 @@ $(document).on('click', '.btn-agregar', function() {
     pintarStockModal();
     document.getElementById('modalAgregar').style.setProperty('display', 'flex', 'important');
     setTimeout(() => $('#modalCantidad').focus().select(), 50);
-});
+}
 
 function opcionPresentacion(val, label, sub, price, factor, checked) {
     const active = checked ? 'border-sky-500 bg-sky-50' : 'border-slate-200 hover:border-slate-300';
@@ -1275,7 +1264,6 @@ function nuevaVenta() {
     $('#btnLimpiarCliente').addClass('hidden');
     $('#clienteSeleccionado').addClass('hidden').find('span').text('');
     $('#clienteDropdown').addClass('hidden').empty();
-    $('#nroComprobante').text('— automático —').removeClass('text-emerald-700 font-semibold').addClass('text-slate-400 italic');
     $('#dniEstado').addClass('hidden').html('');
     $('#dniMensaje').addClass('hidden').text('').removeClass('text-emerald-600 text-slate-400 text-red-400');
     $('#tipoDocumentoId').val('');
@@ -1352,7 +1340,6 @@ $('#btnTerminarVenta').on('click', function() {
         customer_document: $('#documento').val(),
         payment_type:      $('#tipoPago').val(),
         voucher_type:      $('#tipoComprobante').val(),
-        voucher_number:    $('#nroComprobante').val(),
         operation_number:  $('#nroOperacion').val(),
         amount_received:   $('#tipoPago').val() == 1 ? montoRecibido : null,
         subtotal: sub,
@@ -1383,13 +1370,7 @@ $('#btnTerminarVenta').on('click', function() {
 
             const numComp = res.voucher_number ?? '';
 
-            // Mostrar el número en el topbar
-            $('#nroComprobante').text(numComp).removeClass('text-slate-400 italic').addClass('text-emerald-700 font-semibold');
-            setTimeout(function() {
-                $('#nroComprobante').text('— automático —').removeClass('text-emerald-700 font-semibold').addClass('text-slate-400 italic');
-            }, 6000);
-
-            // Abrir modal de éxito con opción de imprimir
+            // Abrir modal de éxito con el número del comprobante y la opción de imprimir
             openSaleSuccessModal(res.order_id, numComp);
 
             carrito = {};
@@ -1407,11 +1388,9 @@ $('#btnTerminarVenta').on('click', function() {
             aplicarClientePublico();
             $('#dniEstado').addClass('hidden').html('');
             $('#dniMensaje').addClass('hidden').text('').removeClass('text-emerald-600 text-slate-400 text-red-400');
-            $.get(window.location.href, function(html) {
-                const $nuevaTabla = $(html).find('#tablaProductos');
-                $('#tablaProductos').html($nuevaTabla.html());
-                filtrarProductos();
-            });
+            // El stock cambió: se vuelve a pedir la página del catálogo
+            clearTimeout(esperaBusqueda);
+            cargarProductos(1);
         },
         error: function(xhr) {
             const msg = xhr.responseJSON?.message ?? (EDIT_ORDER ? 'Error al guardar los cambios.' : 'Error al registrar la venta.');
@@ -1706,5 +1685,8 @@ $('#documento').on('input', function() {
         });
     }, 400);
 });
+
+// Primera página del catálogo
+cargarProductos(1);
 </script>
 @endsection

@@ -99,9 +99,11 @@ it('ventas incluye el código de barras para buscar y escanear', function () {
     posSetup($employee);
     Product::where('code', 'P1')->update(['barcode' => '0012345']);
 
-    $this->get(route('employee.orders.index'))
+    // El lector de códigos busca exacto en el catálogo del POS (con los ceros a la izquierda)
+    $this->getJson(route('employee.pos.products', ['q' => '0012345', 'exact' => 1]))
         ->assertOk()
-        ->assertSee('data-barcode="0012345"', false);
+        ->assertJsonPath('data.0.barcode', '0012345')
+        ->assertJsonCount(1, 'data');
 });
 
 // ── Stock inicial ──────────────────────────────────────────────────

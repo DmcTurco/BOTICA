@@ -136,22 +136,75 @@ class OrderController extends Controller
         return $setting && $setting->enabled && $setting->isReady();
     }
 
-    /**
-     * El POS ofrece solo stock vendible: a lo que hay en la sede se le restan las unidades de lotes
-     * vencidos, y los productos que quedan en 0 desaparecen de la lista. (Solo en memoria; no se guarda.)
-     */
-    private function withSellableStock(\Illuminate\Support\Collection $products, int $branchId): \Illuminate\Support\Collection
-    {
-        $expired = app(BatchService::class)->expiredMap($branchId, $products->pluck('id')->all());
+    /** Productos por página en el catálogo del POS */
+    const POS_PER_PAGE = 50;
 
-        return $products
-            ->each(function (Product $p) use ($expired) {
-                if ($stock = $p->branchStocks->first()) {
-                    $stock->stock_actual = max(0, (float) $stock->stock_actual - ($expired[$p->id] ?? 0));
-                }
-            })
-            ->filter(fn (Product $p) => (float) ($p->branchStocks->first()?->stock_actual ?? 0) > 0)
-            ->values();
+    /**
+     * Catálogo del POS, paginado: productos activos de la compañía con su stock vendible en la sede
+     * (lo que hay menos las unidades de lotes vencidos). Busca por nombre, correlativo, código de
+     * barras o principio activo. Con ?exact=1 solo coincide exacto el código de barras o el
+     * correlativo (lector de códigos de barras).
+     */
+    public function products(Request $request, BatchService $batches)
+    {
+        $employee = auth()->guard('employee')->user();
+        $branchId = $employee->branch_id;
+        $term     = trim((string) $request->query('q', ''));
+
+        $page = Product::with([
+                'laboratory:id,name',
+                'presentations' => fn ($q) => $q->where('status', 1)->with('unit:id,name'),
+                'branchStocks'  => fn ($q) => $q->where('branch_id', $branchId),
+            ])
+            ->where('company_id', $employee->company_id)
+            ->where('status', 1)
+            ->when(
+                $request->boolean('exact'),
+                fn ($q) => $q->where(fn ($w) => $w->where('barcode', $term)->orWhere('code', mb_strtoupper($term))),
+                fn ($q) => $q->search($term, ['name', 'code', 'barcode', 'active_ingredient'])
+            )
+            ->when($request->boolean('stock', true), fn ($q) => $q->whereHas('branchStocks', fn ($s) => $s->where('branch_id', $branchId)->where('stock_actual', '>', 0)))
+            ->orderBy('name')
+            ->orderBy('id')
+            ->paginate(self::POS_PER_PAGE);
+
+        $expired = $batches->expiredMap($branchId, $page->getCollection()->pluck('id')->all());
+
+        return response()->json([
+            'data' => $page->getCollection()->map(function (Product $p) use ($expired) {
+                $stock = $p->branchStocks->first();
+
+                return [
+                    'id'            => $p->id,
+                    'code'          => $p->code,
+                    'barcode'       => $p->barcode,
+                    'name'          => $p->name,
+                    'laboratory'    => $p->laboratory?->name,
+                    'ingredient'    => $p->active_ingredient,
+                    'price'         => (float) $p->unit_sale_price,
+                    'afectacion'    => $p->igv_affectation,
+                    'receta'        => $p->recipe_level,
+                    // Solo stock vendible: las unidades de lotes vencidos no se ofrecen
+                    'stock'         => (int) max(0, (float) ($stock?->stock_actual ?? 0) - ($expired[$p->id] ?? 0)),
+                    'stock_minimum' => (int) ($stock?->stock_minimum ?? 0),
+                    'presentations' => $p->presentations->map(fn ($pr) => [
+                        'id'     => $pr->id,
+                        'label'  => $pr->unit?->name ?? 'Presentación',
+                        'amount' => (float) $pr->equivalent_amount,
+                        'price'  => (float) $pr->sale_price,
+                    ])->values(),
+                ];
+            })->values(),
+            'total'     => $page->total(),
+            'page'      => $page->currentPage(),
+            'last_page' => $page->lastPage(),
+        ]);
+    }
+
+    /** ¿La sede tiene algún producto con stock para vender? */
+    private function branchHasStock(int $branchId): bool
+    {
+        return BranchStock::where('branch_id', $branchId)->where('stock_actual', '>', 0)->exists();
     }
 
     /**
@@ -603,26 +656,14 @@ class OrderController extends Controller
 
         $branchId = $employee->branch_id;
 
-        // Solo mostrar productos con stock disponible en la sede del empleado
-        $products = Product::with([
-                'laboratory',
-                'presentations.unit',
-                'branchStocks' => fn ($q) => $q->where('branch_id', $branchId),
-            ])
-            ->where('company_id', $employee->company_id)
-            ->where('status', 1)
-            ->whereHas('branchStocks', fn ($q) => $q->where('branch_id', $branchId)->where('stock_actual', '>', 0))
-            ->orderBy('name')
-            ->get();
-
-        $products = $this->withSellableStock($products, $branchId);
+        // El catálogo no se carga aquí: la pantalla lo pide paginado a pos/products
 
         // Comprobantes con serie activa en la sede (los demás no se muestran)
         $availableVouchers = $this->availableVouchers($branchId);
 
         $requirements = Requirements::make('Ventas', 'employee.home')
             ->need(Product::where('company_id', $employee->company_id)->exists(), 'Productos', 'Registra los productos que vas a vender.', 'employee.products.create', 'Registrar producto')
-            ->need($products->isNotEmpty(), 'Stock en esta sede', 'Ningún producto tiene stock en tu sede. Ingrésalo registrando una compra.', 'employee.purchases.create', 'Registrar compra')
+            ->need($this->branchHasStock($branchId), 'Stock en esta sede', 'Ningún producto tiene stock en tu sede. Ingrésalo registrando una compra.', 'employee.purchases.create', 'Registrar compra')
             ->need(!empty($availableVouchers), 'Series de comprobantes de la sede', 'La empresa debe generarlas en Empresa → Sedes → "Generar series".');
 
         if ($requirements->blocked()) {
@@ -646,7 +687,7 @@ class OrderController extends Controller
         // Cliente predeterminado del POS (ventas al público general)
         $publicClient = Client::publicFor($employee->company_id);
 
-        return view('employee.pages.orders.index', compact('products', 'documentTypes', 'printConfig', 'historicalCaja', 'publicClient', 'availableVouchers'));
+        return view('employee.pages.orders.index', compact('documentTypes', 'printConfig', 'historicalCaja', 'publicClient', 'availableVouchers'));
     }
 
     /**
@@ -989,20 +1030,8 @@ class OrderController extends Controller
 
         $order->load('items.product:id,code');
 
-        // Productos disponibles en la sede (para agregar nuevos ítems)
+        // Los productos para agregar los pide la pantalla paginados a pos/products
         $branchId = $employee->branch_id;
-        $products = Product::with([
-                'laboratory',
-                'presentations.unit',
-                'branchStocks' => fn ($q) => $q->where('branch_id', $branchId),
-            ])
-            ->where('company_id', $employee->company_id)
-            ->where('status', 1)
-            ->whereHas('branchStocks', fn ($q) => $q->where('branch_id', $branchId)->where('stock_actual', '>', 0))
-            ->orderBy('name')
-            ->get();
-
-        $products = $this->withSellableStock($products, $branchId);
 
         $documentTypes = DocumentType::activos()->get();
 
@@ -1041,7 +1070,6 @@ class OrderController extends Controller
         ])->values();
 
         return view('employee.pages.orders.index', [
-            'products'       => $products,
             'documentTypes'  => $documentTypes,
             'printConfig'    => $printConfig,
             'historicalCaja' => $cashRegister,

@@ -130,6 +130,10 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware(['auth:employee', 'subscriptio
     Route::get('pos/alternatives', [Employee\ProductAlternativeController::class, 'index'])
         ->middleware('privilege:ver_ventas')->name('pos.alternatives');
 
+    // Catálogo paginado del punto de venta (también al editar una venta histórica)
+    Route::get('pos/products', [Employee\OrderController::class, 'products'])
+        ->middleware('privilege:ver_ventas')->name('pos.products');
+
     // Búsqueda y listado de clientes — accesible con cualquier privilegio (usada en el POS)
     Route::middleware('privilege:any')->group(function () {
         Route::get('clients/search', [Employee\ClientController::class, 'search'])->name('clients.search');
