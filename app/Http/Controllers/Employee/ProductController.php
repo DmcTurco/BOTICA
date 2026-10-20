@@ -75,8 +75,8 @@ class ProductController extends Controller
             $producto = new Product();
             $producto->company_id             = $employee->company_id;
             $producto->employee_id            = $employee->id;
-            // Código interno automático (único en todo el sistema); el de barras lo ingresa el usuario
-            $producto->code                   = DocumentSeries::siguiente(DocumentSeries::PRODUCTO);
+            // Código interno automático (correlativo de la compañía); el de barras lo ingresa el usuario
+            $producto->code                   = DocumentSeries::siguiente(DocumentSeries::PRODUCTO, companyId: $employee->company_id);
             $producto->barcode                = $request->codigo_barras ?: null;
             $producto->name                   = $request->nombre;
             $producto->description            = $request->descripcion;

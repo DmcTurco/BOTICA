@@ -108,7 +108,7 @@ class BranchController extends Controller
 
     /**
      * Genera las series de comprobantes que le falten a la sede (B00X, F00X, NV0X, BC0X, FC0X)
-     * y, si no existen, los correlativos internos globales y los tipos de documento (DNI, RUC...).
+     * y, si no existen, los correlativos internos de la compañía y los tipos de documento (DNI, RUC...).
      * Útil cuando en el servidor no se corrieron los seeders.
      * No toca las series que ya existen.
      */
@@ -121,7 +121,7 @@ class BranchController extends Controller
 
         DB::transaction(function () use ($branch) {
             DocumentType::crearTiposBase();
-            DocumentSeries::crearSeriesGlobales();
+            DocumentSeries::crearSeriesDeCompania($branch->company_id);
             DocumentSeries::crearSeriesParaSede($branch);
         });
 

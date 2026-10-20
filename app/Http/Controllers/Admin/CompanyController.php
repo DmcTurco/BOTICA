@@ -70,7 +70,7 @@ class CompanyController extends Controller
 
             // Datos fijos del sistema (idempotente) y series de la primera sede
             DocumentType::crearTiposBase();
-            DocumentSeries::crearSeriesGlobales();
+            DocumentSeries::crearSeriesDeCompania($company->id);
             DocumentSeries::crearSeriesParaSede($branch);
 
             // Catálogo base: unidades, categorías y laboratorios comunes

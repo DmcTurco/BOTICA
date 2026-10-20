@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();                                             // PK: las demás tablas apuntan aquí con product_id
-            $table->string('code', 20)->unique();                     // correlativo interno que ve el usuario, lo genera el sistema (P-00000001)
+            $table->string('code', 20);                               // correlativo de la compañía que ve el usuario, lo genera el sistema (P-00000001)
             $table->unsignedBigInteger('company_id')->index();        // compañía dueña del catálogo
             $table->string('barcode', 30)->nullable();                // código de barras (EAN) de la caja; opcional
             $table->string('name', 150);
@@ -46,7 +46,9 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            // El código de barras no se repite dentro de una compañía, pero dos boticas sí pueden tener el mismo
+            // El correlativo y el código de barras no se repiten dentro de una compañía,
+            // pero dos boticas sí pueden tener los mismos (cada una empieza en P-00000001)
+            $table->unique(['company_id', 'code']);
             $table->unique(['company_id', 'barcode']);
 
             // Listados de la compañía ordenados por nombre y paginados (catálogos de miles de productos)

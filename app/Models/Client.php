@@ -78,7 +78,7 @@ class Client extends Model
         return static::firstOrCreate(
             ['company_id' => $companyId, 'document_number' => self::PUBLIC_DOCUMENT],
             fn () => [
-                'code'             => DocumentSeries::siguiente(DocumentSeries::CLIENTE),
+                'code'             => DocumentSeries::siguiente(DocumentSeries::CLIENTE, companyId: $companyId),
                 'name'             => self::PUBLIC_NAME,
                 'document_type_id' => DocumentType::DNI,
                 'status'           => 1,

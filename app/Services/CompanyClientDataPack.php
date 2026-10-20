@@ -97,7 +97,7 @@ class CompanyClientDataPack
         $categories = self::categories($company, array_column($items, 'category'));
         $labs       = self::laboratories($company, array_column($items, 'laboratory'));
 
-        $codes = DocumentSeries::reservar(DocumentSeries::PRODUCTO, count($items));
+        $codes = DocumentSeries::reservar(DocumentSeries::PRODUCTO, count($items), $company->id);
         $now   = now();
 
         $products = $presentations = $stocks = $movements = $batches = [];

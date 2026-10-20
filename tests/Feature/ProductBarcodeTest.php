@@ -75,7 +75,8 @@ it('dos compañías pueden registrar el mismo código de barras', function () {
         ->assertSessionHasNoErrors();
 
     expect(Product::where('barcode', '7751234567890')->pluck('company_id')->sort()->values()->all())->toBe([1, $other->id])
-        ->and(Product::pluck('code')->sort()->values()->all())->toBe(['P-00000001', 'P-00000002']);
+        // Cada compañía tiene su propio correlativo: las dos empiezan en P-00000001
+        ->and(Product::pluck('code')->sort()->values()->all())->toBe(['P-00000001', 'P-00000001']);
 });
 
 it('al editar se puede conservar o cambiar el código de barras', function () {

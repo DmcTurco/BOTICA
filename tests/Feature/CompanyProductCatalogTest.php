@@ -83,14 +83,16 @@ it('no deja vender un producto sin precio de venta', function () {
 
 it('reserva códigos en bloque sin chocar con los que se piden uno a uno', function () {
     DB::beginTransaction();
-    $one   = DocumentSeries::siguiente(DocumentSeries::PRODUCTO);
-    $block = DocumentSeries::reservar(DocumentSeries::PRODUCTO, 3);
-    $next  = DocumentSeries::siguiente(DocumentSeries::PRODUCTO);
+    $one   = DocumentSeries::siguiente(DocumentSeries::PRODUCTO, companyId: 1);
+    $block = DocumentSeries::reservar(DocumentSeries::PRODUCTO, 3, 1);
+    $next  = DocumentSeries::siguiente(DocumentSeries::PRODUCTO, companyId: 1);
+    $other = DocumentSeries::siguiente(DocumentSeries::PRODUCTO, companyId: 2);   // otra compañía: su propia serie
     DB::commit();
 
     expect($one)->toBe('P-00000001')
         ->and($block)->toBe(['P-00000002', 'P-00000003', 'P-00000004'])
-        ->and($next)->toBe('P-00000005');
+        ->and($next)->toBe('P-00000005')
+        ->and($other)->toBe('P-00000001');
 });
 
 it('el comando arma el catálogo desde el Excel de DIGEMID', function () {

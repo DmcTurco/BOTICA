@@ -53,9 +53,10 @@ class DocumentSeries extends Model
     ];
 
     /**
-     * Correlativos internos globales (sin sede ni compañía): P-00000001, C-00000001...
+     * Correlativos internos propios de cada compañía, compartidos por todas sus sedes
+     * (no hay correlativos globales): cada compañía empieza en P-00000001, C-00000001...
      */
-    const GLOBAL = [
+    const PER_COMPANY = [
         self::PRODUCTO      => ['series' => 'P',   'name' => 'Producto'],
         self::PROVEEDOR     => ['series' => 'X',   'name' => 'Proveedor'],
         self::CLIENTE       => ['series' => 'C',   'name' => 'Cliente'],
@@ -81,21 +82,24 @@ class DocumentSeries extends Model
      * Debe llamarse DENTRO de una transacción DB existente.
      *
      * Ejemplos:
-     *   DocumentSeries::siguiente('BOLETA')   → "B001-00000001"
-     *   DocumentSeries::siguiente('PRODUCTO') → "P-00000001"
-     *   DocumentSeries::siguiente('COMPRA')   → "CMP-00000001"
+     *   DocumentSeries::siguiente('BOLETA', branchId: 3)    → "B002-00000001"
+     *   DocumentSeries::siguiente('PRODUCTO', companyId: 1) → "P-00000001"
      *
-     * Los comprobantes de venta (BOLETA, FACTURA, NOTA_VENTA) llevan serie y correlativo
-     * propios de cada sede: hay que pasar el $branchId de la sede que vende.
-     * Los demás correlativos (PRODUCTO, CLIENTE...) son globales y no llevan sede.
+     * Los comprobantes de venta (BOLETA, FACTURA, NOTA_VENTA...) llevan serie y correlativo
+     * propios de cada sede (SUNAT): hay que pasar el $branchId de la sede que emite.
+     * Los correlativos internos (PRODUCTO, CLIENTE...) son de la compañía y los comparten
+     * todas sus sedes: hay que pasar el $companyId.
      *
      * Si la serie activa alcanzó su límite, la cierra automáticamente
      * y activa la siguiente (B001 → B002, CMP → no rota — solo SUNAT rota).
      */
-    public static function siguiente(string $typeCode, ?int $branchId = null): string
+    public static function siguiente(string $typeCode, ?int $branchId = null, ?int $companyId = null): string
     {
         if (isset(self::PER_BRANCH[$typeCode]) && $branchId === null) {
             throw new \RuntimeException("El comprobante {$typeCode} requiere la sede que lo emite.");
+        }
+        if (isset(self::PER_COMPANY[$typeCode]) && $companyId === null) {
+            throw new \RuntimeException("El correlativo {$typeCode} requiere la compañía.");
         }
 
         $findSerie = fn () => self::where('type_code', $typeCode)
@@ -103,17 +107,17 @@ class DocumentSeries extends Model
             ->when(
                 isset(self::PER_BRANCH[$typeCode]),
                 fn ($q) => $q->where('branch_id', $branchId),
-                fn ($q) => $q->whereNull('branch_id')
+                fn ($q) => $q->where('company_id', $companyId)->whereNull('branch_id')
             )
             ->lockForUpdate()
             ->first();
 
         $serie = $findSerie();
 
-        // Correlativo interno global faltante (no se corrió el seeder): se crea con sus valores fijos
-        if (!$serie && isset(self::GLOBAL[$typeCode])
-            && !self::where('type_code', $typeCode)->whereNull('branch_id')->exists()) {
-            self::crearSeriesGlobales();
+        // Correlativo interno faltante (compañía nueva o no se corrió el seeder): se crea con sus valores fijos
+        if (!$serie && isset(self::PER_COMPANY[$typeCode])
+            && !self::where('type_code', $typeCode)->where('company_id', $companyId)->whereNull('branch_id')->exists()) {
+            self::crearSeriesDeCompania($companyId);
             $serie = $findSerie();
         }
 
@@ -161,24 +165,23 @@ class DocumentSeries extends Model
     }
 
     /**
-     * Reserva de una vez $cantidad correlativos internos globales consecutivos (p. ej. al precargar
-     * el catálogo de productos de una compañía). Debe llamarse DENTRO de una transacción.
+     * Reserva de una vez $cantidad correlativos internos consecutivos de una compañía (p. ej. al
+     * precargar su catálogo de productos). Debe llamarse DENTRO de una transacción.
      * Devuelve los códigos en orden: ['P-00000001', 'P-00000002', ...].
      */
-    public static function reservar(string $typeCode, int $cantidad): array
+    public static function reservar(string $typeCode, int $cantidad, int $companyId): array
     {
-        if (!isset(self::GLOBAL[$typeCode])) {
-            throw new \RuntimeException("Solo se pueden reservar en bloque correlativos internos globales ({$typeCode}).");
+        if (!isset(self::PER_COMPANY[$typeCode])) {
+            throw new \RuntimeException("Solo se pueden reservar en bloque correlativos internos de la compañía ({$typeCode}).");
         }
         if ($cantidad <= 0) {
             return [];
         }
 
-        if (!self::where('type_code', $typeCode)->whereNull('branch_id')->exists()) {
-            self::crearSeriesGlobales();
-        }
+        self::crearSeriesDeCompania($companyId);
 
-        $serie = self::where('type_code', $typeCode)->whereNull('branch_id')->where('active', true)->lockForUpdate()->firstOrFail();
+        $serie = self::where('type_code', $typeCode)->where('company_id', $companyId)->whereNull('branch_id')
+            ->where('active', true)->lockForUpdate()->firstOrFail();
 
         $desde  = $serie->current_number + 1;
         $hasta  = $serie->current_number + $cantidad;
@@ -231,28 +234,29 @@ class DocumentSeries extends Model
     }
 
     /**
-     * Crea los correlativos internos globales que falten (producto, cliente, compra...).
-     * Es idempotente: solo inserta los tipos que aún no existen.
+     * Crea los correlativos internos de una compañía que falten (producto, cliente, compra...).
+     * Es idempotente: solo inserta los tipos que aún no existen. Los comparten todas sus sedes.
      *
      * @return int Cantidad de correlativos creados
      */
-    public static function crearSeriesGlobales(): int
+    public static function crearSeriesDeCompania(int $companyId): int
     {
         $created = 0;
 
-        foreach (self::GLOBAL as $typeCode => $format) {
-            $exists = self::where('type_code', $typeCode)->whereNull('branch_id')->exists();
+        foreach (self::PER_COMPANY as $typeCode => $format) {
+            $exists = self::where('type_code', $typeCode)->where('company_id', $companyId)->whereNull('branch_id')->exists();
 
             if ($exists) {
                 continue;
             }
 
             self::create([
+                'company_id'     => $companyId,
                 'type_code'      => $typeCode,
                 'name'           => $format['name'],
                 'series'         => $format['series'],
                 'current_number' => 0,
-                'digits'         => 8,   // 8 dígitos: alcanza para muchas compañías con catálogo precargado
+                'digits'         => 8,
                 'active'         => true,
             ]);
 

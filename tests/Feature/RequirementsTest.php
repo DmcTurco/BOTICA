@@ -8,6 +8,7 @@ use App\Models\DocumentSeries;
 use App\Models\DocumentType;
 use App\Models\Unit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -73,7 +74,7 @@ it('la empresa genera las series faltantes de una sede sin duplicar', function (
 
     expect(DocumentSeries::where('branch_id', $branch->id)->pluck('series')->sort()->values()->all())
         ->toBe(['B001', 'BC01', 'F001', 'FC01', 'NV01'])
-        ->and(DocumentSeries::whereNull('branch_id')->count())->toBe(count(DocumentSeries::GLOBAL))
+        ->and(DocumentSeries::where('company_id', 1)->whereNull('branch_id')->count())->toBe(count(DocumentSeries::PER_COMPANY))
         ->and(DocumentType::count())->toBe(count(DocumentType::BASE));
 
     $this->get(route('company.branches.index'))->assertDontSee('Generar series');
@@ -88,4 +89,13 @@ it('los correlativos internos se crean solos y el cliente público no gasta núm
 
     expect($client->code)->toBe('C-00000001')
         ->and(DocumentSeries::where('type_code', DocumentSeries::CLIENTE)->value('current_number'))->toBe(1);
+});
+
+it('cada compañía tiene su propia serie de clientes desde C-00000001', function () {
+    Client::publicFor(1);
+
+    expect(DB::transaction(fn () => DocumentSeries::siguiente(DocumentSeries::CLIENTE, companyId: 1)))->toBe('C-00000002')
+        ->and(Client::publicFor(2)->code)->toBe('C-00000001')
+        ->and(DB::transaction(fn () => DocumentSeries::siguiente(DocumentSeries::CLIENTE, companyId: 2)))->toBe('C-00000002')
+        ->and(DocumentSeries::where('type_code', DocumentSeries::CLIENTE)->count())->toBe(2);
 });

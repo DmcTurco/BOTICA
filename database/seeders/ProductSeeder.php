@@ -360,7 +360,7 @@ class ProductSeeder extends Seeder
         DB::transaction(function () use ($products, $now) {
             foreach ($products as $product) {
                 DB::table('products')->insert(array_merge($product, [
-                    'code'       => DocumentSeries::siguiente(DocumentSeries::PRODUCTO),
+                    'code'       => DocumentSeries::siguiente(DocumentSeries::PRODUCTO, companyId: $product['company_id']),
                     'igv_affectation' => ($product['taxed_product'] ?? false) ? '10' : '20',
                     'created_at' => $now,
                     'updated_at' => $now,

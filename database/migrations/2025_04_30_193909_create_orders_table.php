@@ -23,8 +23,8 @@ return new class extends Migration
         // Series y correlativos de documentos del sistema (genérico)
         Schema::create('document_series', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('company_id')->nullable()->index(); // compañía (null = correlativo global interno)
-            $table->unsignedBigInteger('branch_id')->nullable()->index();  // sede (solo los comprobantes de venta llevan serie por sede)
+            $table->unsignedBigInteger('company_id')->index();             // compañía: no hay correlativos globales
+            $table->unsignedBigInteger('branch_id')->nullable()->index();  // sede (solo los comprobantes de venta llevan serie por sede; null = correlativo interno de la compañía)
             $table->string('type_code', 20)->comment('Código interno: BOLETA, FACTURA, NOTA_VENTA, NOTA_CREDITO_*, PRODUCTO, COMPRA...');
             $table->string('name', 50)->comment('Nombre legible del tipo de documento');
             $table->string('series', 10)->comment('Prefijo de serie: B001, F001, P, CMP...');
@@ -33,13 +33,10 @@ return new class extends Migration
             $table->boolean('active')->default(true);
             $table->timestamps();
 
-            // SUNAT: la serie es única por compañía (RUC) y tipo de comprobante
+            // SUNAT: la serie es única por compañía (RUC) y tipo de comprobante.
+            // También evita duplicar un correlativo interno (P, C...) dentro de la compañía.
             $table->unique(['company_id', 'type_code', 'series']);
         });
-
-        // NULL no cuenta como igual en un índice único: los correlativos globales
-        // (company_id NULL) conservan su unicidad con un índice parcial.
-        DB::statement('CREATE UNIQUE INDEX document_series_global_unique ON document_series (type_code, series) WHERE company_id IS NULL');
 
         Schema::create('orders', function (Blueprint $table) {
             $table->id();

@@ -62,7 +62,7 @@ class ClientController extends Controller
 
         try {
             DB::transaction(function () use ($request, $employee) {
-                $code = DocumentSeries::siguiente(DocumentSeries::CLIENTE);
+                $code = DocumentSeries::siguiente(DocumentSeries::CLIENTE, companyId: $employee->company_id);
 
                 Client::create([
                     'company_id'       => $employee->company_id,

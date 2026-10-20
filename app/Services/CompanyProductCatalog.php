@@ -59,7 +59,7 @@ class CompanyProductCatalog
         )));
         $labs = self::laboratories($company, $medicines);
 
-        $codes = DocumentSeries::reservar(DocumentSeries::PRODUCTO, count($medicines) + count($others));
+        $codes = DocumentSeries::reservar(DocumentSeries::PRODUCTO, count($medicines) + count($others), $company->id);
         $now   = now();
         $products = [];
         $presentations = [];
