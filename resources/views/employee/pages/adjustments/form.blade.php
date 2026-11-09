@@ -44,7 +44,7 @@
                 {{-- Producto: buscador sobre los productos de la compañía con su stock en la sede --}}
                 <div class="relative">
                     <label for="buscadorProducto" class="block text-sm font-medium text-slate-700 mb-1.5">Producto <span class="text-red-500">*</span></label>
-                    <input type="hidden" name="product_id" id="productId" value="{{ old('product_id') }}">
+                    <input type="hidden" name="product_id" id="productId" value="{{ old('product_id', $selectedId ?? '') }}">
                     <input type="text" id="buscadorProducto" autocomplete="off" placeholder="Busca por nombre, código o código de barras..."
                            class="{{ $inputClass }} @error('product_id') border-red-400 @enderror">
                     <div id="resultados" class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-auto"></div>
@@ -187,5 +187,9 @@ inpCantidad.addEventListener('input', previsualizar);
 if (actual()) inpBuscar.value = actual().name;
 segunModo();
 previsualizar();
+// Si llegó con un producto elegido desde la lista, deja el cursor listo en la cantidad
+@if(!empty($selectedId) && !old('product_id'))
+inpCantidad.focus();
+@endif
 </script>
 @endsection

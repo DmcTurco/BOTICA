@@ -125,7 +125,7 @@
         <td class="qty">{{ rtrim(rtrim(number_format($item->quantity, 2), '0'), '.') }}</td>
         <td class="desc" style="font-size:10px;">{{ $item->product_name }}</td>
         <td class="price">{{ number_format($item->unit_price, 2) }}</td>
-        <td class="total">{{ number_format($item->subtotal, 2) }}</td>
+        <td class="total">{{ number_format($item->subtotal + $item->igv_amount, 2) }}</td>
     </tr>
     @endforeach
 </table>

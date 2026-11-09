@@ -109,6 +109,9 @@ Route::prefix(MyApp::EMPLOYEE_SUBDIR)->middleware(['auth:employee', 'subscriptio
         // Nota de crédito: anula una boleta o factura aceptada por SUNAT
         Route::post('orders/{order}/credit-note', [Employee\CreditNoteController::class, 'store'])
             ->middleware('privilege:crear_nota_credito')->name('orders.credit-note');
+        // Corregir un comprobante (nombre, documento o boleta ↔ factura): anula el original y emite uno nuevo
+        Route::post('orders/{order}/correct', [Employee\VoucherCorrectionController::class, 'store'])
+            ->middleware('privilege:crear_nota_credito')->name('orders.correct');
         Route::post('credit-notes/{creditNote}/sunat', [Employee\CreditNoteController::class, 'resend'])
             ->middleware('privilege:enviar_nce_sunat')->name('credit-notes.sunat-resend');
         Route::get('consultar-documento', [Employee\OrderController::class, 'consultarDocumento'])->name('consultar-documento');

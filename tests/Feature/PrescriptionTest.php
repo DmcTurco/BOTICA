@@ -17,10 +17,10 @@ function rxData(array $overrides = []): array
     ], $overrides);
 }
 
-/** Venta de 2 unidades de P1 (S/ 10 gravado): total 23.60 */
+/** Venta de 2 unidades de P1 (S/ 10 gravado): total 20 */
 function rxSale(array $extra = [])
 {
-    return posSale(array_merge(['total' => 23.60], $extra));
+    return posSale(array_merge(['total' => 20], $extra));
 }
 
 // ── Nivel de receta ───────────────────────────────────────────

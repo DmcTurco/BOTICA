@@ -20,11 +20,11 @@ function creditClient(float $limit = 100): Client
     ]);
 }
 
-/** Venta de 2 unidades de P1 (total S/ 23.60) a crédito para el cliente dado */
+/** Venta de 2 unidades de P1 (total S/ 20.00) a crédito para el cliente dado */
 function creditSale(?Client $client, array $extra = [])
 {
     return posSale(array_merge([
-        'payment_type' => 5, 'total' => 23.60, 'client_id' => $client?->id,
+        'payment_type' => 5, 'total' => 20, 'client_id' => $client?->id,
         'customer_name' => $client?->name, 'customer_document' => $client?->document_number,
     ], $extra));
 }
@@ -37,8 +37,8 @@ it('vende a crédito a un cliente con línea y deja la deuda en la venta', funct
 
     $order = Order::firstOrFail();
     expect($order->client_id)->toBe($client->id)->and($order->payment_type)->toBe(5)
-        ->and((float) $order->credit_balance)->toBe(23.6)->and($order->credit_due_date->toDateString())->toBe(today()->addDays(15)->toDateString())
-        ->and($client->creditDebt())->toBe(23.6)->and($client->creditAvailable())->toBe(76.4)
+        ->and((float) $order->credit_balance)->toBe(20.0)->and($order->credit_due_date->toDateString())->toBe(today()->addDays(15)->toDateString())
+        ->and($client->creditDebt())->toBe(20.0)->and($client->creditAvailable())->toBe(80.0)
         ->and(stockOf('P1'))->toBe(8.0);
 });
 
@@ -47,7 +47,7 @@ it('rechaza el fiado sin cliente, al público, sin línea, sobre el tope o en fa
 
     creditSale(null)->assertStatus(422);                                                       // sin cliente
     creditSale(creditClient(0))->assertStatus(422);                                            // sin línea
-    creditSale(creditClient(20))->assertStatus(422)->assertJsonFragment(['message' => 'Supera el crédito disponible de «Cliente 3»: puede usar S/ 20.00 y la venta es de S/ 23.60.']);
+    creditSale(creditClient(15))->assertStatus(422)->assertJsonFragment(['message' => 'Supera el crédito disponible de «Cliente 3»: puede usar S/ 15.00 y la venta es de S/ 20.00.']);
     creditSale(creditClient(500), ['voucher_type' => 2, 'document_type_id' => 3, 'customer_document' => '20123456789'])->assertStatus(422); // factura
 
     expect(Order::count())->toBe(0)->and(stockOf('P1'))->toBe(10.0);
@@ -55,10 +55,10 @@ it('rechaza el fiado sin cliente, al público, sin línea, sobre el tope o en fa
 
 it('suma la deuda de varias ventas contra la misma línea', function () {
     posSetup(loginEmployee());
-    $client = creditClient(40);
+    $client = creditClient(30);
 
-    creditSale($client)->assertOk();                  // 23.60 de 40
-    creditSale($client)->assertStatus(422);           // otros 23.60 superan lo disponible (16.40)
+    creditSale($client)->assertOk();                  // 20 de 30
+    creditSale($client)->assertStatus(422);           // otros 20 superan lo disponible (10)
 
     expect(Order::count())->toBe(1);
 });
@@ -75,10 +75,10 @@ it('el abono se reparte entre las ventas más antiguas y suma a la caja si es ef
     $this->post(route('employee.receivables.pay', $client), ['amount' => 30, 'method' => 1, 'paid_at' => today()->toDateString()])->assertSessionHasNoErrors();
 
     $orders = Order::orderBy('credit_due_date')->get();
-    expect((float) $orders[0]->credit_balance)->toBe(0.0)           // la primera se salda (23.60)
-        ->and((float) $orders[1]->credit_balance)->toBe(17.2)       // el resto a la segunda
+    expect((float) $orders[0]->credit_balance)->toBe(0.0)           // la primera se salda (20)
+        ->and((float) $orders[1]->credit_balance)->toBe(10.0)       // el resto a la segunda
         ->and(CreditPayment::count())->toBe(2)
-        ->and($client->creditDebt())->toBe(17.2)
+        ->and($client->creditDebt())->toBe(10.0)
         ->and($register->expectedCash())->toBe(round($before + 30, 2));
 });
 
@@ -92,7 +92,7 @@ it('un abono por transferencia no mueve el efectivo de la caja', function () {
 
     $this->post(route('employee.receivables.pay', $client), ['amount' => 10, 'method' => 3, 'paid_at' => today()->toDateString(), 'reference' => 'OP-9'])->assertSessionHasNoErrors();
 
-    expect($register->expectedCash())->toBe($before)->and($client->creditDebt())->toBe(13.6);
+    expect($register->expectedCash())->toBe($before)->and($client->creditDebt())->toBe(10.0);
 });
 
 it('no permite abonar más de la deuda ni en efectivo sin caja abierta', function () {
@@ -106,7 +106,7 @@ it('no permite abonar más de la deuda ni en efectivo sin caja abierta', functio
 
     CashRegister::query()->update(['status' => 0]);       // cierra la caja
     $this->post(route('employee.receivables.pay', $client), ['amount' => 5, 'method' => 1, 'paid_at' => today()->toDateString()])->assertSessionHas('error');
-    expect(CreditPayment::count())->toBe(0)->and($client->creditDebt())->toBe(23.6);
+    expect(CreditPayment::count())->toBe(0)->and($client->creditDebt())->toBe(20.0);
 });
 
 it('las pantallas de cuentas por cobrar muestran la deuda', function () {
@@ -115,7 +115,7 @@ it('las pantallas de cuentas por cobrar muestran la deuda', function () {
     creditSale($client)->assertOk();
 
     $index = $this->get(route('employee.receivables.index'))->assertOk()->assertSee($client->name);
-    expect($index->viewData('totalDebt'))->toBe(23.6);
+    expect($index->viewData('totalDebt'))->toBe(20.0);
     $this->get(route('employee.receivables.show', $client))->assertOk()->assertSee('Registrar abono');
 });
 
@@ -140,7 +140,7 @@ it('las ventas a crédito no se editan y el crédito exige privilegio para cobra
     CashRegister::query()->update(['approval_status' => CashRegister::APPROVAL_PENDING]);
 
     $this->putJson(route('employee.orders.update-historical', $order), [
-        'items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 1]], 'payment_type' => 1, 'total' => 11.8,
+        'items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 1]], 'payment_type' => 1, 'total' => 10,
     ])->assertStatus(422);
 
     $this->actingAs(Employee::create([

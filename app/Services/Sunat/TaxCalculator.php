@@ -8,12 +8,14 @@ use InvalidArgumentException;
  * Calcula el IGV y los totales de una venta según la afectación de cada producto
  * (catálogo SUNAT 07): 10 gravado, 20 exonerado, 30 inafecto.
  *
- * Los precios de venta del sistema son valores SIN IGV; el IGV (18%) se suma
- * solo a las líneas gravadas. El IGV se redondea por línea y luego se suma.
+ * Los precios de venta del sistema YA INCLUYEN el IGV: lo que el usuario pone como precio es lo
+ * que paga el cliente. En una línea gravada el IGV (18%) se SACA del importe (base = importe ÷ 1.18,
+ * IGV = importe − base) solo para mostrarlo y declararlo; en exonerado e inafecto no se saca nada.
+ * El IGV se redondea por línea y luego se suma.
  *
- * Descuento: un porcentaje que se aplica a la base de cada línea ANTES del IGV. En el comprobante
- * electrónico el valor unitario de cada ítem ya sale neto (base ÷ cantidad), por lo que no requiere
- * campos de descuento aparte.
+ * Descuento: un porcentaje o monto que se aplica al importe de cada línea (con IGV incluido), así el
+ * cliente paga exactamente ese descuento menos. En el comprobante electrónico el valor unitario de
+ * cada ítem ya sale neto (base ÷ cantidad), por lo que no requiere campos de descuento aparte.
  */
 class TaxCalculator
 {
@@ -74,8 +76,17 @@ class TaxCalculator
             } else {
                 $discount = round($gross * $discountPercent / 100, 2);
             }
-            $base        = round($gross - $discount, 2);
-            $lineIgv     = $affectation === self::GRAVADO ? round($base * self::IGV_RATE, 2) : 0.0;
+            // Importe que paga el cliente por la línea (el precio ya trae el IGV en lo gravado)
+            $net = round($gross - $discount, 2);
+
+            if ($affectation === self::GRAVADO) {
+                // Se separa el IGV: base = importe ÷ 1.18 y el IGV es la diferencia (base + IGV = importe exacto)
+                $base    = round($net / (1 + self::IGV_RATE), 2);
+                $lineIgv = round($net - $base, 2);
+            } else {
+                $base    = $net;   // exonerado e inafecto: no hay IGV que sacar
+                $lineIgv = 0.0;
+            }
 
             match ($affectation) {
                 self::GRAVADO   => $taxable    += $base,

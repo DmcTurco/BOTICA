@@ -24,7 +24,7 @@ it('vende primero el lote que vence antes', function () {
     addBatch('P1', 5, today()->addDays(20)->toDateString(), 'PRONTO');
     addBatch('P1', 5, null, 'SINFECHA');
 
-    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 7]], 'total' => 82.6])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 7]], 'total' => 70])->assertOk();
 
     expect(remaining('PRONTO'))->toBe(0.0)     // el que vence antes se agota primero
         ->and(remaining('TARDE'))->toBe(3.0)   // luego el siguiente en vencer
@@ -40,10 +40,10 @@ it('no vende unidades de lotes vencidos', function () {
     addBatch('P1', 2, today()->addDays(30)->toDateString(), 'VIGENTE');
 
     // Hay 6 en stock pero solo 2 vigentes
-    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 3]], 'total' => 35.4])->assertStatus(422);
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 3]], 'total' => 30])->assertStatus(422);
     expect(stockOf('P1'))->toBe(6.0);
 
-    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 2]], 'total' => 23.6])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 2]], 'total' => 20])->assertOk();
     expect(remaining('VIGENTE'))->toBe(0.0)->and(remaining('VENCIDO'))->toBe(4.0)->and(stockOf('P1'))->toBe(4.0);
 });
 
@@ -53,7 +53,7 @@ it('un lote que vence hoy todavía se puede vender', function () {
     BranchStock::where('product_id', pid('P1'))->update(['stock_actual' => 0]);
     addBatch('P1', 3, today()->toDateString(), 'HOY');
 
-    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 3]], 'total' => 35.4])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 3]], 'total' => 30])->assertOk();
 
     expect(remaining('HOY'))->toBe(0.0);
 });
@@ -63,7 +63,7 @@ it('las unidades sin lote se venden después de los lotes', function () {
     posSetup($employee);                       // 10 unidades sin lote
     addBatch('P1', 2, today()->addDays(10)->toDateString(), 'L1');
 
-    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 5]], 'total' => 59])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 5]], 'total' => 50])->assertOk();
 
     expect(remaining('L1'))->toBe(0.0)->and(stockOf('P1'))->toBe(7.0);
 });
@@ -75,7 +75,7 @@ it('anular la venta con nota de crédito devuelve las unidades a su lote', funct
     addBatch('P1', 5, today()->addDays(10)->toDateString(), 'L1');
     addBatch('P1', 5, today()->addDays(90)->toDateString(), 'L2');
 
-    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 7]], 'total' => 82.6])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 7]], 'total' => 70])->assertOk();
     expect(remaining('L1'))->toBe(0.0)->and(remaining('L2'))->toBe(3.0);
 
     $order = App\Models\Order::firstOrFail();
@@ -97,7 +97,7 @@ it('una compra crea su lote y no se anula si ya se vendió parte', function () {
     ])->assertSessionHasNoErrors();
     expect(remaining('C-1'))->toBe(10.0);
 
-    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 4]], 'total' => 47.2])->assertOk();
+    posSale(['items' => [['product_id' => pid('P1'), 'name' => 'x', 'price' => 10, 'qty' => 4]], 'total' => 40])->assertOk();
 
     $this->post(route('employee.purchases.void', Purchase::firstOrFail()), ['void_reason' => 'x'])->assertSessionHas('error');
     expect(Purchase::first()->status)->toBe(1)->and(stockOf('P1'))->toBe(6.0);

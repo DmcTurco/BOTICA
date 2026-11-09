@@ -11,7 +11,7 @@
     <div class="flex items-start justify-between gap-3 shrink-0">
         <div>
             <h1 class="text-xl font-bold text-slate-800">Actualización de Precios</h1>
-            <p class="text-sm text-slate-500 mt-0.5">Edita el precio de compra y de venta (por unidad, sin IGV) de varios productos a la vez. Cada cambio queda registrado.</p>
+            <p class="text-sm text-slate-500 mt-0.5">Edita el precio de compra y de venta (por unidad) de varios productos a la vez. El precio de venta ya incluye el IGV. Cada cambio queda registrado.</p>
         </div>
         <a href="{{ route('employee.prices.history') }}"
            class="shrink-0 inline-flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-medium rounded-lg shadow-sm">

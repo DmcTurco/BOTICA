@@ -285,7 +285,7 @@
             <td class="center" style="font-size:10px; color:#555;">{{ $item->product?->code }}</td>
             <td>{{ $item->product_name }}</td>
             <td class="right">S/ {{ number_format($item->unit_price, 2) }}</td>
-            <td class="right">S/ {{ number_format($item->subtotal, 2) }}</td>
+            <td class="right">S/ {{ number_format($item->subtotal + $item->igv_amount, 2) }}</td>
         </tr>
         @endforeach
     </tbody>

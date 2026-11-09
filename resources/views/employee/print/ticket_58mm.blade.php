@@ -100,7 +100,7 @@
     <tr>
         <td class="qty">{{ rtrim(rtrim(number_format($item->quantity, 2), '0'), '.') }}</td>
         <td class="desc">{{ $item->product_name }}</td>
-        <td class="total">{{ number_format($item->subtotal, 2) }}</td>
+        <td class="total">{{ number_format($item->subtotal + $item->igv_amount, 2) }}</td>
     </tr>
     @endforeach
 </table>

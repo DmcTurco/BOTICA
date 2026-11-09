@@ -42,9 +42,9 @@
                 : collect();
             $historicaActiva = request()->route('cashRegister')?->id;
         @endphp
-        <div>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Ventas</p>
-            <ul class="space-y-0.5">
+        <div data-sb-group>
+            <button type="button" data-sb-toggle aria-expanded="false" class="flex items-center justify-between w-full px-3 py-1.5 mb-1 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700"><span>Ventas</span><i class="fas fa-chevron-down text-[9px]" data-sb-chevron style="transition:transform .2s"></i></button>
+            <ul class="space-y-0.5" data-sb-body style="display:none">
                 @if($emp->hasPrivilege(\App\Models\Employee::PRIV_ABRIR_CAJA))
                 <li>
                     <a href="{{ route('employee.cash-register.show-open') }}"
@@ -228,9 +228,9 @@
             $hasControlled = $emp->hasPrivilege(\App\Models\Employee::PRIV_LIBRO_CONTROLADOS);
         @endphp
         @if($hasInventory || $hasPurchases || $hasKardex || $hasAdjust || $hasReplenish || $hasTransfer || $hasSuppliers || $hasPayables || $hasControlled)
-        <div>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Inventario</p>
-            <ul class="space-y-0.5">
+        <div data-sb-group>
+            <button type="button" data-sb-toggle aria-expanded="false" class="flex items-center justify-between w-full px-3 py-1.5 mb-1 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700"><span>Inventario</span><i class="fas fa-chevron-down text-[9px]" data-sb-chevron style="transition:transform .2s"></i></button>
+            <ul class="space-y-0.5" data-sb-body style="display:none">
                 @if($hasInventory)
                 <li>
                     <a href="{{ route('employee.products.index') }}"
@@ -374,9 +374,9 @@
             $hasProductions = $emp->hasPrivilege(\App\Models\Employee::PRIV_PRODUCIR_FORMULAS);
         @endphp
         @if($hasFormulas || $hasProductions)
-        <div>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Laboratorio</p>
-            <ul class="space-y-0.5">
+        <div data-sb-group>
+            <button type="button" data-sb-toggle aria-expanded="false" class="flex items-center justify-between w-full px-3 py-1.5 mb-1 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700"><span>Laboratorio</span><i class="fas fa-chevron-down text-[9px]" data-sb-chevron style="transition:transform .2s"></i></button>
+            <ul class="space-y-0.5" data-sb-body style="display:none">
                 @if($hasFormulas)
                 <li>
                     <a href="{{ route('employee.formulas.index') }}"
@@ -434,9 +434,9 @@
         @foreach($linkGroups as $groupTitle => $links)
             @php $visible = collect($links)->filter(fn ($l) => $emp->hasPrivilege($l[1])); @endphp
             @if($visible->isNotEmpty())
-            <div>
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">{{ $groupTitle }}</p>
-                <ul class="space-y-0.5">
+            <div data-sb-group>
+                <button type="button" data-sb-toggle aria-expanded="false" class="flex items-center justify-between w-full px-3 py-1.5 mb-1 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700"><span>{{ $groupTitle }}</span><i class="fas fa-chevron-down text-[9px]" data-sb-chevron style="transition:transform .2s"></i></button>
+                <ul class="space-y-0.5" data-sb-body style="display:none">
                     @foreach($visible as [$linkRoute, $linkPriv, $linkIcon, $linkLabel])
                     <li>
                         <a href="{{ route($linkRoute) }}"
@@ -461,9 +461,9 @@
                 ->where('status', 0)
                 ->count();
         @endphp
-        <div>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Administración</p>
-            <ul class="space-y-0.5">
+        <div data-sb-group>
+            <button type="button" data-sb-toggle aria-expanded="false" class="flex items-center justify-between w-full px-3 py-1.5 mb-1 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700"><span>Administración</span><i class="fas fa-chevron-down text-[9px]" data-sb-chevron style="transition:transform .2s"></i></button>
+            <ul class="space-y-0.5" data-sb-body style="display:none">
                 <li>
                     <a href="{{ route('employee.approvals.index') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -511,3 +511,76 @@
         </form>
     </div>
 </aside>
+
+<style>
+/* Acordeón + menú plegado (solo íconos): se muestran todos los íconos y cada título pasa a ser una línea separadora */
+@media (min-width: 1024px) {
+    .sidebar-collapsed #sidebar [data-sb-body] { display: block !important; }
+    .sidebar-collapsed #sidebar [data-sb-toggle] {
+        height: 1px; padding: 0; margin: 0 0.75rem 0.5rem; width: auto;
+        background: #e2e8f0; font-size: 0; pointer-events: none;
+    }
+    .sidebar-collapsed #sidebar [data-sb-toggle] > * { display: none; }
+}
+</style>
+<script>
+// Menú lateral tipo acordeón: abre un grupo a la vez; el grupo de la página actual queda abierto
+(function () {
+    var groups = document.querySelectorAll('#sidebar [data-sb-group]');
+    var KEY = 'employee_sidebar_open';
+
+    function setOpen(g, open) {
+        var body = g.querySelector('[data-sb-body]');
+        var btn = g.querySelector('[data-sb-toggle]');
+        var chev = g.querySelector('[data-sb-chevron]');
+        body.style.display = open ? '' : 'none';
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        chev.style.transform = open ? 'rotate(180deg)' : '';
+    }
+
+    // Grupo que contiene el enlace activo (resaltado con bg-sky-600)
+    var active = null;
+    groups.forEach(function (g, i) {
+        if (g.querySelector('a.bg-sky-600')) active = i;
+    });
+
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    var openIndex = active !== null ? active : (saved !== null && groups[saved] ? parseInt(saved, 10) : 0);
+
+    groups.forEach(function (g, i) { setOpen(g, i === openIndex); });
+
+    groups.forEach(function (g, i) {
+        g.querySelector('[data-sb-toggle]').addEventListener('click', function () {
+            var abierto = this.getAttribute('aria-expanded') === 'true';
+            groups.forEach(function (o) { setOpen(o, false); });
+            setOpen(g, !abierto);
+            try { localStorage.setItem(KEY, abierto ? '' : String(i)); } catch (e) {}
+        });
+    });
+
+    // Mantiene el scroll del menú al cambiar de vista o recargar la página
+    var nav = document.querySelector('#sidebar nav');
+    var SCROLL_KEY = 'employee_sidebar_scroll';
+    if (nav) {
+        var top = null;
+        try { top = sessionStorage.getItem(SCROLL_KEY); } catch (e) {}
+        if (top !== null) nav.scrollTop = parseInt(top, 10) || 0;
+
+        // Si la opción activa quedó fuera de vista, se trae a la vista
+        var link = nav.querySelector('a.bg-sky-600');
+        if (link) {
+            var n = nav.getBoundingClientRect(), l = link.getBoundingClientRect();
+            if (l.top < n.top || l.bottom > n.bottom) link.scrollIntoView({ block: 'center' });
+        }
+
+        var guardar = function () {
+            try { sessionStorage.setItem(SCROLL_KEY, String(nav.scrollTop)); } catch (e) {}
+        };
+        nav.addEventListener('scroll', guardar, { passive: true });
+        window.addEventListener('pagehide', guardar);
+        // Al abrir/cerrar un grupo cambia la altura: se guarda también
+        nav.addEventListener('click', function () { setTimeout(guardar, 0); });
+    }
+})();
+</script>

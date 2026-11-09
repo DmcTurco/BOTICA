@@ -134,7 +134,7 @@
             <td class="center">{{ rtrim(rtrim(number_format($item->quantity, 2), '0'), '.') }}</td>
             <td>{{ $item->product_name }}</td>
             <td class="right">S/ {{ number_format($item->unit_price, 2) }}</td>
-            <td class="right">S/ {{ number_format($item->subtotal, 2) }}</td>
+            <td class="right">S/ {{ number_format($item->subtotal + $item->igv_amount, 2) }}</td>
         </tr>
         @endforeach
     </tbody>

@@ -66,7 +66,7 @@ class CreditNoteService
                 'sunat_status'      => Order::SUNAT_PENDING,
             ]);
 
-            $this->restoreStock($order, $note, $employee);
+            $this->restoreStock($order, 'credit_note', $note->id, "Anulación {$order->voucher_number} (NC {$note->voucher_number})");
 
             // La venta queda anulada: ya no suma en el total de la caja
             $order->update(['status' => 0, 'credit_balance' => 0]);
@@ -76,10 +76,39 @@ class CreditNoteService
     }
 
     /**
+     * Anula un comprobante que SUNAT RECHAZÓ: no tiene validez ni se informa nada a SUNAT (no hay nota de crédito).
+     * La venta queda anulada (ya no suma en la caja) y el stock vuelve a la sede; el número queda inutilizado.
+     *
+     * @throws RuntimeException si el comprobante no está rechazado o ya está anulado
+     */
+    public function voidRejected(Order $order, Employee $employee): void
+    {
+        DB::transaction(function () use ($order, $employee) {
+            $order = Order::with('items')->whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            if ($order->company_id !== $employee->company_id || $order->branch_id !== $employee->branch_id) {
+                throw new RuntimeException('Solo puedes anular comprobantes de tu sede.');
+            }
+
+            if (!$order->isSunatVoucher() || $order->sunat_status !== Order::SUNAT_REJECTED) {
+                throw new RuntimeException('Solo se puede anular así un comprobante rechazado por SUNAT.');
+            }
+
+            if (!$order->status) {
+                throw new RuntimeException('Este comprobante ya está anulado.');
+            }
+
+            $this->restoreStock($order, 'order_void', $order->id, "Anulación {$order->voucher_number} (rechazado por SUNAT)");
+
+            $order->update(['status' => 0, 'credit_balance' => 0]);
+        });
+    }
+
+    /**
      * Devuelve a la sede el stock de cada ítem anulado y registra la entrada en el kardex.
      * Se bloquean las filas de stock en orden por producto (evita bloqueos cruzados).
      */
-    private function restoreStock(Order $order, CreditNote $note, Employee $employee): void
+    private function restoreStock(Order $order, string $referenceType, int $referenceId, string $notes): void
     {
         // Las unidades vuelven a los lotes de los que salieron
         app(\App\Services\BatchService::class)->restore('order', $order->id);
@@ -106,12 +135,12 @@ class CreditNoteService
                 'branch_id'      => $order->branch_id,
                 'product_id'     => $item->product_id,
                 'type'           => 'entrada',
-                'reference_type' => 'credit_note',
-                'reference_id'   => $note->id,
+                'reference_type' => $referenceType,
+                'reference_id'   => $referenceId,
                 'quantity'       => (int) round($item->base_quantity),
                 'unit_cost'      => round((float) $item->unit_price / ((float) $item->units_per_item ?: 1), 2),
                 'balance'        => (int) $stock->stock_actual,
-                'notes'          => "Anulación {$order->voucher_number} (NC {$note->voucher_number})",
+                'notes'          => $notes,
             ]);
         }
     }

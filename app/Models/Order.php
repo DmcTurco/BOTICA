@@ -149,6 +149,19 @@ class Order extends Model
             && !$this->creditNote;
     }
 
+    /**
+     * ¿Se puede corregir (cliente o tipo de comprobante)? Aceptado por SUNAT: nota de crédito y comprobante nuevo.
+     * Rechazado: se anula (no tiene validez) y se emite uno nuevo. Las ventas a crédito no: su deuda depende del total.
+     */
+    public function canCorrect(): bool
+    {
+        return (bool) $this->status
+            && $this->isSunatVoucher()
+            && in_array($this->sunat_status, [self::SUNAT_ACCEPTED, self::SUNAT_REJECTED], true)
+            && !$this->creditNote
+            && (int) $this->payment_type !== CashRegister::PAYMENT_CREDIT;
+    }
+
     /** Etiqueta legible del estado SUNAT */
     public function sunatLabel(): string
     {

@@ -99,6 +99,7 @@ class StockMovement extends Model
             'transfer'        => 'Traspaso #' . $this->reference_id,
             'transfer_void'   => 'Anulación de traspaso #' . $this->reference_id,
             'credit_note' => 'Anulación (NC #' . $this->reference_id . ')',
+            'order_void'  => 'Anulación de venta rechazada #' . $this->reference_id,
             default    => '—',
         };
     }

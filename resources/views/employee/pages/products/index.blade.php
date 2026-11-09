@@ -3,7 +3,12 @@
 @section('title', 'Productos')
 @section('main-padding', 'p-2 md:p-3')
 
-@php $canManage = auth()->guard('employee')->user()->hasPrivilege(\App\Models\Employee::PRIV_CREAR_PRODUCTOS); @endphp
+@php
+    $emp = auth()->guard('employee')->user();
+    $canManage = $emp->hasPrivilege(\App\Models\Employee::PRIV_CREAR_PRODUCTOS);
+    // El botón de ajuste solo aparece si el rol tiene el permiso "Ajuste de Inventario"
+    $canAdjust = $emp->hasPrivilege(\App\Models\Employee::PRIV_AJUSTE_INVENTARIO);
+@endphp
 
 @section('content-area')
 <div class="flex-1 flex flex-col gap-3 min-h-0">
@@ -147,6 +152,13 @@
                         </td>
                         <td class="px-5 py-3">
                             <div class="flex items-center justify-end gap-1">
+@if($canAdjust)
+                                {{-- Abre "Nuevo ajuste de inventario" con este producto ya cargado --}}
+                                <a href="{{ route('employee.adjustments.create', ['producto' => $producto->id]) }}"
+                                   class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-sky-50 hover:text-sky-600 transition-colors" title="Ajustar stock">
+                                    <i class="fas fa-scale-balanced text-xs"></i>
+                                </a>
+@endif
 @if($canManage)
                                 <a href="{{ route('employee.products.edit', $producto) }}"
                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-sky-50 hover:text-sky-600 transition-colors" title="Editar">

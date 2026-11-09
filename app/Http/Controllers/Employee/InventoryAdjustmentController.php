@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use App\Services\BatchService;
 use App\Services\StockService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -33,7 +34,7 @@ class InventoryAdjustmentController extends Controller
     /**
      * Formulario para registrar un ajuste, con el stock actual de cada producto en la sede.
      */
-    public function create()
+    public function create(Request $request)
     {
         $employee = auth()->guard('employee')->user();
 
@@ -53,9 +54,14 @@ class InventoryAdjustmentController extends Controller
                 'stock' => (float) ($stocks[$p->id] ?? 0),
             ])->values()->all();
 
+        // Producto precargado (viene del botón "Ajustar stock" de la lista de productos);
+        // solo se acepta si pertenece a la compañía
+        $selectedId = collect($products)->firstWhere('id', (int) $request->query('producto'))['id'] ?? null;
+
         return view('employee.pages.adjustments.form', [
-            'products' => $products,
-            'reasons'  => InventoryAdjustmentRequest::REASONS,
+            'products'   => $products,
+            'reasons'    => InventoryAdjustmentRequest::REASONS,
+            'selectedId' => $selectedId,
         ]);
     }
 

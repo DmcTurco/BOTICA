@@ -37,7 +37,8 @@ it('acepta el precio real del producto', function () {
     $result = callOrderController('pricing', [['product_id' => pid('P001'), 'name' => 'x', 'price' => 1.20, 'qty' => 2]], 1, null);
 
     expect($result)->not->toHaveKey('error')
-        ->and($result['tax']['total'])->toBe(2.83); // 2.40 + IGV 0.43
+        ->and($result['tax']['total'])->toBe(2.4)  // el precio ya incluye el IGV
+        ->and($result['tax']['igv'])->toBe(0.37); // base 2.03 + IGV 0.37 = 2.40
 });
 
 // El precio y la presentación de cada línea los fija resolveLines() con la base de datos

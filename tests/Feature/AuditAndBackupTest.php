@@ -35,8 +35,8 @@ it('registra descuentos, ventas a crédito y cambios de privilegios', function (
     posSetup($admin);
     $client = App\Models\Client::create(['company_id' => 1, 'code' => 'C-900001', 'name' => 'Cliente Fiado', 'credit_limit' => 100, 'status' => 1]);
 
-    posSale(['discount_percent' => 10, 'total' => 21.24])->assertOk();
-    posSale(['payment_type' => 5, 'client_id' => $client->id, 'total' => 23.60])->assertOk();
+    posSale(['discount_percent' => 10, 'total' => 18])->assertOk();
+    posSale(['payment_type' => 5, 'client_id' => $client->id, 'total' => 20])->assertOk();
 
     $worker = Employee::create(['company_id' => 1, 'branch_id' => 1, 'role_id' => App\Models\Role::EMPLOYEE, 'name' => 'Cajera', 'email' => 'cajera@example.com', 'password' => 'x', 'privileges' => []]);
     $this->put(route('employee.employees.update', $worker), [

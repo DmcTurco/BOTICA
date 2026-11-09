@@ -56,7 +56,9 @@ class OrderController extends Controller
         $boletaSummary = (bool) CompanySunatSetting::where('company_id', $employee->company_id)
             ->first()?->usesBoletaSummary();
 
-        return view('employee.pages.orders.historial', compact('orders', 'fechaDesde', 'fechaHasta', 'boletaSummary'));
+        $documentTypes = DocumentType::activos()->get();
+
+        return view('employee.pages.orders.historial', compact('orders', 'fechaDesde', 'fechaHasta', 'boletaSummary', 'documentTypes'));
     }
 
     /**
@@ -634,12 +636,20 @@ class OrderController extends Controller
             'discount_percent'  => $order->discount_percent,
             'total'             => $order->total,
             'status'            => $order->status,
+            // Respuesta de SUNAT (solo boletas y facturas): estado, código y el motivo si lo rechazó
+            'sunat'             => $order->isSunatVoucher() ? [
+                'status'  => $order->sunat_status,
+                'label'   => $order->sunatLabel(),
+                'code'    => $order->sunat_code,
+                'message' => $order->sunat_message,
+            ] : null,
             'items'             => $order->items->map(fn($item) => [
                 'product_code' => $item->product?->code,   // correlativo para mostrar
                 'product_name' => $item->product_name,
                 'unit_price'   => $item->unit_price,
                 'quantity'     => $item->quantity,
                 'subtotal'     => $item->subtotal,
+                'total'        => round((float) $item->subtotal + (float) $item->igv_amount, 2),   // importe cobrado (con IGV)
             ]),
         ]);
     }
@@ -773,13 +783,13 @@ class OrderController extends Controller
             'amount_received'   => 'nullable|numeric|min:0|max:99999999',
         ]);
 
-        // Factura requiere RUC (document_type_id = 3)
+        // Factura requiere RUC (document_type_id = 3): SUNAT rechaza la factura con DNI (código 2800)
         if ($request->voucher_type == 2) {
             $docType = (int) $request->document_type_id;
             if ($docType !== DocumentType::RUC) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'La factura requiere un cliente con RUC.',
+                    'message' => 'La factura requiere un cliente con RUC. Para un cliente con DNI emite una boleta.',
                 ], 422);
             }
             if (empty($request->customer_document)) {
@@ -916,7 +926,7 @@ class OrderController extends Controller
                 'employee_id'       => $employee->id,
                 'cash_register_id'  => $cashRegisterId,
                 'client_id'         => $creditClient?->id ?? $this->validClientId($request, $employee->company_id),
-                'customer_name'     => $request->customer_name ?: null,
+                'customer_name'     => $request->customer_name ? mb_strtoupper(trim($request->customer_name)) : null,
                 'document_type_id'  => $documentTypeId,
                 'customer_document' => $request->customer_document ?: null,
                 'voucher_type'      => $request->voucher_type,

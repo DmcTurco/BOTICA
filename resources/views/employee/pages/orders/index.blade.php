@@ -296,7 +296,7 @@
                         <div class="relative">
                             <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs pointer-events-none"></i>
                             <input type="text" id="cliente" autocomplete="off"
-                                   class="w-full pl-8 pr-8 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                   class="uppercase w-full pl-8 pr-8 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                                    placeholder="Buscar o escribir nombre...">
                             <button type="button" id="btnLimpiarCliente"
                                     class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors hidden"
@@ -378,7 +378,7 @@
                        class="w-14 px-2 py-1 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
                 @if($salesCfg['amount_discount'])
                 <span class="text-xs text-slate-400">ó S/</span>
-                <input type="number" id="descuentoMonto" min="0" step="0.10" inputmode="decimal" value="0" title="Descuento en soles sobre toda la venta (antes de IGV)"
+                <input type="number" id="descuentoMonto" min="0" step="0.10" inputmode="decimal" value="0" title="Descuento en soles sobre el total de la venta (el precio ya incluye IGV)"
                        class="w-20 px-2 py-1 text-sm text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
                 @endif
             </div>
@@ -624,11 +624,34 @@ $(document).on('click', '.btn-comprobante', function() {
     activarBtn('.btn-comprobante', $(this));
     $('#tipoComprobante').val($(this).data('value'));
 
-    // Factura (2) → forzar selección de RUC si hay documento
+    // Factura (2) → solo RUC: se oculta el resto de documentos y se elige RUC
+    aplicarRestriccionFactura();
     if ($(this).data('value') == 2) {
         seleccionarTipoDocPorId(3); // RUC
     }
 });
+
+// SUNAT solo acepta la factura a un cliente con RUC (con DNI la rechaza, código 2800): con ella elegida no se puede escoger DNI ni otro documento
+const esFactura = () => $('#tipoComprobante').val() == 2;
+const MSG_FACTURA_RUC = 'La factura requiere un RUC de 11 dígitos. Para un cliente con DNI usa boleta.';
+
+function aplicarRestriccionFactura() {
+    const factura = esFactura();
+    $('.btn-tipo-doc').not('[data-id="3"]').toggleClass('hidden', factura);
+
+    if (factura) {
+        // Si ya había un documento que no es RUC, se limpia para no mandarlo
+        const doc = $('#documento').val().replace(/\D/g, '');
+        if (doc.length && doc.length !== 11) {
+            $('#documento').val('');
+            $('#dniEstado').addClass('hidden').html('');
+            $('#dniMensaje').removeClass('hidden text-emerald-600 text-slate-400').addClass('text-red-400').text(MSG_FACTURA_RUC);
+        }
+    } else {
+        $('#dniMensaje').filter(function () { return $(this).text() === MSG_FACTURA_RUC; }).addClass('hidden').text('');
+    }
+}
+aplicarRestriccionFactura();   // por si la venta empieza en factura (comprobante por defecto o edición)
 
 // ── Panel de pago plegable (como el menú lateral) ─────────────
 // Plegado queda una franja con lo elegido y el catálogo y el detalle ganan ese ancho.
@@ -664,6 +687,7 @@ $(document).on('click', '.btn-pago, .btn-comprobante', () => $('#pagoFranjaTexto
 
 // ── Tipo de documento del cliente ────────────────────────────
 function seleccionarTipoDocPorId(id) {
+    if (esFactura() && id != 3) return;   // factura: solo RUC
     const $btn = $('.btn-tipo-doc[data-id="' + id + '"]');
     if (!$btn.length) return;
     $('.btn-tipo-doc').removeClass(DOC_ACTIVO.join(' ')).addClass(DOC_INACTIVO.join(' '));
@@ -1141,14 +1165,17 @@ function actualizarTotales() {
         } else {
             desc = redondear(bruto * pct / 100);
         }
-        const base = redondear(bruto - desc);
+        // El precio ya incluye el IGV: lo que paga el cliente por la línea es el neto
+        const neto = redondear(bruto - desc);
         descuento += desc;
 
         if (i.afectacion === '10') {
+            // Gravado: se separa el IGV (base = neto ÷ 1.18); base + IGV = neto exacto
+            const base = redondear(neto / 1.18);
             gravada += base;
-            igv     += redondear(base * 0.18);
+            igv     += redondear(neto - base);
         } else {
-            exonerada += base;   // exonerado e inafecto no pagan IGV
+            exonerada += neto;   // exonerado e inafecto: no hay IGV que sacar
         }
     });
 
@@ -1591,7 +1618,15 @@ $(document).on('click', '.cliente-opcion', function() {
 });
 
 function aplicarCliente(id, name, docTypeId, docNumber) {
-    // Llenar campos
+    // Con factura solo sirven clientes con RUC (tipo 3)
+    if (esFactura() && docTypeId != 3) {
+        $('#clienteDropdown').addClass('hidden').empty();
+        $('#dniMensaje').removeClass('hidden text-emerald-600 text-slate-400').addClass('text-red-400').text('Ese cliente no tiene RUC: la factura requiere un cliente con RUC. Usa boleta.');
+        return;
+    }
+
+    // Llenar campos (el nombre siempre en mayúsculas)
+    name = String(name ?? '').toUpperCase();
     $('#cliente').val(name);
     $('#clienteId').val(id);
     $('#btnLimpiarCliente').removeClass('hidden');
@@ -1644,6 +1679,13 @@ $(document).on('keydown', function(e) {
     if (e.key === 'F2') { e.preventDefault(); $('#inputBusqueda').focus(); }
 });
 
+// Nombre del cliente en mayúsculas mientras se escribe (se respeta la posición del cursor)
+$('#cliente').on('input', function () {
+    const ini = this.selectionStart, fin = this.selectionEnd;
+    this.value = this.value.toUpperCase();
+    this.setSelectionRange(ini, fin);
+});
+
 // ── Consulta DNI / RUC ────────────────────────────────────────
 let dniTimer = null;
 
@@ -1654,6 +1696,11 @@ $('#documento').on('input', function() {
 
     $('#dniEstado').addClass('hidden').html('');
     $('#dniMensaje').addClass('hidden').text('').removeClass('text-emerald-600 text-slate-400 text-red-400');
+
+    if (esFactura() && num.length === 8) {
+        $('#dniMensaje').removeClass('hidden').addClass('text-red-400').text(MSG_FACTURA_RUC);
+        return;
+    }
 
     // Auto-seleccionar tipo de documento por longitud
     if (num.length === 8) {
@@ -1673,7 +1720,7 @@ $('#documento').on('input', function() {
             data:   { numero: num },
             success: function(res) {
                 if (res.success && res.nombre) {
-                    $('#cliente').val(res.nombre);
+                    $('#cliente').val(String(res.nombre).toUpperCase());
                     $('#dniEstado').html('<i class="fas fa-circle-check text-emerald-500"></i>');
                     $('#dniMensaje').removeClass('hidden').addClass('text-emerald-600').text(res.nombre);
                 } else {

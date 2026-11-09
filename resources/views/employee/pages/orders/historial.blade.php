@@ -216,6 +216,18 @@
                                 </button>
                                 @endif
 
+                                @if($order->canCorrect() && $emp->hasPrivilege(\App\Models\Employee::PRIV_CREAR_NOTA_CREDITO))
+                                {{-- Cambia el nombre, el documento o boleta ↔ factura: anula el original y emite uno nuevo --}}
+                                <button type="button"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                        data-id="{{ $order->id }}" data-numero="{{ $order->voucher_number }}" data-estado="{{ $order->sunat_status }}"
+                                        data-tipo="{{ $order->voucher_type }}" data-doc-tipo="{{ $order->document_type_id }}"
+                                        data-doc="{{ $order->customer_document }}" data-nombre="{{ $order->customer_name }}"
+                                        onclick="abrirModalCorregir(this)" title="Corregir cliente o tipo de comprobante">
+                                    <i class="fas fa-pen-to-square text-xs"></i>
+                                </button>
+                                @endif
+
                                 @if($order->creditNote?->canResendToSunat() && $emp->hasPrivilege(\App\Models\Employee::PRIV_ENVIAR_NCE_SUNAT))
                                 <button type="button"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-amber-50 hover:text-amber-600 transition-colors"
@@ -306,6 +318,17 @@
                         <p class="text-xs text-slate-400" id="modal-cliente-documento"></p>
                     </div>
                 </div>
+            </div>
+
+            {{-- Estado en SUNAT: si lo rechazó, aquí se ve el motivo --}}
+            <div id="modal-sunat" class="border border-slate-200 rounded-lg px-4 py-3" style="display:none">
+                <div class="flex items-center justify-between gap-2 mb-1">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">SUNAT</p>
+                    <span id="modal-sunat-estado" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"></span>
+                </div>
+                <p id="modal-sunat-codigo" class="text-xs font-semibold text-slate-700 hidden"></p>
+                <p id="modal-sunat-mensaje" class="text-xs text-slate-600 mt-1 break-words"></p>
+                <p id="modal-sunat-ayuda" class="text-xs text-slate-500 mt-2 hidden"></p>
             </div>
 
             {{-- Tabla de productos --}}
@@ -418,6 +441,81 @@
         </div>
     </div>
 </div>
+{{-- Modal corregir comprobante --}}
+<div id="modalCorregir" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" style="display:none!important">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center shrink-0">
+                <i class="fas fa-pen-to-square text-sky-600 text-sm"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">Corregir comprobante</h3>
+        </div>
+
+        <p id="co-explicacion" class="text-slate-600 text-sm mb-4"></p>
+
+        <div class="space-y-3">
+            <div>
+                <label for="co-tipo" class="block text-xs font-semibold text-slate-600 mb-1.5">Emitir como <span class="text-red-500">*</span></label>
+                <select id="co-tipo" class="w-full text-sm text-slate-700 border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                    <option value="1">Boleta</option>
+                    <option value="2">Factura (solo con RUC)</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label for="co-doc-tipo" class="block text-xs font-semibold text-slate-600 mb-1.5">Documento</label>
+                    <select id="co-doc-tipo" class="w-full text-sm text-slate-700 border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                        @foreach($documentTypes as $dt)
+                        <option value="{{ $dt->id }}" data-digits="{{ $dt->digits ?? '' }}">{{ $dt->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="co-doc" class="block text-xs font-semibold text-slate-600 mb-1.5">Número</label>
+                    <input type="text" id="co-doc" autocomplete="off" inputmode="numeric"
+                           class="w-full text-sm text-slate-700 border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                </div>
+            </div>
+            <div>
+                <label for="co-nombre" class="block text-xs font-semibold text-slate-600 mb-1.5">Nombre o razón social</label>
+                <input type="text" id="co-nombre" autocomplete="off" maxlength="150"
+                       class="uppercase w-full text-sm text-slate-700 border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+            </div>
+
+            {{-- Solo si el original fue aceptado: la nota de crédito pide motivo --}}
+            <div id="co-bloque-nota" class="space-y-3 hidden">
+                <div>
+                    <label for="co-motivo" class="block text-xs font-semibold text-slate-600 mb-1.5">Motivo de la nota de crédito <span class="text-red-500">*</span></label>
+                    <select id="co-motivo" class="w-full text-sm text-slate-700 border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                        @foreach(\App\Models\CreditNote::REASONS as $code => $label)
+                        <option value="{{ $code }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="co-descripcion" class="block text-xs font-semibold text-slate-600 mb-1.5">Descripción <span class="text-red-500">*</span></label>
+                    <input type="text" id="co-descripcion" maxlength="250" placeholder="Ej.: error en el nombre del cliente"
+                           class="w-full text-sm text-slate-700 border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <p id="co-error" class="hidden text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2"></p>
+        </div>
+
+        <p class="text-slate-500 text-xs mt-4 mb-5">El comprobante nuevo lleva los mismos productos, precios y forma de pago. El dinero no se cuenta dos veces: queda en la misma caja. Esta acción no se puede deshacer.</p>
+
+        <div class="flex gap-3 justify-end">
+            <button type="button" onclick="cerrarModalCorregir()"
+                    class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                Cancelar
+            </button>
+            <button type="button" id="co-confirmar" onclick="corregirComprobante()"
+                    class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors">
+                Corregir y emitir
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -468,6 +566,103 @@ function reenviarNotaCredito(id) {
         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
     })
     .finally(() => window.location.reload());
+}
+
+// ── Corregir comprobante ──────────────────────────────────────
+let corregirOrderId = null;
+const RUC_ID = 3;
+
+function abrirModalCorregir(boton) {
+    const d = boton.dataset;
+    corregirOrderId = d.id;
+    const aceptado = d.estado === 'accepted';
+
+    document.getElementById('co-explicacion').innerHTML = aceptado
+        ? `Se anulará <strong class="text-slate-800">${esc(d.numero)}</strong> con una nota de crédito y se emitirá un comprobante nuevo con los datos correctos.`
+        : `<strong class="text-slate-800">${esc(d.numero)}</strong> fue rechazado por SUNAT y no es válido. Se anulará (su número queda inutilizado) y se emitirá un comprobante nuevo con los datos correctos.`;
+    document.getElementById('co-bloque-nota').classList.toggle('hidden', !aceptado);
+    document.getElementById('co-descripcion').value = '';
+
+    // Por defecto: lo mismo que tenía el original (una factura rechazada con DNI pasa a boleta)
+    const docTipo = d.docTipo || '1';
+    document.getElementById('co-tipo').value = (d.tipo === '2' && docTipo === String(RUC_ID)) ? '2' : '1';
+    document.getElementById('co-doc-tipo').value = docTipo;
+    document.getElementById('co-doc').value = d.doc || '';
+    document.getElementById('co-nombre').value = (d.nombre || '').toUpperCase();
+
+    ajustarCorregir();
+    document.getElementById('co-error').classList.add('hidden');
+    document.getElementById('co-confirmar').disabled = false;
+    document.getElementById('modalCorregir').style.setProperty('display', 'flex', 'important');
+}
+
+function esc(t) { const x = document.createElement('div'); x.textContent = t ?? ''; return x.innerHTML; }
+
+function cerrarModalCorregir() {
+    document.getElementById('modalCorregir').style.setProperty('display', 'none', 'important');
+}
+
+// La factura solo admite RUC; la boleta acepta DNI u otro documento
+function ajustarCorregir() {
+    const factura = document.getElementById('co-tipo').value === '2';
+    const select  = document.getElementById('co-doc-tipo');
+
+    Array.from(select.options).forEach(o => {
+        const oculto = factura && o.value !== String(RUC_ID);
+        o.disabled = oculto;
+        o.hidden   = oculto;
+    });
+    if (factura) select.value = String(RUC_ID);
+
+    const digitos = select.options[select.selectedIndex]?.dataset.digits;
+    document.getElementById('co-doc').maxLength = digitos ? parseInt(digitos, 10) : 20;
+}
+
+document.getElementById('co-tipo').addEventListener('change', ajustarCorregir);
+document.getElementById('co-doc-tipo').addEventListener('change', ajustarCorregir);
+document.getElementById('co-doc').addEventListener('input', function () { this.value = this.value.replace(/\D/g, ''); });
+document.getElementById('co-nombre').addEventListener('input', function () {
+    const ini = this.selectionStart, fin = this.selectionEnd;
+    this.value = this.value.toUpperCase();
+    this.setSelectionRange(ini, fin);
+});
+
+/** Corrige el comprobante; si algo falla, el motivo se muestra en el mismo modal y no cambia nada */
+function corregirComprobante() {
+    const error = document.getElementById('co-error');
+    const boton = document.getElementById('co-confirmar');
+    const mostrar = (msg) => { error.textContent = msg; error.classList.remove('hidden'); boton.disabled = false; };
+
+    error.classList.add('hidden');
+    boton.disabled = true;
+
+    fetch(`{{ url('employee/orders') }}/${corregirOrderId}/correct`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            voucher_type:      document.getElementById('co-tipo').value,
+            document_type_id:  document.getElementById('co-doc-tipo').value,
+            customer_document: document.getElementById('co-doc').value,
+            customer_name:     document.getElementById('co-nombre').value,
+            reason_code:       document.getElementById('co-motivo').value,
+            reason_text:       document.getElementById('co-descripcion').value
+        })
+    })
+    .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.success) {
+            window.location.reload();
+            return;
+        }
+
+        mostrar(data.message ?? (data.errors ? Object.values(data.errors).flat().join(' ') : 'No se pudo corregir el comprobante.'));
+    })
+    .catch(() => mostrar('No se pudo conectar con el servidor.'));
 }
 
 // ── Nota de crédito ───────────────────────────────────────────
@@ -556,6 +751,52 @@ function formatCurrency(num) {
     return 'S/ ' + parseFloat(num).toFixed(2);
 }
 
+// Explicación en palabras simples de los rechazos más comunes de SUNAT
+// (orientativas: el mensaje original de SUNAT siempre se muestra arriba)
+const SUNAT_AYUDA = {
+    '2010': 'El RUC de la empresa no está activo en SUNAT. Revisa su estado en la Consulta RUC.',
+    '2014': 'Falta el número de documento del cliente.',
+    '2017': 'La factura debe ir a un cliente con RUC. Para un cliente sin RUC emite una boleta.',
+    '2021': 'Falta el nombre o la razón social del cliente.',
+    '2040': 'El tipo de IGV (gravado, exonerado o inafecto) de algún producto no es válido. Revísalo en el producto.',
+    '2103': 'La serie del comprobante no es válida para este tipo de documento.',
+    '2104': 'El RUC de la empresa no existe en SUNAT. Revísalo en la configuración de SUNAT.',
+    '2108': 'Se pasó el plazo para enviar este comprobante a SUNAT.',
+    '2501': 'El valor de venta debe ser mayor que cero. Revisa los montos de la venta.',
+    '2800': 'SUNAT no permite ese tipo de documento del cliente en este comprobante. La factura exige un cliente con RUC; con DNI se emite boleta.',
+};
+
+// Muestra el estado de SUNAT y, si falló, su código y mensaje (se escribe con textContent: es texto externo)
+function mostrarSunat(sunat) {
+    const caja = document.getElementById('modal-sunat');
+    if (!sunat) { caja.style.display = 'none'; return; }
+
+    const clases = {
+        accepted: 'bg-emerald-50 text-emerald-700',
+        rejected: 'bg-red-50 text-red-600',
+    };
+    const estado = document.getElementById('modal-sunat-estado');
+    estado.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ' + (clases[sunat.status] ?? 'bg-amber-50 text-amber-700');
+    estado.textContent = sunat.label;
+
+    const codigo  = document.getElementById('modal-sunat-codigo');
+    const mensaje = document.getElementById('modal-sunat-mensaje');
+    const ayuda   = document.getElementById('modal-sunat-ayuda');
+
+    codigo.textContent = sunat.code ? 'Código ' + sunat.code : '';
+    codigo.classList.toggle('hidden', !sunat.code || sunat.status === 'accepted');
+    mensaje.textContent = sunat.message ?? (sunat.status === 'pending' ? 'Aún no se ha enviado a SUNAT.' : '');
+
+    let texto = SUNAT_AYUDA[sunat.code] ?? '';
+    if (sunat.status === 'rejected') {
+        texto = (texto ? texto + ' ' : '') + 'Un comprobante rechazado no es válido ante SUNAT: corrige el dato y emite uno nuevo.';
+    }
+    ayuda.textContent = texto;
+    ayuda.classList.toggle('hidden', !texto);
+
+    caja.style.display = '';
+}
+
 function openDetail(id) {
     currentOrderId = id;
     showLoader(true);
@@ -579,6 +820,8 @@ function openDetail(id) {
         document.getElementById('modal-igv').textContent       = formatCurrency(v.igv);
         document.getElementById('modal-total').textContent     = formatCurrency(v.total);
 
+        mostrarSunat(v.sunat);
+
         const tbody = document.getElementById('modal-items');
         tbody.innerHTML = '';
         (v.items ?? []).forEach(d => {
@@ -590,7 +833,7 @@ function openDetail(id) {
                     </td>
                     <td class="px-4 py-2.5 text-right text-xs text-slate-600">${formatCurrency(d.unit_price)}</td>
                     <td class="px-4 py-2.5 text-right text-xs text-slate-600">${parseFloat(d.quantity)}</td>
-                    <td class="px-4 py-2.5 text-right text-xs font-semibold text-slate-700">${formatCurrency(d.subtotal)}</td>
+                    <td class="px-4 py-2.5 text-right text-xs font-semibold text-slate-700">${formatCurrency(d.total)}</td>
                 </tr>
             `);
         });
